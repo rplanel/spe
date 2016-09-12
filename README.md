@@ -9,10 +9,12 @@ Les contigs, chromosomes, plasmides de même organisme ne sont pas dans la même
 Ils seront concatenés durant l'exécution du workflow.
 
 ```bash
-mysqlagc -ABN -r pkgdb_dev -e "SELECT REPLACE (strtofastaudf(CONCAT_WS('_',O_id, O_name, name_txt),S_string),' ','_')
-FROM Organism INNER JOIN O_Taxonomy USING(O_id) INNER JOIN Replicon USING(O_id) INNER JOIN Sequence USING(R_id) 
+
+mysqlagc --max_allowed-packet=1G -ABNqr pkgdb_dev -e "SELECT REPLACE (strtofastaudf(CONCAT_WS('_',O_id, O_name, name_txt),S_string),' ','_')
+FROM Organism LEFT JOIN O_Taxonomy USING(O_id) INNER JOIN Replicon USING(O_id) INNER JOIN Sequence USING(R_id) 
 INNER JOIN Sequence_String USING(S_id) 
-WHERE rank = 'order' AND S_status = 'inProduction' LIMIT 100" >  data/genome/mic100.fasta
+WHERE rank = 'order' AND S_status = 'inProduction'" >  data/genome/mic_all.fasta
+
 
 ```
 
