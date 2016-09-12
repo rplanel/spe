@@ -13,10 +13,9 @@ println "Work dir : $workflow.workDir"
 params.genomes='data/genome/mic100.fasta'
 params.chunkSize = 100
 
+
 mergeFasta = Channel.fromPath('scripts/mergeGenomes.pl')
 genomes    = Channel.fromPath(params.genomes)
-
-
 
 
 
@@ -40,14 +39,14 @@ process mergeSameOrganism {
  * The file file is split in chunks containing as many sequences as defined by the parameter 'chunkSize'
  * Finally, assign the result channel to the variable genomesChunk.
  */
-
 mergedGenomes
 .splitFasta(by: params.chunkSize)
 .set { genomesChunk }
 
 // Calculate the sketches 
 process sketch {
-  echo true
+  
+  maxForks 1
   
   input:
   file genomesChunk
@@ -56,7 +55,7 @@ process sketch {
   file "${genomesChunk}.msh" into reference
 
   script:
-  "mash sketch -p 5 -s 4000 -k 10 -i ${genomesChunk}"
+  "mash sketch -s 400 -k 16 -i ${genomesChunk}"
 }
 
 
@@ -94,7 +93,7 @@ process distance {
   file 'distance.tab' into distance
 
   """
-  mash dist -v 1 -d 1 -t ${genomeSketches} ${genomeSketches} > distance.tab
+  mash dist -v 1e-10 -d 0.05 -t ${genomeSketches} ${genomeSketches} > distance.tab
   """
 }
 
