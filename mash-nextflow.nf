@@ -9,11 +9,21 @@
 params.genomes='data/genome/mic100.fasta'
 params.chunkSize = 100
 
+mergeFasta = Channel.fromPath('scripts/mergeGenomes.pl')
+genomes    = Channel.fromPath(params.genomes)
 
+process mergeSameOrganism {
 
+  input:
+  file genomes
+  file mergeFasta
 
+  output:
+  file "${genomes}.merged" into mergedGenomes
 
-
+  script:
+  "perl ${mergeFasta} ${genomes} ${genomes}.merged"
+}
 
 
 
@@ -23,9 +33,7 @@ params.chunkSize = 100
  * Finally, assign the result channel to the variable genomesChunk.
  */
 
-
-Channel
-.fromPath(params.genomes)
+mergedGenomes
 .splitFasta(by: params.chunkSize)
 .set { genomesChunk }
 
@@ -41,7 +49,6 @@ process sketch {
 
   script:
   "mash sketch -i ${genomesChunk}"
-  
 }
 
 
@@ -51,20 +58,6 @@ reference
  }
 .set { sketchesFilename }
 
-
-// process writeSketchFileName {
-
-//   input:
-//   file reference
-
-//   script:
-//   reference.subscribe {println it}
-
-//   ""
-  
-  
-// }
-// sketchesFilename.subscribe { println it }
 
 process pasteSketches {
 
