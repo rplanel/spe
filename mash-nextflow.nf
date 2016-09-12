@@ -2,6 +2,10 @@
 
 
 
+println "Project : $workflow.projectDir"
+println "Cmd line : $workflow.commandLine"
+println "Work dir : $workflow.workDir"
+
 /*
 * These default parameters will be overwrite by user input:
 * nextflow run mash-nextflow.nf --genomes /path/to/file --chunksize 10
@@ -11,6 +15,10 @@ params.chunkSize = 100
 
 mergeFasta = Channel.fromPath('scripts/mergeGenomes.pl')
 genomes    = Channel.fromPath(params.genomes)
+
+
+
+
 
 process mergeSameOrganism {
 
@@ -48,7 +56,7 @@ process sketch {
   file "${genomesChunk}.msh" into reference
 
   script:
-  "mash sketch -i ${genomesChunk}"
+  "mash sketch -p 5 -s 4000 -k 10 -i ${genomesChunk}"
 }
 
 
@@ -77,7 +85,8 @@ process pasteSketches {
 
 // Calculate the distances
 process distance {
-
+  publishDir 'result'
+  
   input:
   file genomeSketches
 
@@ -85,7 +94,7 @@ process distance {
   file 'distance.tab' into distance
 
   """
-  mash dist -t ${genomeSketches} ${genomeSketches} > distance.tab
+  mash dist -v 1 -d 1 -t ${genomeSketches} ${genomeSketches} > distance.tab
   """
 }
 
