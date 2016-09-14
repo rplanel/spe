@@ -1,0 +1,4 @@
+task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	rss	vmem	rchar	wchar
+1	69/5c5fd4	32049	mergeSameOrganism (1)	COMPLETED	0	2016-09-13 17:39:40.625	7m 49s	7m 46s	106.0%	3 MB	33.6 MB	22.3 GB	22.3 GB
+2	b9/f9f3b4	11116	sketch (1)	COMPLETED	0	2016-09-13 17:47:29.767	22m 57s	22m 53s	115.0%	143.9 MB	235 MB	22.4 GB	34 B
+3	c2/b23b35	7922	distance (1)	COMPLETED	0	2016-09-13 18:10:26.680	3m 9s	3m 8s	101.0%	31.3 MB	125.5 MB	26.8 MB	29.2 MB
