@@ -12,10 +12,11 @@ println "Work dir : $workflow.workDir"
 */
 params.genomes='data/genome/mic100.fasta'
 params.chunkSize = 100
-
+params.update
 
 mergeFasta = Channel.fromPath('scripts/mergeGenomes.pl')
 genomes    = Channel.fromPath(params.genomes)
+
 
 
 
@@ -34,52 +35,20 @@ process mergeSameOrganism {
 
 
 
-/*
- * Given a genome, create a channel emitting the fasta file.
- * The file file is split in chunks containing as many sequences as defined by the parameter 'chunkSize'
- * Finally, assign the result channel to the variable genomesChunk.
- */
-mergedGenomes
-.splitFasta(by: params.chunkSize)
-.set { genomesChunk }
-
 // Calculate the sketches 
 process sketch {
   
   maxForks 1
   
   input:
-  file genomesChunk
+  file mergedGenomes
 
   output:
-  file "${genomesChunk}.msh" into reference
+  file "${mergedGenomes}.msh" into reference
 
   script:
-  "mash sketch -s 400 -k 16 -i ${genomesChunk}"
+  "mash sketch -s 400 -k 16 -i ${mergedGenomes}"
 }
-
-
-reference
-.collectFile() {file ->
-  [ 'sketches-filenames.txt', file.toString() + '\n' ]
- }
-.set { sketchesFilename }
-
-
-process pasteSketches {
-
-  input:
-  file sketchesFilename
-
-
-  output:
-    file 'genome-sketches.msh' into genomeSketches
-
-  script:
-  "mash paste genome-sketches -l ${sketchesFilename} "
-
-}
-
 
 
 // Calculate the distances
@@ -87,31 +56,15 @@ process distance {
   publishDir 'result'
   
   input:
-  file genomeSketches
+  file reference
 
   output:
   file 'distance.tab' into distance
 
   """
-  mash dist -v 1e-10 -d 0.05 -t ${genomeSketches} ${genomeSketches} > distance.tab
+  mash dist -v 1e-10 -d 0.05 -t ${reference} ${reference} > distance.tab
   """
 }
 
-
-
-
-// Process that sort the distance output
-// process sort {
-
-//   input:
-//   file distance
-
-//   output:
-//   file 'distance-sort.tab'
-
-//   """
-//   sort -gk3 ${distance} > distance-sort.tab
-//   """
-// }
 
 
