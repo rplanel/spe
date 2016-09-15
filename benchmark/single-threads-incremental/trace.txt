@@ -1,0 +1,5 @@
+task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	rss	vmem	rchar	wchar
+1	83/259968	7875	merge_same_organism (genome1.fna)	COMPLETED	0	2016-09-15 10:23:38.857	258ms	140ms	0.0%	1.1 MB	9 MB	4.7 KB	0
+2	3f/74e237	7926	sketch (genome1.merged.fasta)	COMPLETED	0	2016-09-15 10:23:39.319	557ms	349ms	0.0%	16 MB	113.9 MB	4.5 MB	34 B
+3	3e/fe8d3d	8013	paste_sketch_to_db (1)	COMPLETED	0	2016-09-15 10:23:39.904	251ms	152ms	0.0%	1.1 MB	9 MB	12 KB	0
+4	eb/a9cf5e	8065	incremental_distance (1)	COMPLETED	0	2016-09-15 10:23:40.182	290ms	215ms	0.0%	15.2 MB	114.8 MB	17.9 MB	25.3 KB

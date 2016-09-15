@@ -1,0 +1,62 @@
+digraph dag {
+p0 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.fromPath"];
+p4 [label="merge_same_organism"];
+p0 -> p4 [label="mergeFasta"];
+
+p1 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.fromPath"];
+p4 [label="merge_same_organism"];
+p1 -> p4 [label="query"];
+
+p2 [shape=point,label="",fixedsize=true,width=0.1,xlabel="Channel.empty"];
+p3 [shape=point];
+p2 -> p3 [label="incremental"];
+
+p4 [label="merge_same_organism"];
+p5 [label="sketch"];
+p4 -> p5 [label="mergedGenomes"];
+
+p5 [label="sketch"];
+p6 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="choice"];
+p5 -> p6 [label="querySketch"];
+
+p6 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="choice"];
+p8 [label="all_vs_all_distance"];
+p6 -> p8 [label="allVsAllQuery"];
+
+p6 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="choice"];
+p7 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="into"];
+p6 -> p7 [label="incrementalQuery"];
+
+p7 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="into"];
+p12 [label="paste_sketch_to_db"];
+p7 -> p12 [label="queryToPaste"];
+
+p7 [shape=circle,label="",fixedsize=true,width=0.1,xlabel="into"];
+p13 [label="incremental_distance"];
+p7 -> p13 [label="queryToDist"];
+
+p8 [label="all_vs_all_distance"];
+p10 [shape=point];
+p8 -> p10 [label="allVsAllDistance"];
+
+p8 [label="all_vs_all_distance"];
+p9 [shape=point];
+p8 -> p9 [label="all_db_sketch"];
+
+p11 [shape=point,label="",fixedsize=true,width=0.1];
+p12 [label="paste_sketch_to_db"];
+p11 -> p12 [label="sketches"];
+
+p12 [label="paste_sketch_to_db"];
+p13 [label="incremental_distance"];
+p12 -> p13 [label="incrementalSketches"];
+
+p13 [label="incremental_distance"];
+p15 [shape=point];
+p13 -> p15 [label="incrementalDistance"];
+
+p13 [label="incremental_distance"];
+p14 [shape=point];
+p13 -> p14 [label="sketches_db"];
+
+}
