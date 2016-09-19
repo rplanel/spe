@@ -4,16 +4,12 @@
 ## Extraction genomes ##
 
 
-Extraction des génomes au format fasta de la base de données.
-Les contigs, chromosomes, plasmides de même organisme ne sont pas dans la même sequence fasta.
-Ils seront concatenés durant l'exécution du workflow.
 
-```
-mysqlagc --max_allowed-packet=1G -ABNqr pkgdb_dev -e "SELECT strtofastaudf(CONCAT_WS(' ',O_id, O_name, name_txt),S_string)
-FROM Organism LEFT JOIN O_Taxonomy USING(O_id) INNER JOIN Replicon USING(O_id) INNER JOIN Sequence USING(R_id) 
-INNER JOIN Sequence_String USING(S_id) 
-WHERE rank = 'order' AND S_status = 'inProduction'" >  data/genome/mic_all.fasta
-```
+* Extraction des génomes au format fasta de la base de données.
+* Les contigs, chromosomes, plasmides de même organisme ne sont pas dans la même sequence fasta.
+* Les sequences fasta qui appartiennent au même organisme seront concatenées.
+* Ne peut pas supprimer 1 sketches d'un fichier contenant tous les sketches. Pour éviter les doublons, quand on met à jours un génome qui est déjà dans la base, il faut recréer la base de données de sketches à partir de tous les sketches individuels.
+
 
 
 ## Exécution workflow ##
@@ -42,4 +38,4 @@ L'utilisation de la fonction *splitFasta* pour découper un multifasta en chunk 
 
 
 
-4218325
+
