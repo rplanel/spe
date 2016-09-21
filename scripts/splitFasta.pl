@@ -30,7 +30,7 @@ while (my $l = <$GENOMES>) {
 
 sub getId {
     my ($line) = @_;
-    my ($id) = split(/ /,$line);
+    my ($id) = split(/\s+/,$line);
     $id =~ s/>//g;
     return $id;
 }

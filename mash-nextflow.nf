@@ -13,20 +13,40 @@ println "Profile  : $workflow.profile"
 */
 //params.query
 params.sketches
-params.genomes
+//params.genomes
 params.numOfGenomes
 params.oid
 params.cpus
-
-
+params.pvalue
+params.distance
+params.sketchSize
+params.kmerSize
 
 
 
 
 sketchesOutName = "sketches-db"
 
-mergeFastaScript = Channel.value(file('scripts/mergeGenomes.pl'))
-splitFastaScript = Channel.value(file('scripts/splitFasta.pl'))
+
+/*
+ * SCRIPTS
+ */
+mergeFastaScript     = Channel.value(file('scripts/mergeGenomes.pl'))
+splitFastaScript     = Channel.value(file('scripts/splitFasta.pl'))
+filterGraphScript    = Channel.value(file('scripts/filterGraph.pl'))
+addAnnotationScript  = Channel.value(file('scripts/addAnnotation.pl'))
+extractClusterScript = Channel.value(file('scripts/extractCluster.pl'))
+calculateClusterIntraStatScript = Channel.value(file('scripts/calculateClusterIntraStat.pl'))
+
+
+
+/*
+ * Values parameters
+ */
+pvalueThreshold   = Channel.value(params.pvalue)
+distanceThreshold = Channel.value(params.distance)
+sketchSize        = Channel.value(params.sketchSize)
+kmerSize          = Channel.value(params.kmerSize)
 
 
 //genomes = Channel.fromPath(params.genomes+'/*.fasta')
@@ -129,7 +149,9 @@ genomesInputs.mix(genome,genomes)
 
 process merge_same_organism {
   tag { g }
+  storeDir 'data/genomes'
   
+
   input:
   each g from genomesInput 
   file mergeFastaScript
@@ -154,8 +176,8 @@ process splitFasta {
   file script from splitFastaScript
   
   output:
-  file "${outdir}/*.fasta" into fastaGenomes mode flatten
-
+  file "${outdir}/*.fasta" into countFasta, fastaGenomes mode flatten
+  
   script:
   outdir = "per_oid"
   f = file("$outdir")
@@ -167,27 +189,32 @@ process splitFasta {
 
 
 
-
 /*  Calculate the sketches */
 
 
 process sketch {
   tag { genomes }
   storeDir 'data/sketches'
-  afterScript 'date'
+  errorStrategy 'retry'
   maxRetries 5
-  cpus params.cpus
-  maxForks params.cpus
+  // cpus params.cpus
+  // maxForks params.cpus
   
   input:
   file genomes from fastaGenomes
-
+  val sketchSize
+  val kmerSize  
+  
+  
   output:
-  file "${baseName}.msh" into querySketch
+  file "${out}.msh" into querySketch
 
   script:
   baseName = genomes.getBaseName()
-  "mash sketch -s 400 -k 16 -i ${genomes} -o $baseName"
+  out = "${baseName}-${kmerSize}_kmers-${sketchSize}_sketches"
+  """
+  mash sketch -s ${sketchSize} -k ${kmerSize} -i ${genomes} -o $out
+  """
   
 }
 
@@ -200,16 +227,24 @@ querySketch
 .into { sketchesFilenameToPaste;  sketchesFilenameToDist; sketchesFilenameToDistUpdate }
 
 
+
+
 process paste_query_sketches_together {
-  
+  tag { filesList }
+  // Do not store dir because will not redo this file if use a subset.
+  //storeDir 'data/sketches' 
+
   input:
   file filesList from sketchesFilenameToPaste
+  val sketchSize
+  val kmerSize
   
   output:
-  file 'genome-sketches.msh' into genomeSketches
-
+  file "${out}.msh" into genomeSketches
+  
   script:
-  "mash paste genome-sketches -l ${filesList}"
+  out = "genome-sketches-${kmerSize}-${sketchSize}"
+  "mash paste ${out} -l ${filesList}"
 
 }
 
@@ -241,20 +276,25 @@ incrementalQuery.into {queryToSketch; queryToDist}
 // Calculate the distances
 process all_vs_all_distance {
   tag { query }
-  publishDir 'result', mode: 'copy', overwrite: true
+  publishDir 'result'
 
   input:
   file sketchesDb from allVsAllQuery
   file query from sketchesFilenameToDist
+  val pvalueThreshold
+  val distanceThreshold
+  val sketchSize
+  val kmerSize  
+
   
   output:
   file out into allVsAllDistances
 
   script:
   baseName = sketchesDb.getBaseName()
-  out = "${baseName}.distance.tab"
+  out = "${baseName}-distance.tab"
   """
-  mash dist ${sketchesDb} -l ${query} > $out
+  mash dist -v $pvalueThreshold -d $distanceThreshold ${sketchesDb} -l ${query} > $out
   """
 
 }
@@ -262,6 +302,7 @@ process all_vs_all_distance {
 
 process paste_sketch_to_db {
   tag { sketchesList }
+  
   input:
   file sketchesList from sketchesDB
 
@@ -287,23 +328,186 @@ process incremental_distance {
   input:
   file querySketch from sketchesFilenameToDistUpdate
   file sketches from updatedSketchesDB
+  val pvalueThreshold
+  val distanceThreshold
+
   
   output:
   file out into queryDistanceResult
   
   script:
   baseName = querySketch.getBaseName()
-  out      = "${baseName}.distance.tab"
+  out      = "${baseName}-distance.tab"
   """
-  mash dist ${sketches} -l ${querySketch} > $out
+  mash dist -v $pvalueThreshold -d $distanceThreshold ${sketches} -l ${querySketch} > $out
   """
   
 }
 
 
+
+process filterEdges {
+  //publishDir 'result'
+
+  input:
+  file dist from allVsAllDistances
+  file script from filterGraphScript
+  val pvalueThreshold
+  val distanceThreshold
+
+
+  output:
+  file "${out}" into filteredDistance, filteredEdges
+
+  script:
+  baseName = dist.getBaseName()
+  out = "${baseName}-${distanceThreshold}-${pvalueThreshold}.tab"
+  """
+  perl $script $dist ${distanceThreshold} ${pvalueThreshold} > $out
+  """
+
+}
+
+process extractAnnotation {
+  //publishDir 'result'
+  
+  input:
+  file dist from filteredDistance
+
+  output:
+  file "$out" into annotations
+
+  script:
+  out = "annotations.tab"
+
+  """
+  mysql --max_allowed-packet=1G -ABqr pkgdb_dev -e \
+    \" SELECT o.O_id, o.O_Strain, o.O_name, t.name_txt, t.rank, t.tax_id  \
+       FROM   Organism o INNER JOIN O_Taxonomy t USING (O_id)
+       WHERE  rank = 'genus' \" >  ${out}
+
+  """
+ }
+
+
+process prepareSilixInput {
+  
+  //  publishDir 'result'
+  
+  input:
+  file edgeFile from filteredEdges
+  
+  
+  output:
+  file "${out}" into edgesFile
+  
+  script:
+  base = edgeFile.getBaseName()
+  out = "${base}-edges.tab"
+  """
+  tail -n +2 ${edgeFile} | cut -d\$'\t' -f1,2 > ${out}
+  """
+
+}
+
+/*
+* Get the num of fasta
+*/
+numOfFasta = countFasta.count()
+
+//numOfFasta.subscribe {println it}
+
+
+process silixx {
+  
+  validExitStatus 0,1
+  
+  input:
+  file edges from edgesFile
+  val num from numOfFasta
+
+  output:
+  file "$out" into silixClusterFile
+
+  script:
+  baseName = edges.getBaseName()
+  out = "${baseName}.silix"
+  """
+  silixx $num $edges > $out
+  """
+  
+
+}
+
+process addAnnotation {
+
+  input:
+  file silixRes from silixClusterFile
+  file anno     from annotations
+  file script from addAnnotationScript
+
+  output:
+  file "$out" into annotatedSilixClusterFile, annotatedSilixCluster
+
+  script:
+  base = silixRes.getBaseName()
+  out = "${base}-annotated.silix"
+  """
+  perl $script $anno $silixRes > $out
+  """
+
+
+}
+
+process extractCluster {
+
+  input:
+  file multipleCluster from annotatedSilixClusterFile
+  file script from extractClusterScript
+
+  output:
+  file "CL*.tab" into clusterFiles
+  
+  script:
+  """
+  perl $script $multipleCluster
+  """
+
+}
+
+
+process calculateClusterIntraStat {
+  publishDir 'result'
+  
+  input:
+  file cluster from annotatedSilixCluster
+  file script from calculateClusterIntraStatScript
+
+  output:
+  file "$out*" into stats
+  file "$cluster" into clu
+  
+  script:
+  base = cluster.getBaseName()
+  out = "${base}-stat"
+  """
+  perl $script $cluster $out
+  """
+}
+
+
+
+// process htmlReport {
+
+  
+// }
+
+
+
 workflow.onComplete {
   println "Pipeline execution summary"
   println "---------------------------"
+  println "Cmd line    : $workflow.commandLine"   
   println "Completed at: ${workflow.complete}"
   println "Duration    : ${workflow.duration}"
   println "Success     : ${workflow.success}"
