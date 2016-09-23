@@ -57,7 +57,8 @@ my $clusterStatToJson = [];
 while ( my ($k, $v) = each %$cluster ) {
     ## for each cluster
     my $clusterStat = {
-	name => "$k",
+	name => $k,
+	id   => $k,
 	data => [],
     };
     my $tot = $v->{total};
@@ -66,7 +67,7 @@ while ( my ($k, $v) = each %$cluster ) {
 	    @{$clusterStat->{data}}, {
 		count => $count,
 		name  => $taxid2name->{$taxid},
-		taxid => $taxid
+		id => $taxid
 	    });
     	print $CLUSTAT $k,"\t",$tot,"\t",$taxid,"\t",$taxid2name->{$taxid},"\t",$count,"\n";
     }
@@ -78,7 +79,7 @@ my $rankStatToJson = [];
 while ( my ($k, $v) = each %$rankStat ) {
     my $rankStat = {
 	name  => $taxid2name->{$k},
-	taxid =>  $k,
+	id =>  $k,
 	data => []
     };
     my $tot = $v->{total};
@@ -87,6 +88,7 @@ while ( my ($k, $v) = each %$rankStat ) {
 	    @{$rankStat->{data}}, {
 		count => $count,
 		name  => $clusterId,
+		id    => $clusterId
 	    });
 	print $RANKSTAT $k,"\t",$taxid2name->{$k},"\t",$tot,"\t",$clusterId,"\t",$count,"\n";
     }

@@ -1,54 +1,155 @@
-var canvas = document.querySelector("canvas"),
-    context = canvas.getContext("2d");
-
-var width = canvas.width,
-    height = canvas.height,
-    radius = Math.min(width, height) / 2;
-
-var colors = ["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"];
-
-var arc = d3.arc()
-    .outerRadius(radius - 10)
-    .innerRadius(0)
-    .context(context);
-
-var labelArc = d3.arc()
-    .outerRadius(radius - 40)
-    .innerRadius(radius - 40)
-    .context(context);
-
-var pie = d3.pie()
-    .sort(null)
-    .value(function(d) { return d.population; });
-
-context.translate(width / 2, height / 2);
-
-d3.requestTsv("data.tsv", function(d) {
-    d.population = +d.population;
-    return d;
-}, function(error, data) {
-    if (error) throw error;
+function piechart () {
     
-    var arcs = pie(data);
-    
-    arcs.forEach(function(d, i) {
-	context.beginPath();
-	arc(d);
-	context.fillStyle = colors[i];
-	context.fill();
-    });
+    var getAngle = function (d) {
+	return (180 / Math.PI * (d.startAngle + d.endAngle) / 2 - 90);
+    };
+    function exports(_selection, width, height) {
+	_selection.each(function(d, i) {
+	    var svg = d3.select(this);
+	    var context = svg.select('g.piecharts');
 
-    context.beginPath();
-    arcs.forEach(arc);
-    context.strokeStyle = "#fff";
-    context.stroke();
-    
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillStyle = "#000";
-    arcs.forEach(function(d) {
-	var c = labelArc.centroid(d);
-	context.fillText(d.data.age, c[0], c[1]);
-    });
-});
-	
+	    if (context.empty()){
+		context = d3.select(this).append('g').classed('piecharts',true);
+	    }
+		
+	    
+	    context.attr('transform','translate('+ (width+100) + ',' + height + ')');
+	    svg.attr('height',function(d){
+		return (d.length * (height+50)) + 400;
+	    });
+	    var radius = Math.min(width, height) / 2;
+	    var colors = d3.scaleOrdinal(d3.schemeCategory20b)
+	    var arc = d3.arc()
+		.outerRadius(radius - 10)
+		.innerRadius(0);
+	    
+	    var labelArc = d3.arc()
+		.outerRadius(radius +2)
+		.innerRadius(radius +2);
+	    
+	    var pie = d3.pie()
+		.sort(null)
+		.value(function(d) { return d.count; });
+	    
+
+	    var updateSelection = context
+		.selectAll('g.pieDraw')
+		.data(d,function(d){return d.id;});
+	    
+	    
+	    // ENTER
+	    var enterSelection = updateSelection
+		.enter()
+		.append('g')
+		.classed('pieDraw',true);
+	    
+	    
+	    var pieE = enterSelection
+		.append('g')
+	    	.classed('pie',true);
+	    
+	    
+	    var update = enterSelection  
+		.merge(updateSelection);
+	    
+	    update.attr('transform',function(d,i){
+		var count = d.data.length;
+		var rotate = 0;
+		switch (count) {
+		case 1 :
+		    rotate = -90;
+		    break;
+		case 2 :
+		    rotate = 0;
+		    break;
+		}
+		
+		return 'translate(0,' + ((height+150) * i) + ')'+
+		    'rotate('+ rotate + ')';
+	    });
+	    
+	    var pies = update
+		.select('g.pie')
+	    	.attr('transform',function(d,i){
+		    return 'translate('+width/2+',0)'
+		});
+	    
+	    // update
+	    // 	.select('text')
+	    // 	.text(function(d){return d.name})
+	    // 	.attr('transform','translate(0, '+ (-height/2)+')');
+	    
+	    
+	    // EXIT
+	    updateSelection.exit().remove();
+	    
+	    var arcSelection = pies
+		.selectAll('g.arc')
+		.data(function(d){
+		    return pie(d.data);
+		});
+	    
+	    
+	    var arcEnter = arcSelection
+		.enter()
+		.append('g')
+		.classed('arc',true);
+	    
+	    arcEnter
+		.append('path')
+		.attr('d',arc);
+	    
+	    arcEnter
+	    	.append('text');
+	    
+	    
+	    // Update
+	    var arcUpdate = arcEnter
+		.merge(arcSelection);
+	    
+	    arcUpdate
+		.select('path')
+	    	.style('fill',function(d){
+		    var c = colors(d.data.id);
+		    return c;
+		});
+	    
+	    arcUpdate
+		.select('text')
+	    	.attr("transform", function(d) {
+		    console.log(d.data.name);
+		    var angle = getAngle(d);
+		    var transform = "translate(" + labelArc.centroid(d) + ")"+
+			"rotate(" + getAngle(d) + ")";
+			
+		    if (angle > 90 && d.data.name) {
+			console.log(d.data.name);
+			
+			xcenter = (parseInt(d.data.name.length) * 6)/2;
+			transform += 'rotate(180, '+xcenter+',0)';
+		    }
+		    return transform;
+		})
+		.text(function(d){
+		    return d.data.name;
+		});
+
+	    
+	    
+	    arcSelection.exit().remove();
+
+	    //Add the labels (Put it after to be on top of arcs)
+	    // var labels = pieE
+	    // 	.append('text');
+	    
+	    
+	    // labels
+	    // 	.merge(updateSelection.selectAll('text'))
+
+	    // labels.exit().remove();
+	    
+
+	});
+    }
+    return exports;
+}

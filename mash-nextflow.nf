@@ -38,6 +38,9 @@ addAnnotationScript  = Channel.value(file('scripts/addAnnotation.pl'))
 extractClusterScript = Channel.value(file('scripts/extractCluster.pl'))
 calculateClusterIntraStatScript = Channel.value(file('scripts/calculateClusterIntraStat.pl'))
 
+indexHtml = Channel.value(file('scripts/index.html'))
+indexJs   = Channel.value(file('scripts/index.js'))
+piechart  = Channel.value(file('scripts/piechart.js'))
 
 
 /*
@@ -484,7 +487,8 @@ process calculateClusterIntraStat {
   file script from calculateClusterIntraStatScript
 
   output:
-  file "$out*" into stats
+  file "*rank.json" into rankStats
+  file "*cluster.json" into clusterStats
   file "$cluster" into clu
   
   script:
@@ -496,6 +500,35 @@ process calculateClusterIntraStat {
 }
 
 
+process createJsonData {
+  
+  publishDir 'report', mode: 'copy'
+  
+  input:
+  file rankStats
+  file clusterStats
+  val pvalueThreshold  
+  val distanceThreshold
+  val sketchSize       
+  val kmerSize
+  
+  
+
+  output:
+  file 'data.js' into data
+  
+
+  script:
+  """
+  echo 'var rawClusterData = ' | cat - $clusterStats > clusterData
+  echo -e \";\n var rawRankData = \" | cat - $rankStats > rankData
+  cat clusterData rankData > data.js
+  echo -e \";\n\" >> data.js
+  echo -e 'var parameters = {'pvalue':${pvalueThreshold},distance:${distanceThreshold},kmer:${kmerSize},sketch:${sketchSize}};' >> data.js
+  """
+  
+
+}
 
 // process htmlReport {
 
