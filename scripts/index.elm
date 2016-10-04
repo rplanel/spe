@@ -44,37 +44,6 @@ init =
 
 
 
--- JSON DECODERS
--- Decode an element of a cluster
-
-
--- decodeclusterObject : Json.Decoder ClusterObject
--- decodeclusterObject =
---     Json.object3 ClusterObject ("name" := Json.maybe Json.string) ("id" := Json.string) ("count" := Json.int)
-
-
-
--- Decode a cluster object
-
-
--- decodeClusterObjects : Json.Decoder (List ClusterObject)
--- decodeClusterObjects =
---     Json.list decodeclusterObject
-
-
-
--- Decode a cluster from JSON
-
-
--- decodeCluster : Json.Decoder Cluster
--- decodeCluster =
---     Json.object3 Cluster ("id" := Json.string) ("data" := decodeClusterObjects) ("name" := Json.maybe Json.string)
-
-
--- decodeClusters : Json.Decoder (List Cluster)
--- decodeClusters =
---     Json.list decodeCluster
-
 
 
 -- UPDATE
@@ -84,6 +53,9 @@ type Msg
     = TaxonomicCluster Clusters
     | DistanceCluster Clusters
     | DataClusters Model
+    | Draw
+      
+port draw : Clusters -> Cmd msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -104,7 +76,8 @@ update msg model =
             in
                 ( newModel, Cmd.none )
 
-
+        Draw ->
+           (model, draw model.displayedClusters)
 
 
 -- SUBSCRIPTIONS
@@ -116,15 +89,7 @@ subscriptions model =
     dataClusters DataClusters
 
 
-
--- HTTP
-
-
--- getDistanceClusters : String -> Cmd Msg
--- getDistanceClusters url =
---     Task.perform FetchFail FetchSucceed (Http.get decodeClusters url)
-
-
+        
 
 -- VIEW
 
@@ -136,7 +101,8 @@ view model =
             ]
         ]
         [
-         button [onClick (DistanceCluster model.distanceClusters)] [text "Distance Clusters" ]
+         button [onClick (DistanceCluster model.distanceClusters)]   [text "Distance Clusters" ]
         ,button [onClick (TaxonomicCluster model.taxonomicClusters)] [text "Taxonomic Clusters" ]
+        ,button [onClick Draw]                                       [text "Draw" ]
         ,text (toString (List.length model.displayedClusters))
         ]

@@ -8704,6 +8704,25 @@ var _evancz$elm_http$Http$post = F3(
 			A2(_evancz$elm_http$Http$send, _evancz$elm_http$Http$defaultSettings, request));
 	});
 
+var _user$project$Main$draw = _elm_lang$core$Native_Platform.outgoingPort(
+	'draw',
+	function (v) {
+		return _elm_lang$core$Native_List.toArray(v).map(
+			function (v) {
+				return {
+					id: v.id,
+					data: _elm_lang$core$Native_List.toArray(v.data).map(
+						function (v) {
+							return {
+								name: (v.name.ctor === 'Nothing') ? null : v.name._0,
+								id: v.id,
+								count: v.count
+							};
+						}),
+					name: (v.name.ctor === 'Nothing') ? null : v.name._0
+				};
+			});
+	});
 var _user$project$Main$dataClusters = _elm_lang$core$Native_Platform.incomingPort(
 	'dataClusters',
 	A2(
@@ -8922,10 +8941,16 @@ var _user$project$Main$update = F2(
 				var _p2 = _p0._0;
 				var newModel = A3(_user$project$Main$Model, model.distanceClusters, _p2, _p2);
 				return {ctor: '_Tuple2', _0: newModel, _1: _elm_lang$core$Platform_Cmd$none};
-			default:
+			case 'DistanceCluster':
 				var _p3 = _p0._0;
 				var newModel = A3(_user$project$Main$Model, _p3, model.taxonomicClusters, _p3);
 				return {ctor: '_Tuple2', _0: newModel, _1: _elm_lang$core$Platform_Cmd$none};
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: model,
+					_1: _user$project$Main$draw(model.displayedClusters)
+				};
 		}
 	});
 var _user$project$Main$Cluster = F3(
@@ -8936,6 +8961,7 @@ var _user$project$Main$ClusterObject = F3(
 	function (a, b, c) {
 		return {name: a, id: b, count: c};
 	});
+var _user$project$Main$Draw = {ctor: 'Draw'};
 var _user$project$Main$DataClusters = function (a) {
 	return {ctor: 'DataClusters', _0: a};
 };
@@ -8982,6 +9008,16 @@ var _user$project$Main$view = function (model) {
 				_elm_lang$core$Native_List.fromArray(
 					[
 						_elm_lang$html$Html$text('Taxonomic Clusters')
+					])),
+				A2(
+				_elm_lang$html$Html$button,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Events$onClick(_user$project$Main$Draw)
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text('Draw')
 					])),
 				_elm_lang$html$Html$text(
 				_elm_lang$core$Basics$toString(
