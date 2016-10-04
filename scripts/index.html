@@ -14,7 +14,7 @@
   </head>
   
   <body>
-    <div class="container-fluid" style="padding:40px 40px 40px 40px;">
+    <div id="main" class="container-fluid" style="padding:40px 40px 40px 40px;">
       <div class="row">
 	<div class="col-md-4">
 	  <div class="control-cluster btn-group " role="group"></div>
@@ -46,6 +46,20 @@
     <script src="piechart.js"></script>
     <script src="parameters.js"></script>
     <script src="histogram.js"></script>
-    <script src="index.js"></script>
+    <script src="elm.js"></script>
+    <script>
+      var app = Elm.Main.fullscreen();
+      var dataCluster = rawClusterData;
+      var taxoCluster = rawRankData;
+      var parameters  = parameters;
+      
+      app.ports.dataClusters.send({
+      "distanceClusters" : dataCluster,
+      "taxonomicClusters" : taxoCluster,
+      "displayedClusters" : dataCluster
+      });
+      
+    </script>
+
   </body>
 </html>
