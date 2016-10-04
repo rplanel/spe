@@ -6,7 +6,6 @@ function piechart () {
     function exports(_selection, width, height) {
 	_selection.each(function(d, i) {
 	    
-	    console.log("dans piecharts");
 	    var context = d3.select(this).select('g.piecharts');
 	    
 	    if (context.empty()){

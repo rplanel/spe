@@ -31,6 +31,7 @@ type alias Model =
     , title : String
     , min : Int
     , max : Int
+    , numberOfClusters : Int
     }
 
 
@@ -62,7 +63,7 @@ type alias ClusterObject =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model [] [] [] [] "" 0 1, Cmd.none )
+    ( Model [] [] [] [] "" 0 1 0, Cmd.none )
 
 
 
@@ -88,6 +89,7 @@ update msg model =
                 "Distance Clusters"
                 m.min
                 m.max
+                (List.length m.displayedClusters)
             , draw m.displayedClusters
             )
 
@@ -106,6 +108,7 @@ update msg model =
                         , displayedClusters = model.taxonomicClusters
                         , min = min
                         , max = max
+                        , numberOfClusters = List.length filteredClusters
                     }
 
 
@@ -132,6 +135,7 @@ update msg model =
                         , displayedClusters = model.distanceClusters
                         , min = min
                         , max = max
+                        , numberOfClusters = List.length filteredClusters
                     }
             in
                 ( newModel, Cmd.batch
@@ -151,6 +155,7 @@ update msg model =
                     { model
                         | min = range.min
                         , max = range.max
+                        , numberOfClusters = List.length filteredClusters
                     }
             in
                 ( newModel
@@ -194,7 +199,7 @@ view model =
         , button [ onClick (TaxonomicCluster) ] [ text "Taxonomic Clusters" ]
         , div
             []
-            [ h4 [] [ text model.title ] ]
+            [ h4 [] [ text (model.title ++ " ("++ toString model.numberOfClusters ++ ")") ] ]
         ]
 
 

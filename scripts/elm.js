@@ -8274,8 +8274,13 @@ var _user$project$Main$dataClusters = _elm_lang$core$Native_Platform.incomingPor
 														_elm_lang$core$Json_Decode$andThen,
 														A2(_elm_lang$core$Json_Decode_ops[':='], 'max', _elm_lang$core$Json_Decode$int),
 														function (max) {
-															return _elm_lang$core$Json_Decode$succeed(
-																{distanceClusters: distanceClusters, taxonomicClusters: taxonomicClusters, displayedClusters: displayedClusters, parameters: parameters, title: title, min: min, max: max});
+															return A2(
+																_elm_lang$core$Json_Decode$andThen,
+																A2(_elm_lang$core$Json_Decode_ops[':='], 'numberOfClusters', _elm_lang$core$Json_Decode$int),
+																function (numberOfClusters) {
+																	return _elm_lang$core$Json_Decode$succeed(
+																		{distanceClusters: distanceClusters, taxonomicClusters: taxonomicClusters, displayedClusters: displayedClusters, parameters: parameters, title: title, min: min, max: max, numberOfClusters: numberOfClusters});
+																});
 														});
 												});
 										});
@@ -8297,13 +8302,13 @@ var _user$project$Main$sliderChange = _elm_lang$core$Native_Platform.incomingPor
 						{min: min, max: max});
 				});
 		}));
-var _user$project$Main$Model = F7(
-	function (a, b, c, d, e, f, g) {
-		return {distanceClusters: a, taxonomicClusters: b, displayedClusters: c, parameters: d, title: e, min: f, max: g};
+var _user$project$Main$Model = F8(
+	function (a, b, c, d, e, f, g, h) {
+		return {distanceClusters: a, taxonomicClusters: b, displayedClusters: c, parameters: d, title: e, min: f, max: g, numberOfClusters: h};
 	});
 var _user$project$Main$init = {
 	ctor: '_Tuple2',
-	_0: A7(
+	_0: A8(
 		_user$project$Main$Model,
 		_elm_lang$core$Native_List.fromArray(
 			[]),
@@ -8315,7 +8320,8 @@ var _user$project$Main$init = {
 			[]),
 		'',
 		0,
-		1),
+		1,
+		0),
 	_1: _elm_lang$core$Platform_Cmd$none
 };
 var _user$project$Main$update = F2(
@@ -8326,7 +8332,16 @@ var _user$project$Main$update = F2(
 				var _p2 = _p1._0;
 				return {
 					ctor: '_Tuple2',
-					_0: A7(_user$project$Main$Model, _p2.distanceClusters, _p2.taxonomicClusters, _p2.displayedClusters, _p2.parameters, 'Distance Clusters', _p2.min, _p2.max),
+					_0: A8(
+						_user$project$Main$Model,
+						_p2.distanceClusters,
+						_p2.taxonomicClusters,
+						_p2.displayedClusters,
+						_p2.parameters,
+						'Distance Clusters',
+						_p2.min,
+						_p2.max,
+						_elm_lang$core$List$length(_p2.displayedClusters)),
 					_1: _user$project$Main$draw(_p2.displayedClusters)
 				};
 			case 'TaxonomicCluster':
@@ -8337,13 +8352,19 @@ var _user$project$Main$update = F2(
 					model.taxonomicClusters);
 				var min = _p3._0;
 				var max = _p3._1;
-				var newModel = _elm_lang$core$Native_Utils.update(
-					model,
-					{title: 'Taxonomic clusters', displayedClusters: model.taxonomicClusters, min: min, max: max});
 				var filteredClusters = A2(
 					_elm_lang$core$List$filter,
 					A2(_user$project$Main$betweenRange, model.min, model.max),
 					model.taxonomicClusters);
+				var newModel = _elm_lang$core$Native_Utils.update(
+					model,
+					{
+						title: 'Taxonomic clusters',
+						displayedClusters: model.taxonomicClusters,
+						min: min,
+						max: max,
+						numberOfClusters: _elm_lang$core$List$length(filteredClusters)
+					});
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
@@ -8364,13 +8385,19 @@ var _user$project$Main$update = F2(
 					model.distanceClusters);
 				var min = _p4._0;
 				var max = _p4._1;
-				var newModel = _elm_lang$core$Native_Utils.update(
-					model,
-					{title: 'Distance Clusters', displayedClusters: model.distanceClusters, min: min, max: max});
 				var filteredClusters = A2(
 					_elm_lang$core$List$filter,
 					A2(_user$project$Main$betweenRange, model.min, model.max),
 					model.distanceClusters);
+				var newModel = _elm_lang$core$Native_Utils.update(
+					model,
+					{
+						title: 'Distance Clusters',
+						displayedClusters: model.distanceClusters,
+						min: min,
+						max: max,
+						numberOfClusters: _elm_lang$core$List$length(filteredClusters)
+					});
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
@@ -8385,13 +8412,17 @@ var _user$project$Main$update = F2(
 				};
 			default:
 				var _p5 = _p1._0;
-				var newModel = _elm_lang$core$Native_Utils.update(
-					model,
-					{min: _p5.min, max: _p5.max});
 				var filteredClusters = A2(
 					_elm_lang$core$List$filter,
 					A2(_user$project$Main$betweenRange, _p5.min, _p5.max),
 					model.displayedClusters);
+				var newModel = _elm_lang$core$Native_Utils.update(
+					model,
+					{
+						min: _p5.min,
+						max: _p5.max,
+						numberOfClusters: _elm_lang$core$List$length(filteredClusters)
+					});
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
@@ -8481,7 +8512,17 @@ var _user$project$Main$view = function (model) {
 							[]),
 						_elm_lang$core$Native_List.fromArray(
 							[
-								_elm_lang$html$Html$text(model.title)
+								_elm_lang$html$Html$text(
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									model.title,
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										' (',
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											_elm_lang$core$Basics$toString(model.numberOfClusters),
+											')'))))
 							]))
 					]))
 			]));
