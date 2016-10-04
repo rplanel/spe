@@ -7897,6 +7897,14 @@ var _elm_lang$html$Html_Events$Options = F2(
 		return {stopPropagation: a, preventDefault: b};
 	});
 
+var _user$project$Main$betweenRange = F3(
+	function (min, max, cluster) {
+		return (_elm_lang$core$Native_Utils.cmp(
+			_elm_lang$core$List$length(cluster.data),
+			min) > -1) && (_elm_lang$core$Native_Utils.cmp(
+			_elm_lang$core$List$length(cluster.data),
+			max) < 1);
+	});
 var _user$project$Main$parameters = function (params) {
 	var row = function (param) {
 		return A2(
@@ -8007,7 +8015,8 @@ var _user$project$Main$parameters = function (params) {
 var _user$project$Main$draw = _elm_lang$core$Native_Platform.outgoingPort(
 	'draw',
 	function (v) {
-		return _elm_lang$core$Native_List.toArray(v).map(
+		return [
+			_elm_lang$core$Native_List.toArray(v._0).map(
 			function (v) {
 				return {
 					id: v.id,
@@ -8021,7 +8030,10 @@ var _user$project$Main$draw = _elm_lang$core$Native_Platform.outgoingPort(
 						}),
 					name: (v.name.ctor === 'Nothing') ? null : v.name._0
 				};
-			});
+			}),
+			v._1,
+			v._2
+		];
 	});
 var _user$project$Main$dataClusters = _elm_lang$core$Native_Platform.incomingPort(
 	'dataClusters',
@@ -8149,48 +8161,133 @@ var _user$project$Main$dataClusters = _elm_lang$core$Native_Platform.incomingPor
 						_elm_lang$core$Json_Decode$andThen,
 						A2(
 							_elm_lang$core$Json_Decode_ops[':='],
-							'parameters',
+							'displayedClusters',
 							_elm_lang$core$Json_Decode$list(
 								A2(
 									_elm_lang$core$Json_Decode$andThen,
-									A2(_elm_lang$core$Json_Decode_ops[':='], 'pvalue', _elm_lang$core$Json_Decode$float),
-									function (pvalue) {
+									A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+									function (id) {
 										return A2(
 											_elm_lang$core$Json_Decode$andThen,
-											A2(_elm_lang$core$Json_Decode_ops[':='], 'distance', _elm_lang$core$Json_Decode$float),
-											function (distance) {
+											A2(
+												_elm_lang$core$Json_Decode_ops[':='],
+												'data',
+												_elm_lang$core$Json_Decode$list(
+													A2(
+														_elm_lang$core$Json_Decode$andThen,
+														A2(
+															_elm_lang$core$Json_Decode_ops[':='],
+															'name',
+															_elm_lang$core$Json_Decode$oneOf(
+																_elm_lang$core$Native_List.fromArray(
+																	[
+																		_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																		A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																	]))),
+														function (name) {
+															return A2(
+																_elm_lang$core$Json_Decode$andThen,
+																A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																function (id) {
+																	return A2(
+																		_elm_lang$core$Json_Decode$andThen,
+																		A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																		function (count) {
+																			return _elm_lang$core$Json_Decode$succeed(
+																				{name: name, id: id, count: count});
+																		});
+																});
+														}))),
+											function (data) {
 												return A2(
 													_elm_lang$core$Json_Decode$andThen,
-													A2(_elm_lang$core$Json_Decode_ops[':='], 'kmer', _elm_lang$core$Json_Decode$int),
-													function (kmer) {
-														return A2(
-															_elm_lang$core$Json_Decode$andThen,
-															A2(_elm_lang$core$Json_Decode_ops[':='], 'sketch', _elm_lang$core$Json_Decode$int),
-															function (sketch) {
-																return _elm_lang$core$Json_Decode$succeed(
-																	{pvalue: pvalue, distance: distance, kmer: kmer, sketch: sketch});
-															});
+													A2(
+														_elm_lang$core$Json_Decode_ops[':='],
+														'name',
+														_elm_lang$core$Json_Decode$oneOf(
+															_elm_lang$core$Native_List.fromArray(
+																[
+																	_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																	A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																]))),
+													function (name) {
+														return _elm_lang$core$Json_Decode$succeed(
+															{id: id, data: data, name: name});
 													});
 											});
 									}))),
-						function (parameters) {
+						function (displayedClusters) {
 							return A2(
 								_elm_lang$core$Json_Decode$andThen,
-								A2(_elm_lang$core$Json_Decode_ops[':='], 'title', _elm_lang$core$Json_Decode$string),
-								function (title) {
-									return _elm_lang$core$Json_Decode$succeed(
-										{distanceClusters: distanceClusters, taxonomicClusters: taxonomicClusters, parameters: parameters, title: title});
+								A2(
+									_elm_lang$core$Json_Decode_ops[':='],
+									'parameters',
+									_elm_lang$core$Json_Decode$list(
+										A2(
+											_elm_lang$core$Json_Decode$andThen,
+											A2(_elm_lang$core$Json_Decode_ops[':='], 'pvalue', _elm_lang$core$Json_Decode$float),
+											function (pvalue) {
+												return A2(
+													_elm_lang$core$Json_Decode$andThen,
+													A2(_elm_lang$core$Json_Decode_ops[':='], 'distance', _elm_lang$core$Json_Decode$float),
+													function (distance) {
+														return A2(
+															_elm_lang$core$Json_Decode$andThen,
+															A2(_elm_lang$core$Json_Decode_ops[':='], 'kmer', _elm_lang$core$Json_Decode$int),
+															function (kmer) {
+																return A2(
+																	_elm_lang$core$Json_Decode$andThen,
+																	A2(_elm_lang$core$Json_Decode_ops[':='], 'sketch', _elm_lang$core$Json_Decode$int),
+																	function (sketch) {
+																		return _elm_lang$core$Json_Decode$succeed(
+																			{pvalue: pvalue, distance: distance, kmer: kmer, sketch: sketch});
+																	});
+															});
+													});
+											}))),
+								function (parameters) {
+									return A2(
+										_elm_lang$core$Json_Decode$andThen,
+										A2(_elm_lang$core$Json_Decode_ops[':='], 'title', _elm_lang$core$Json_Decode$string),
+										function (title) {
+											return A2(
+												_elm_lang$core$Json_Decode$andThen,
+												A2(_elm_lang$core$Json_Decode_ops[':='], 'min', _elm_lang$core$Json_Decode$int),
+												function (min) {
+													return A2(
+														_elm_lang$core$Json_Decode$andThen,
+														A2(_elm_lang$core$Json_Decode_ops[':='], 'max', _elm_lang$core$Json_Decode$int),
+														function (max) {
+															return _elm_lang$core$Json_Decode$succeed(
+																{distanceClusters: distanceClusters, taxonomicClusters: taxonomicClusters, displayedClusters: displayedClusters, parameters: parameters, title: title, min: min, max: max});
+														});
+												});
+										});
 								});
 						});
 				});
 		}));
-var _user$project$Main$Model = F4(
-	function (a, b, c, d) {
-		return {distanceClusters: a, taxonomicClusters: b, parameters: c, title: d};
+var _user$project$Main$sliderChange = _elm_lang$core$Native_Platform.incomingPort(
+	'sliderChange',
+	A2(
+		_elm_lang$core$Json_Decode$andThen,
+		A2(_elm_lang$core$Json_Decode_ops[':='], 'min', _elm_lang$core$Json_Decode$int),
+		function (min) {
+			return A2(
+				_elm_lang$core$Json_Decode$andThen,
+				A2(_elm_lang$core$Json_Decode_ops[':='], 'max', _elm_lang$core$Json_Decode$int),
+				function (max) {
+					return _elm_lang$core$Json_Decode$succeed(
+						{min: min, max: max});
+				});
+		}));
+var _user$project$Main$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {distanceClusters: a, taxonomicClusters: b, displayedClusters: c, parameters: d, title: e, min: f, max: g};
 	});
 var _user$project$Main$init = {
 	ctor: '_Tuple2',
-	_0: A4(
+	_0: A7(
 		_user$project$Main$Model,
 		_elm_lang$core$Native_List.fromArray(
 			[]),
@@ -8198,7 +8295,11 @@ var _user$project$Main$init = {
 			[]),
 		_elm_lang$core$Native_List.fromArray(
 			[]),
-		''),
+		_elm_lang$core$Native_List.fromArray(
+			[]),
+		'',
+		0,
+		1),
 	_1: _elm_lang$core$Platform_Cmd$none
 };
 var _user$project$Main$update = F2(
@@ -8209,28 +8310,63 @@ var _user$project$Main$update = F2(
 				var _p1 = _p0._0;
 				return {
 					ctor: '_Tuple2',
-					_0: A4(_user$project$Main$Model, _p1.distanceClusters, _p1.taxonomicClusters, _p1.parameters, 'Distance Clusters'),
-					_1: _user$project$Main$draw(_p1.distanceClusters)
+					_0: A7(_user$project$Main$Model, _p1.distanceClusters, _p1.taxonomicClusters, _p1.displayedClusters, _p1.parameters, 'Distance Clusters', _p1.min, _p1.max),
+					_1: _user$project$Main$draw(
+						{ctor: '_Tuple3', _0: _p1.displayedClusters, _1: _p1.min, _2: _p1.max})
 				};
 			case 'TaxonomicCluster':
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
-					{title: 'Taxonomic clusters'});
+					{title: 'Taxonomic clusters', displayedClusters: model.taxonomicClusters});
+				var filteredClusters = A2(
+					_elm_lang$core$List$filter,
+					A2(_user$project$Main$betweenRange, model.min, model.max),
+					model.taxonomicClusters);
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
-					_1: _user$project$Main$draw(_p0._0)
+					_1: _user$project$Main$draw(
+						{ctor: '_Tuple3', _0: filteredClusters, _1: model.min, _2: model.max})
 				};
-			default:
+			case 'DistanceCluster':
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
-					{title: 'Distance Clusters'});
+					{title: 'Distance Clusters', displayedClusters: model.distanceClusters});
+				var filteredClusters = A2(
+					_elm_lang$core$List$filter,
+					A2(_user$project$Main$betweenRange, model.min, model.max),
+					model.distanceClusters);
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
-					_1: _user$project$Main$draw(_p0._0)
+					_1: _user$project$Main$draw(
+						{ctor: '_Tuple3', _0: filteredClusters, _1: model.min, _2: model.max})
+				};
+			default:
+				var _p2 = _p0._0;
+				var newModel = _elm_lang$core$Native_Utils.update(
+					model,
+					{min: _p2.min, max: _p2.max});
+				var clusters = model.displayedClusters;
+				var filteredClusters = A2(
+					_elm_lang$core$List$filter,
+					A2(_user$project$Main$betweenRange, _p2.min, _p2.max),
+					clusters);
+				return {
+					ctor: '_Tuple2',
+					_0: newModel,
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Main$draw(
+								{ctor: '_Tuple3', _0: filteredClusters, _1: _p2.min, _2: _p2.max})
+							]))
 				};
 		}
+	});
+var _user$project$Main$Range = F2(
+	function (a, b) {
+		return {min: a, max: b};
 	});
 var _user$project$Main$Parameters = F4(
 	function (a, b, c, d) {
@@ -8244,18 +8380,22 @@ var _user$project$Main$ClusterObject = F3(
 	function (a, b, c) {
 		return {name: a, id: b, count: c};
 	});
+var _user$project$Main$SliderChange = function (a) {
+	return {ctor: 'SliderChange', _0: a};
+};
 var _user$project$Main$DataClusters = function (a) {
 	return {ctor: 'DataClusters', _0: a};
 };
 var _user$project$Main$subscriptions = function (model) {
-	return _user$project$Main$dataClusters(_user$project$Main$DataClusters);
+	return _elm_lang$core$Platform_Sub$batch(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_user$project$Main$dataClusters(_user$project$Main$DataClusters),
+				_user$project$Main$sliderChange(_user$project$Main$SliderChange)
+			]));
 };
-var _user$project$Main$DistanceCluster = function (a) {
-	return {ctor: 'DistanceCluster', _0: a};
-};
-var _user$project$Main$TaxonomicCluster = function (a) {
-	return {ctor: 'TaxonomicCluster', _0: a};
-};
+var _user$project$Main$DistanceCluster = {ctor: 'DistanceCluster'};
+var _user$project$Main$TaxonomicCluster = {ctor: 'TaxonomicCluster'};
 var _user$project$Main$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
@@ -8274,8 +8414,7 @@ var _user$project$Main$view = function (model) {
 				_elm_lang$html$Html$button,
 				_elm_lang$core$Native_List.fromArray(
 					[
-						_elm_lang$html$Html_Events$onClick(
-						_user$project$Main$DistanceCluster(model.distanceClusters))
+						_elm_lang$html$Html_Events$onClick(_user$project$Main$DistanceCluster)
 					]),
 				_elm_lang$core$Native_List.fromArray(
 					[
@@ -8285,8 +8424,7 @@ var _user$project$Main$view = function (model) {
 				_elm_lang$html$Html$button,
 				_elm_lang$core$Native_List.fromArray(
 					[
-						_elm_lang$html$Html_Events$onClick(
-						_user$project$Main$TaxonomicCluster(model.taxonomicClusters))
+						_elm_lang$html$Html_Events$onClick(_user$project$Main$TaxonomicCluster)
 					]),
 				_elm_lang$core$Native_List.fromArray(
 					[

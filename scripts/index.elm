@@ -4,8 +4,6 @@ import Html exposing (..)
 import Html.App as App
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-
-
 -- import Http exposing (..)
 -- import Json.Decode as Json exposing ((:=))
 -- import Task
@@ -28,8 +26,17 @@ main =
 type alias Model =
     { distanceClusters : Clusters
     , taxonomicClusters : Clusters
+    , displayedClusters : Clusters
     , parameters : List Parameters
     , title : String
+    , min : Int
+    , max : Int
+    }
+
+
+type alias Range =
+    { min : Int
+    , max : Int
     }
 
 
@@ -55,7 +62,7 @@ type alias ClusterObject =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model [] [] [] "", Cmd.none )
+    ( Model [] [] [] [] "" 0 1, Cmd.none )
 
 
 
@@ -63,50 +70,96 @@ init =
 
 
 type Msg
-    = TaxonomicCluster Clusters
-    | DistanceCluster Clusters
+    = TaxonomicCluster
+    | DistanceCluster
     | DataClusters Model
-
-
-port draw : Clusters -> Cmd msg
+    | SliderChange Range
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         DataClusters m ->
-            ( Model m.distanceClusters m.taxonomicClusters m.parameters "Distance Clusters", draw m.distanceClusters )
+            ( Model
+                m.distanceClusters
+                m.taxonomicClusters
+                m.displayedClusters
+                m.parameters
+                "Distance Clusters"
+                m.min
+                m.max
+            , draw ( m.displayedClusters, m.min, m.max )
+            )
 
-        TaxonomicCluster clusters ->
+        TaxonomicCluster ->
             let
+                filteredClusters =
+                    List.filter
+                        (betweenRange model.min model.max)
+                        model.taxonomicClusters
+
                 newModel =
-                    { model |
-                          title = "Taxonomic clusters"
+                    { model
+                        | title = "Taxonomic clusters"
+                        , displayedClusters = model.taxonomicClusters
                     }
             in
-                ( newModel, draw clusters)
+                ( newModel, draw ( filteredClusters, model.min, model.max ) )
 
-        DistanceCluster clusters ->
+        DistanceCluster ->
             let
+                filteredClusters =
+                    List.filter
+                        (betweenRange model.min model.max)
+                        model.distanceClusters
+
                 newModel =
-                    { model |
-                          title = "Distance Clusters"
+                    { model
+                        | title = "Distance Clusters"
+                        , displayedClusters = model.distanceClusters
                     }
             in
-                ( newModel, draw clusters)
+                ( newModel, draw ( filteredClusters, model.min, model.max ) )
 
+        SliderChange range ->
+            let
+                filteredClusters =
+                    List.filter
+                        (betweenRange range.min range.max)
+                        model.displayedClusters
+
+                newModel =
+                    { model
+                        | min = range.min
+                        , max = range.max
+                    }
+            in
+                ( newModel
+                , Cmd.batch
+                    [ draw ( filteredClusters, range.min, range.max )
+                    ]
+                )
 
 
 
 -- SUBSCRIPTIONS
 
 
+port draw : ( Clusters, Int, Int ) -> Cmd msg
+
+
 port dataClusters : (Model -> msg) -> Sub msg
+
+
+port sliderChange : (Range -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    dataClusters DataClusters
+    Sub.batch
+        [ dataClusters DataClusters
+        , sliderChange SliderChange
+        ]
 
 
 
@@ -120,12 +173,17 @@ view model =
             ]
         ]
         [ parameters model.parameters
-        , button [ onClick (DistanceCluster model.distanceClusters) ] [ text "Distance Clusters" ]
-        , button [ onClick (TaxonomicCluster model.taxonomicClusters) ] [ text "Taxonomic Clusters" ]
-        , div [] [h4 [] [text model.title]]
+        , button [ onClick (DistanceCluster) ] [ text "Distance Clusters" ]
+        , button [ onClick (TaxonomicCluster) ] [ text "Taxonomic Clusters" ]
+        , div
+            []
+            [ h4 [] [ text model.title ] ]
         ]
 
 
+parameters :
+    List { e | distance : a, kmer : b, pvalue : c, sketch : d }
+    -> Html f
 parameters params =
     let
         row param =
@@ -149,3 +207,7 @@ parameters params =
                 ]
             , tbody [] (List.map row params)
             ]
+
+
+betweenRange min max cluster =
+    List.length cluster.data >= min && List.length cluster.data <= max
