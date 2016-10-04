@@ -1,11 +1,14 @@
 port module Main exposing (..)
+
 import Html exposing (..)
 import Html.App as App
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Http exposing (..)
-import Json.Decode as Json exposing ((:=))
-import Task
+
+
+-- import Http exposing (..)
+-- import Json.Decode as Json exposing ((:=))
+-- import Task
 
 
 main : Program Never
@@ -22,10 +25,22 @@ main =
 -- MODEL
 
 
-type alias Model = 
-    { distanceClusters : Clusters, taxonomicClusters : Clusters, displayedClusters : Clusters}
+type alias Model =
+    { distanceClusters : Clusters
+    , taxonomicClusters : Clusters
+    , parameters : List Parameters
+    , title : String
+    }
 
-        
+
+type alias Parameters =
+    { pvalue : Float
+    , distance : Float
+    , kmer : Int
+    , sketch : Int
+    }
+
+
 type alias Clusters =
     List Cluster
 
@@ -40,9 +55,7 @@ type alias ClusterObject =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model [] [] [], Cmd.none)
-
-
+    ( Model [] [] [] "", Cmd.none )
 
 
 
@@ -53,8 +66,8 @@ type Msg
     = TaxonomicCluster Clusters
     | DistanceCluster Clusters
     | DataClusters Model
-    | Draw
-      
+
+
 port draw : Clusters -> Cmd msg
 
 
@@ -62,47 +75,77 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         DataClusters m ->
-            (Model m.distanceClusters m.taxonomicClusters m.distanceClusters, Cmd.none)
-            
+            ( Model m.distanceClusters m.taxonomicClusters m.parameters "Distance Clusters", draw m.distanceClusters )
+
         TaxonomicCluster clusters ->
             let
-                newModel = Model model.distanceClusters clusters clusters
+                newModel =
+                    { model |
+                          title = "Taxonomic clusters"
+                    }
             in
-                ( newModel , Cmd.none )
+                ( newModel, draw clusters)
 
         DistanceCluster clusters ->
             let
-                newModel = Model clusters model.taxonomicClusters clusters
+                newModel =
+                    { model |
+                          title = "Distance Clusters"
+                    }
             in
-                ( newModel, Cmd.none )
+                ( newModel, draw clusters)
 
-        Draw ->
-           (model, draw model.displayedClusters)
+
 
 
 -- SUBSCRIPTIONS
 
-port dataClusters  : (Model -> msg) -> Sub msg
-                         
+
+port dataClusters : (Model -> msg) -> Sub msg
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     dataClusters DataClusters
 
 
-        
 
 -- VIEW
 
 
 view model =
     div
-    [ classList
+        [ classList
             [ ( "row", True )
             ]
         ]
-        [
-         button [onClick (DistanceCluster model.distanceClusters)]   [text "Distance Clusters" ]
-        ,button [onClick (TaxonomicCluster model.taxonomicClusters)] [text "Taxonomic Clusters" ]
-        ,button [onClick Draw]                                       [text "Draw" ]
-        ,text (toString (List.length model.displayedClusters))
+        [ parameters model.parameters
+        , button [ onClick (DistanceCluster model.distanceClusters) ] [ text "Distance Clusters" ]
+        , button [ onClick (TaxonomicCluster model.taxonomicClusters) ] [ text "Taxonomic Clusters" ]
+        , div [] [h4 [] [text model.title]]
         ]
+
+
+parameters params =
+    let
+        row param =
+            Html.tr
+                []
+                [ Html.td [] [ text (toString (param.kmer)) ]
+                , Html.td [] [ text (toString (param.sketch)) ]
+                , Html.td [] [ text (toString (param.pvalue)) ]
+                , Html.td [] [ text (toString (param.distance)) ]
+                ]
+    in
+        Html.table
+            [ class "table table-condensed" ]
+            [ thead []
+                [ tr []
+                    [ td [] [ text "Kmer size" ]
+                    , td [] [ text "Number Sketches" ]
+                    , td [] [ text "P-value Threshold" ]
+                    , td [] [ text "Distance Threshold" ]
+                    ]
+                ]
+            , tbody [] (List.map row params)
+            ]

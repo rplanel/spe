@@ -69,7 +69,7 @@ function draw (data,range) {
     d3.select('svg').attr('height',function(d){
 	return (fdata.length * (piechartRadius+50)) + 400;
     });
-
+    
     d3.select('.clusters').datum(fdata).call(piechart,piechartRadius,piechartRadius);
 }
 
