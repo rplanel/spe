@@ -5,18 +5,16 @@ function piechart () {
     };
     function exports(_selection, width, height) {
 	_selection.each(function(d, i) {
-	    var svg = d3.select(this);
-	    var context = svg.select('g.piecharts');
-
+	    
+	    
+	    var context = d3.select(this).select('g.piecharts');
+	    
 	    if (context.empty()){
 		context = d3.select(this).append('g').classed('piecharts',true);
 	    }
 		
 	    
 	    context.attr('transform','translate('+ (width+100) + ',' + height + ')');
-	    svg.attr('height',function(d){
-		return (d.length * (height+50)) + 400;
-	    });
 	    var radius = Math.min(width, height) / 2;
 	    var colors = d3.scaleOrdinal(d3.schemeCategory20b)
 	    var arc = d3.arc()
@@ -117,14 +115,11 @@ function piechart () {
 	    arcUpdate
 		.select('text')
 	    	.attr("transform", function(d) {
-		    console.log(d.data.name);
 		    var angle = getAngle(d);
 		    var transform = "translate(" + labelArc.centroid(d) + ")"+
 			"rotate(" + getAngle(d) + ")";
 			
 		    if (angle > 90 && d.data.name) {
-			console.log(d.data.name);
-			
 			xcenter = (parseInt(d.data.name.length) * 6)/2;
 			transform += 'rotate(180, '+xcenter+',0)';
 		    }

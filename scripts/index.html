@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
     <style>
       text {font-family:'Inconsolata', monospace; font-size: 12px}
+      svg {margin-top : 20px;}
     </style>
   </head>
   
@@ -22,7 +23,12 @@
       </div>
       
       <div class="row">
-	<svg width="960" height="500"></svg>
+	<svg width="960" height="500">
+	  <text y="10px" id="count-cluster"></text>
+	  <g class="histogram"><g/>
+	    <g class="clusters"></g>
+	    
+	</svg>
       </div>
       
     </div>
@@ -39,6 +45,7 @@
     <script src="data.js"></script>
     <script src="piechart.js"></script>
     <script src="parameters.js"></script>
+    <script src="histogram.js"></script>
     <script src="index.js"></script>
   </body>
 </html>
