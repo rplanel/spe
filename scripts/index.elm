@@ -88,7 +88,7 @@ update msg model =
                 "Distance Clusters"
                 m.min
                 m.max
-            , draw ( m.displayedClusters, m.min, m.max )
+            , draw m.displayedClusters
             )
 
         TaxonomicCluster ->
@@ -97,14 +97,24 @@ update msg model =
                     List.filter
                         (betweenRange model.min model.max)
                         model.taxonomicClusters
-
+                            
+                (min, max) = (List.foldr minMax (0,0) model.taxonomicClusters)
+                             
                 newModel =
                     { model
                         | title = "Taxonomic clusters"
                         , displayedClusters = model.taxonomicClusters
+                        , min = min
+                        , max = max
                     }
+
+
             in
-                ( newModel, draw ( filteredClusters, model.min, model.max ) )
+                ( newModel, Cmd.batch
+                    [ sliderRange [min, max]
+                    , draw filteredClusters
+                    ]
+                )
 
         DistanceCluster ->
             let
@@ -113,13 +123,22 @@ update msg model =
                         (betweenRange model.min model.max)
                         model.distanceClusters
 
+
+                (min, max) = (List.foldr minMax (0,0) model.distanceClusters)
+                             
                 newModel =
                     { model
                         | title = "Distance Clusters"
                         , displayedClusters = model.distanceClusters
+                        , min = min
+                        , max = max
                     }
             in
-                ( newModel, draw ( filteredClusters, model.min, model.max ) )
+                ( newModel, Cmd.batch
+                      [ sliderRange [min, max]
+                      , draw filteredClusters
+                      ]
+                )
 
         SliderChange range ->
             let
@@ -136,7 +155,7 @@ update msg model =
             in
                 ( newModel
                 , Cmd.batch
-                    [ draw ( filteredClusters, range.min, range.max )
+                    [ draw filteredClusters
                     ]
                 )
 
@@ -145,12 +164,10 @@ update msg model =
 -- SUBSCRIPTIONS
 
 
-port draw : ( Clusters, Int, Int ) -> Cmd msg
-
+port draw : Clusters -> Cmd msg
+port sliderRange : (List Int) -> Cmd msg
 
 port dataClusters : (Model -> msg) -> Sub msg
-
-
 port sliderChange : (Range -> msg) -> Sub msg
 
 
@@ -211,3 +228,11 @@ parameters params =
 
 betweenRange min max cluster =
     List.length cluster.data >= min && List.length cluster.data <= max
+
+
+minMax cluster range =
+    let
+        currentLength = List.length cluster.data
+        (min,max) = range
+    in
+        (Basics.min currentLength min, Basics.max currentLength max)

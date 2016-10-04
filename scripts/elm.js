@@ -7897,6 +7897,18 @@ var _elm_lang$html$Html_Events$Options = F2(
 		return {stopPropagation: a, preventDefault: b};
 	});
 
+var _user$project$Main$minMax = F2(
+	function (cluster, range) {
+		var _p0 = range;
+		var min = _p0._0;
+		var max = _p0._1;
+		var currentLength = _elm_lang$core$List$length(cluster.data);
+		return {
+			ctor: '_Tuple2',
+			_0: A2(_elm_lang$core$Basics$min, currentLength, min),
+			_1: A2(_elm_lang$core$Basics$max, currentLength, max)
+		};
+	});
 var _user$project$Main$betweenRange = F3(
 	function (min, max, cluster) {
 		return (_elm_lang$core$Native_Utils.cmp(
@@ -8015,8 +8027,7 @@ var _user$project$Main$parameters = function (params) {
 var _user$project$Main$draw = _elm_lang$core$Native_Platform.outgoingPort(
 	'draw',
 	function (v) {
-		return [
-			_elm_lang$core$Native_List.toArray(v._0).map(
+		return _elm_lang$core$Native_List.toArray(v).map(
 			function (v) {
 				return {
 					id: v.id,
@@ -8030,10 +8041,15 @@ var _user$project$Main$draw = _elm_lang$core$Native_Platform.outgoingPort(
 						}),
 					name: (v.name.ctor === 'Nothing') ? null : v.name._0
 				};
-			}),
-			v._1,
-			v._2
-		];
+			});
+	});
+var _user$project$Main$sliderRange = _elm_lang$core$Native_Platform.outgoingPort(
+	'sliderRange',
+	function (v) {
+		return _elm_lang$core$Native_List.toArray(v).map(
+			function (v) {
+				return v;
+			});
 	});
 var _user$project$Main$dataClusters = _elm_lang$core$Native_Platform.incomingPort(
 	'dataClusters',
@@ -8304,20 +8320,26 @@ var _user$project$Main$init = {
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p0 = msg;
-		switch (_p0.ctor) {
+		var _p1 = msg;
+		switch (_p1.ctor) {
 			case 'DataClusters':
-				var _p1 = _p0._0;
+				var _p2 = _p1._0;
 				return {
 					ctor: '_Tuple2',
-					_0: A7(_user$project$Main$Model, _p1.distanceClusters, _p1.taxonomicClusters, _p1.displayedClusters, _p1.parameters, 'Distance Clusters', _p1.min, _p1.max),
-					_1: _user$project$Main$draw(
-						{ctor: '_Tuple3', _0: _p1.displayedClusters, _1: _p1.min, _2: _p1.max})
+					_0: A7(_user$project$Main$Model, _p2.distanceClusters, _p2.taxonomicClusters, _p2.displayedClusters, _p2.parameters, 'Distance Clusters', _p2.min, _p2.max),
+					_1: _user$project$Main$draw(_p2.displayedClusters)
 				};
 			case 'TaxonomicCluster':
+				var _p3 = A3(
+					_elm_lang$core$List$foldr,
+					_user$project$Main$minMax,
+					{ctor: '_Tuple2', _0: 0, _1: 0},
+					model.taxonomicClusters);
+				var min = _p3._0;
+				var max = _p3._1;
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
-					{title: 'Taxonomic clusters', displayedClusters: model.taxonomicClusters});
+					{title: 'Taxonomic clusters', displayedClusters: model.taxonomicClusters, min: min, max: max});
 				var filteredClusters = A2(
 					_elm_lang$core$List$filter,
 					A2(_user$project$Main$betweenRange, model.min, model.max),
@@ -8325,13 +8347,26 @@ var _user$project$Main$update = F2(
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
-					_1: _user$project$Main$draw(
-						{ctor: '_Tuple3', _0: filteredClusters, _1: model.min, _2: model.max})
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Main$sliderRange(
+								_elm_lang$core$Native_List.fromArray(
+									[min, max])),
+								_user$project$Main$draw(filteredClusters)
+							]))
 				};
 			case 'DistanceCluster':
+				var _p4 = A3(
+					_elm_lang$core$List$foldr,
+					_user$project$Main$minMax,
+					{ctor: '_Tuple2', _0: 0, _1: 0},
+					model.distanceClusters);
+				var min = _p4._0;
+				var max = _p4._1;
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
-					{title: 'Distance Clusters', displayedClusters: model.distanceClusters});
+					{title: 'Distance Clusters', displayedClusters: model.distanceClusters, min: min, max: max});
 				var filteredClusters = A2(
 					_elm_lang$core$List$filter,
 					A2(_user$project$Main$betweenRange, model.min, model.max),
@@ -8339,27 +8374,31 @@ var _user$project$Main$update = F2(
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
-					_1: _user$project$Main$draw(
-						{ctor: '_Tuple3', _0: filteredClusters, _1: model.min, _2: model.max})
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Main$sliderRange(
+								_elm_lang$core$Native_List.fromArray(
+									[min, max])),
+								_user$project$Main$draw(filteredClusters)
+							]))
 				};
 			default:
-				var _p2 = _p0._0;
+				var _p5 = _p1._0;
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
-					{min: _p2.min, max: _p2.max});
-				var clusters = model.displayedClusters;
+					{min: _p5.min, max: _p5.max});
 				var filteredClusters = A2(
 					_elm_lang$core$List$filter,
-					A2(_user$project$Main$betweenRange, _p2.min, _p2.max),
-					clusters);
+					A2(_user$project$Main$betweenRange, _p5.min, _p5.max),
+					model.displayedClusters);
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
 					_1: _elm_lang$core$Platform_Cmd$batch(
 						_elm_lang$core$Native_List.fromArray(
 							[
-								_user$project$Main$draw(
-								{ctor: '_Tuple3', _0: filteredClusters, _1: _p2.min, _2: _p2.max})
+								_user$project$Main$draw(filteredClusters)
 							]))
 				};
 		}

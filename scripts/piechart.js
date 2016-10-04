@@ -41,7 +41,16 @@ function piechart () {
 		.append('g')
 		.classed('pieDraw',true);
 	    
-	    
+
+            
+            enterSelection
+                .append('text')
+                .attr('transform', 'translate(0,-100)')
+                .classed('title',true);
+                
+
+
+            
 	    var pieE = enterSelection
 		.append('g')
 	    	.classed('pie',true);
@@ -49,27 +58,33 @@ function piechart () {
 	    
 	    var update = enterSelection  
 		.merge(updateSelection);
-	    
+
+            update
+                .select('text.title')
+                .style('font-size','14px')
+                .style('text-decoration','underline')
+                .text(function(d){return d.name;})
+            
 	    update.attr('transform',function(d,i){
-		var count = d.data.length;
-		var rotate = 0;
-		switch (count) {
-		case 1 :
-		    rotate = -90;
-		    break;
-		case 2 :
-		    rotate = 0;
-		    break;
-		}
-		
-		return 'translate(0,' + ((height+150) * i) + ')'+
-		    'rotate('+ rotate + ')';
+	        return 'translate(0,' + ((height+150) * i) + ')';
 	    });
 	    
 	    var pies = update
 		.select('g.pie')
-	    	.attr('transform',function(d,i){
-		    return 'translate('+width/2+',0)'
+	    	.attr('transform',function(d,i) {
+                    var count = d.data.length;
+		    var rotate = 0;
+		    switch (count) {
+		    case 1 :
+		        rotate = -90;
+		        break;
+		    case 2 :
+		        rotate = 0;
+		        break;
+		    }
+		    
+		    return 'translate('+width/2+',0)'+
+                        'rotate('+ rotate + ')';
 		});
 	    
 	    // update

@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.5.1/nouislider.min.css" />
     <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
     <style>
-      text {font-family:'Inconsolata', monospace; font-size: 12px}
+      text {font-family:'Inconsolata', monospace !important; font-size: 12px}
       svg {margin-top : 20px;}
     </style>
   </head>
@@ -72,7 +72,6 @@
 
      
      slider.noUiSlider.on('change', function(range){
-         console.log(range);
          app.ports.sliderChange.send({
              'min' : parseInt(range[0]),
              'max' : parseInt(range[1])
@@ -80,11 +79,6 @@
          
      });
 
-
-
-
-
-     
      app.ports.dataClusters.send({
          "distanceClusters" : dataCluster,
          "taxonomicClusters": taxoCluster,
@@ -94,11 +88,18 @@
          "min"              : 0.0,
          "max"              : 1.0
      });
+
+     app.ports.sliderRange.subscribe(function(range){
+         console.log(range);
+         slider.noUiSlider.updateOptions({
+	     range: {
+	         'min': range[0],
+	         'max': range[1]
+	     }
+    });
+     });
      
-     app.ports.draw.subscribe(function(params){
-         var data = params[0];
-         console.log(data);
-         var range = [params[1],params[2]];
+     app.ports.draw.subscribe(function(data){
          d3.select('svg').attr('height',function(d){
              return (data.length * (piechartRadius+50)) + 400;
          });
