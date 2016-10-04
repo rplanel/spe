@@ -32,6 +32,7 @@ type alias Model =
     , min : Int
     , max : Int
     , numberOfClusters : Int
+    , histogramData : List Int
     }
 
 
@@ -63,7 +64,7 @@ type alias ClusterObject =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model [] [] [] [] "" 0 1 0, Cmd.none )
+    ( Model [] [] [] [] "" 0 1 0 [0], Cmd.none )
 
 
 
@@ -90,7 +91,8 @@ update msg model =
                 m.min
                 m.max
                 (List.length m.displayedClusters)
-            , draw m.displayedClusters
+                m.histogramData
+            , draw (m.displayedClusters, m.histogramData)
             )
 
         TaxonomicCluster ->
@@ -109,13 +111,14 @@ update msg model =
                         , min = min
                         , max = max
                         , numberOfClusters = List.length filteredClusters
+                        , histogramData    = List.map (\n -> List.length n.data) filteredClusters
                     }
 
 
             in
                 ( newModel, Cmd.batch
                     [ sliderRange [min, max]
-                    , draw filteredClusters
+                    , draw (filteredClusters, newModel.histogramData)
                     ]
                 )
 
@@ -136,11 +139,12 @@ update msg model =
                         , min = min
                         , max = max
                         , numberOfClusters = List.length filteredClusters
+                        , histogramData    = List.map (\n -> List.length n.data) filteredClusters
                     }
             in
                 ( newModel, Cmd.batch
                       [ sliderRange [min, max]
-                      , draw filteredClusters
+                      , draw (filteredClusters, newModel.histogramData)
                       ]
                 )
 
@@ -156,11 +160,12 @@ update msg model =
                         | min = range.min
                         , max = range.max
                         , numberOfClusters = List.length filteredClusters
+                        , histogramData    = List.map (\n -> List.length n.data) filteredClusters
                     }
             in
                 ( newModel
                 , Cmd.batch
-                    [ draw filteredClusters
+                    [ draw (filteredClusters, newModel.histogramData)
                     ]
                 )
 
@@ -169,11 +174,12 @@ update msg model =
 -- SUBSCRIPTIONS
 
 
-port draw : Clusters -> Cmd msg
+port draw : (Clusters, List Int) -> Cmd msg
 port sliderRange : (List Int) -> Cmd msg
 
 port dataClusters : (Model -> msg) -> Sub msg
 port sliderChange : (Range -> msg) -> Sub msg
+
 
 
 subscriptions : Model -> Sub Msg

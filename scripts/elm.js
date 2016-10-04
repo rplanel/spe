@@ -8027,7 +8027,8 @@ var _user$project$Main$parameters = function (params) {
 var _user$project$Main$draw = _elm_lang$core$Native_Platform.outgoingPort(
 	'draw',
 	function (v) {
-		return _elm_lang$core$Native_List.toArray(v).map(
+		return [
+			_elm_lang$core$Native_List.toArray(v._0).map(
 			function (v) {
 				return {
 					id: v.id,
@@ -8041,7 +8042,12 @@ var _user$project$Main$draw = _elm_lang$core$Native_Platform.outgoingPort(
 						}),
 					name: (v.name.ctor === 'Nothing') ? null : v.name._0
 				};
-			});
+			}),
+			_elm_lang$core$Native_List.toArray(v._1).map(
+			function (v) {
+				return v;
+			})
+		];
 	});
 var _user$project$Main$sliderRange = _elm_lang$core$Native_Platform.outgoingPort(
 	'sliderRange',
@@ -8278,8 +8284,16 @@ var _user$project$Main$dataClusters = _elm_lang$core$Native_Platform.incomingPor
 																_elm_lang$core$Json_Decode$andThen,
 																A2(_elm_lang$core$Json_Decode_ops[':='], 'numberOfClusters', _elm_lang$core$Json_Decode$int),
 																function (numberOfClusters) {
-																	return _elm_lang$core$Json_Decode$succeed(
-																		{distanceClusters: distanceClusters, taxonomicClusters: taxonomicClusters, displayedClusters: displayedClusters, parameters: parameters, title: title, min: min, max: max, numberOfClusters: numberOfClusters});
+																	return A2(
+																		_elm_lang$core$Json_Decode$andThen,
+																		A2(
+																			_elm_lang$core$Json_Decode_ops[':='],
+																			'histogramData',
+																			_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$int)),
+																		function (histogramData) {
+																			return _elm_lang$core$Json_Decode$succeed(
+																				{distanceClusters: distanceClusters, taxonomicClusters: taxonomicClusters, displayedClusters: displayedClusters, parameters: parameters, title: title, min: min, max: max, numberOfClusters: numberOfClusters, histogramData: histogramData});
+																		});
 																});
 														});
 												});
@@ -8302,13 +8316,13 @@ var _user$project$Main$sliderChange = _elm_lang$core$Native_Platform.incomingPor
 						{min: min, max: max});
 				});
 		}));
-var _user$project$Main$Model = F8(
-	function (a, b, c, d, e, f, g, h) {
-		return {distanceClusters: a, taxonomicClusters: b, displayedClusters: c, parameters: d, title: e, min: f, max: g, numberOfClusters: h};
+var _user$project$Main$Model = F9(
+	function (a, b, c, d, e, f, g, h, i) {
+		return {distanceClusters: a, taxonomicClusters: b, displayedClusters: c, parameters: d, title: e, min: f, max: g, numberOfClusters: h, histogramData: i};
 	});
 var _user$project$Main$init = {
 	ctor: '_Tuple2',
-	_0: A8(
+	_0: A9(
 		_user$project$Main$Model,
 		_elm_lang$core$Native_List.fromArray(
 			[]),
@@ -8321,7 +8335,9 @@ var _user$project$Main$init = {
 		'',
 		0,
 		1,
-		0),
+		0,
+		_elm_lang$core$Native_List.fromArray(
+			[0])),
 	_1: _elm_lang$core$Platform_Cmd$none
 };
 var _user$project$Main$update = F2(
@@ -8332,7 +8348,7 @@ var _user$project$Main$update = F2(
 				var _p2 = _p1._0;
 				return {
 					ctor: '_Tuple2',
-					_0: A8(
+					_0: A9(
 						_user$project$Main$Model,
 						_p2.distanceClusters,
 						_p2.taxonomicClusters,
@@ -8341,8 +8357,10 @@ var _user$project$Main$update = F2(
 						'Distance Clusters',
 						_p2.min,
 						_p2.max,
-						_elm_lang$core$List$length(_p2.displayedClusters)),
-					_1: _user$project$Main$draw(_p2.displayedClusters)
+						_elm_lang$core$List$length(_p2.displayedClusters),
+						_p2.histogramData),
+					_1: _user$project$Main$draw(
+						{ctor: '_Tuple2', _0: _p2.displayedClusters, _1: _p2.histogramData})
 				};
 			case 'TaxonomicCluster':
 				var _p3 = A3(
@@ -8363,7 +8381,13 @@ var _user$project$Main$update = F2(
 						displayedClusters: model.taxonomicClusters,
 						min: min,
 						max: max,
-						numberOfClusters: _elm_lang$core$List$length(filteredClusters)
+						numberOfClusters: _elm_lang$core$List$length(filteredClusters),
+						histogramData: A2(
+							_elm_lang$core$List$map,
+							function (n) {
+								return _elm_lang$core$List$length(n.data);
+							},
+							filteredClusters)
 					});
 				return {
 					ctor: '_Tuple2',
@@ -8374,7 +8398,8 @@ var _user$project$Main$update = F2(
 								_user$project$Main$sliderRange(
 								_elm_lang$core$Native_List.fromArray(
 									[min, max])),
-								_user$project$Main$draw(filteredClusters)
+								_user$project$Main$draw(
+								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
 							]))
 				};
 			case 'DistanceCluster':
@@ -8396,7 +8421,13 @@ var _user$project$Main$update = F2(
 						displayedClusters: model.distanceClusters,
 						min: min,
 						max: max,
-						numberOfClusters: _elm_lang$core$List$length(filteredClusters)
+						numberOfClusters: _elm_lang$core$List$length(filteredClusters),
+						histogramData: A2(
+							_elm_lang$core$List$map,
+							function (n) {
+								return _elm_lang$core$List$length(n.data);
+							},
+							filteredClusters)
 					});
 				return {
 					ctor: '_Tuple2',
@@ -8407,7 +8438,8 @@ var _user$project$Main$update = F2(
 								_user$project$Main$sliderRange(
 								_elm_lang$core$Native_List.fromArray(
 									[min, max])),
-								_user$project$Main$draw(filteredClusters)
+								_user$project$Main$draw(
+								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
 							]))
 				};
 			default:
@@ -8421,7 +8453,13 @@ var _user$project$Main$update = F2(
 					{
 						min: _p5.min,
 						max: _p5.max,
-						numberOfClusters: _elm_lang$core$List$length(filteredClusters)
+						numberOfClusters: _elm_lang$core$List$length(filteredClusters),
+						histogramData: A2(
+							_elm_lang$core$List$map,
+							function (n) {
+								return _elm_lang$core$List$length(n.data);
+							},
+							filteredClusters)
 					});
 				return {
 					ctor: '_Tuple2',
@@ -8429,7 +8467,8 @@ var _user$project$Main$update = F2(
 					_1: _elm_lang$core$Platform_Cmd$batch(
 						_elm_lang$core$Native_List.fromArray(
 							[
-								_user$project$Main$draw(filteredClusters)
+								_user$project$Main$draw(
+								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
 							]))
 				};
 		}

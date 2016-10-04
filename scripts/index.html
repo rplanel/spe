@@ -9,7 +9,16 @@
     <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
     <style>
       text {font-family:'Inconsolata', monospace !important; font-size: 12px}
-      svg {margin-top : 20px;}
+     svg {margin-top : 20px;}
+     .bar rect {
+         fill: steelblue;
+     }
+
+     .bar text {
+         fill: #000;
+         font: 10px sans-serif;
+     }
+
     </style>
   </head>
   
@@ -25,9 +34,8 @@
       <div class="row">
 	<svg width="960" height="500">
 	  <text y="10px" id="count-cluster"></text>
-	  <g class="histogram"><g/>
-	    <g class="clusters"></g>
-	    
+	  <g class="histogram"></g>
+	  <g class="clusters"></g>
 	</svg>
       </div>
       
@@ -87,11 +95,12 @@
          "title"            : "",
          "min"              : 0.0,
          "max"              : 1.0,
-         "numberOfClusters" : 0
+         "numberOfClusters" : 0,
+         "histogramData"    : [0]
+         
      });
 
      app.ports.sliderRange.subscribe(function(range){
-         console.log(range);
          slider.noUiSlider.updateOptions({
 	     range: {
 	         'min': range[0],
@@ -100,13 +109,18 @@
     });
      });
      
-     app.ports.draw.subscribe(function(data){
+     app.ports.draw.subscribe(function(params){
+         var data = params[0];
+         var histoData = params[1];
+         console.log(histoData);
          d3.select('svg').attr('height',function(d){
-             return (data.length * (piechartRadius+50)) + 400;
+             return (data.length * (piechartRadius+50)) + 700;
          });
+
+         d3.select('g.histogram').datum(histoData).call(histogram,500,500);
          
          d3.select('g.clusters')
-           .attr('transform', "translate(0,50)")
+           .attr('transform', "translate(0,300)")
            .datum(data)
            .call(piechart,piechartRadius,piechartRadius);
      });
