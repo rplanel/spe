@@ -3,7 +3,7 @@ function piechart () {
     var getAngle = function (d) {
 	return (180 / Math.PI * (d.startAngle + d.endAngle) / 2 - 90);
     };
-    function exports(_selection, width, height) {
+    function exports(_selection, width, height, numCol) {
 	_selection.each(function(d, i) {
 	    
 	    var context = d3.select(this).select('g.piecharts');
@@ -65,7 +65,10 @@ function piechart () {
                 .text(function(d){return d.name;})
             
 	    update.attr('transform',function(d,i){
-	        return 'translate(0,' + ((height+150) * i) + ')';
+                var column = i % numCol;
+                var line   = parseInt(i / numCol);
+                
+	        return 'translate(' + (column * 250 ) + ', ' + ((height+180) * line) + ')';
 	    });
 	    
 	    var pies = update

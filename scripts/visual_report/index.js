@@ -1,111 +1,85 @@
+// Setup Elm app
+var node = document.getElementById('control-btn')
+var app = Elm.Main.embed(node);
 
-// Graphical
+// Initialize D3 component
 var piechart = piechart();
 var parameters = parameters();
 var histogram = histogram();
+
+// Set parameters
+var piechartRadius = 80;
+var numColumn = 4;
+
+// Get the data
+var dataCluster = rawClusterData;
+var taxoCluster = rawRankData;
+
+// Create the slider
 var slider = document.getElementById('slider-degre');
-
-
-// DATA
-var currentData = rawClusterData;
-var range = getRange(currentData);
-var currentRange = range;
-var histogramData = [];
-
 noUiSlider.create(slider, {
     start: [1,2],
     step: 1,
     tooltips: [ true, true],
     range: {
-	'min': [range[0]],
-	'max': [range [1]]
+	'min': [0],
+	'max': [10]
     },
 });
 
-slider.noUiSlider.on('change', function(curRange){
-    currentRange = curRange;
+slider.noUiSlider.on('change', function(range){
+    app.ports.sliderChange.send({
+        'min' : parseInt(range[0]),
+        'max' : parseInt(range[1])
+    });
     
-    draw(currentData,currentRange);
 });
 
-updateClusterData(currentData);
-d3.select('div.control-cluster')
-    .selectAll('button.btn.btn-default')
-    .data(['cluster','taxonomy'])
-    .enter()
-    .append('button')
-    .classed('btn btn-default',true)
-    .text(function(d){return d;})
-    .on('click',function(d){
-	if (d == 'cluster') {
-	    currentData = rawClusterData;
-	    
 
-	}
-	else {
-	    currentData = rawRankData;
-	}
-	updateClusterData(currentData);
-    });
+app.ports.dataClusters.send({
+    "distanceClusters" : dataCluster,
+    "taxonomicClusters": taxoCluster,
+    "displayedClusters" : dataCluster,
+    "parameters"       : [ parametersData ],
+    "title"            : "",
+    "min"              : 0.0,
+    "max"              : 1.0,
+    "numberOfClusters" : 0,
+    "histogramData"    : [0],
+    "pattern"          : ""
+});
 
-
-function updateSliderRange ( min, max ) {
+app.ports.sliderRange.subscribe(function(range){
     slider.noUiSlider.updateOptions({
 	range: {
-	    'min': min,
-	    'max': max
+	    'min': range[0],
+	    'max': range[1]
 	}
     });
-}
+});
 
-function draw (data,range) {
-    var fdata = data.filter(function(d){
-	return d.data.length >= range[0] && d.data.length <= range[1];
-    });
-    d3.select('text#count-cluster').text(fdata.length);
+app.ports.sliderValue.subscribe(function(range){
+    slider.noUiSlider.set(range);
+});
 
 
-    var piechartRadius = 80;
-    d3.select('svg').attr('height',function(d){
-	return (fdata.length * (piechartRadius+50)) + 400;
-    });
+
+app.ports.draw.subscribe(function(params){
+    var data = params[0];
+    var histoData = params[1];
+    d3
+        .select('svg')
+        .attr('width',function(d){
+            return (numColumn * (piechartRadius+200)) + 100;
+        })
+        .attr('height',function(d){
+            return ((data.length/numColumn) * (piechartRadius+150)) + 700;
+        });
+
+    d3.select('g.histogram').datum(histoData).call(histogram,500,500);
     
-    d3.select('.clusters').datum(fdata).call(piechart,piechartRadius,piechartRadius);
-}
-
-function getRange(data) {
-    return data.reduce(function(prev,curr){
-	var categoryCount = curr.data.length;
-	return [Math.min(prev[0],categoryCount),Math.max(prev[1],categoryCount)];
-    },[0,0]);
-}
-
-function updateHistogramData(data) {
-    return data.reduce(function(prev,curr){
-	var num = curr.data.length;
-	if (prev[num] == undefined ) {
-	    prev[num] = 0;
-	}
-	prev[num]++;
-	return prev;
-    },[]).map(function(e){
-	if (e == undefined) {
-	    return 0;
-	}
-	else {
-	    return e;
-	}
-    });
-}
-
-function updateClusterData(data) {
-    var newRange = getRange(data);
-    updateSliderRange(newRange[0],newRange[1]);
-    histogramData = updateHistogramData(data);
-    d3.select('svg').datum(histogramData).call(histogram,500,500);
-    console.log(histogramData);
-    draw(data,newRange);
-
-}
-
-
+    d3.select('g.clusters')
+        .attr('transform', "translate(0,300)")
+        .datum(data)
+        .call(piechart,piechartRadius,piechartRadius,numColumn);
+});

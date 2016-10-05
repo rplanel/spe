@@ -7,9 +7,7 @@ function histogram () {
 		width = 960 - margin.left - margin.right,
 		height = 250 - margin.top - margin.bottom;
 
-            var domain = [0,d3.max(data)];
-            console.log(data);
-            console.log(domain);
+            var domain = [0,d3.max(data) || 0];
 	    var x = d3.scaleLinear()
                 .domain(domain)
 		.range([0, width]);
@@ -20,12 +18,7 @@ function histogram () {
                 .thresholds(x.ticks(domain[1]+1))
 	    (data);
 
-            
-            
-            console.log('bins');
-	    console.log(bins);
-	    
-	    var y = d3.scaleLinear()
+            var y = d3.scaleLinear()
 		.domain([0, d3.max(bins, function(d) { return d.length; })])
 		.range([height, 0]);
 	    
@@ -39,12 +32,13 @@ function histogram () {
 
             container.select('g.axis').remove();
             
-            var axis = container
-                .append("g")
-	        .attr("class", "axis axis--x")
-	        .attr("transform", "translate(0," + height + ")")
-                .call(d3.axisBottom(x).ticks(domain[1]));
-
+            if (bins.length > 0) {
+                container
+                    .append("g")
+	            .attr("class", "axis axis-x")
+	            .attr("transform", "translate(0," + height + ")")
+                    .call(d3.axisBottom(x).ticks(domain[1]));
+            }
             
 	    var bar = container.selectAll("g.bar")
 		.data(bins);
@@ -74,16 +68,32 @@ function histogram () {
 
             
             // UPDATE
+
+            
             var update = barE
                 .merge(bar);
-
-
+            
             update
-		.attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
+		.attr("transform", function(d) {
+                    var x0;
+                    if (d.x0 != undefined) {
+                        x0 = d.x0;
+                    }
+                    else {
+                        x0 = 0;
+                    }
+                    return "translate(" + x(x0) + "," + y(d.length) + ")";
+                });
             
             update
                 .select('rect')
-		.attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
+		.attr("width", function(d) {
+                    var xVal = x(bins[0].x1) - x(bins[0].x0);
+                    if (xVal <= 1) {
+                        xVal = 1
+                    }
+                    return xVal - 1;
+                })
 		.attr("height", function(d) { return height - y(d.length); });
             
             update

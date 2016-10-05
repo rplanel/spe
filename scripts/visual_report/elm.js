@@ -5817,6 +5817,141 @@ var _elm_lang$core$Json_Decode$dict = function (decoder) {
 };
 var _elm_lang$core$Json_Decode$Decoder = {ctor: 'Decoder'};
 
+//import Maybe, Native.List //
+
+var _elm_lang$core$Native_Regex = function() {
+
+function escape(str)
+{
+	return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+function caseInsensitive(re)
+{
+	return new RegExp(re.source, 'gi');
+}
+function regex(raw)
+{
+	return new RegExp(raw, 'g');
+}
+
+function contains(re, string)
+{
+	return string.match(re) !== null;
+}
+
+function find(n, re, str)
+{
+	n = n.ctor === 'All' ? Infinity : n._0;
+	var out = [];
+	var number = 0;
+	var string = str;
+	var lastIndex = re.lastIndex;
+	var prevLastIndex = -1;
+	var result;
+	while (number++ < n && (result = re.exec(string)))
+	{
+		if (prevLastIndex === re.lastIndex) break;
+		var i = result.length - 1;
+		var subs = new Array(i);
+		while (i > 0)
+		{
+			var submatch = result[i];
+			subs[--i] = submatch === undefined
+				? _elm_lang$core$Maybe$Nothing
+				: _elm_lang$core$Maybe$Just(submatch);
+		}
+		out.push({
+			match: result[0],
+			submatches: _elm_lang$core$Native_List.fromArray(subs),
+			index: result.index,
+			number: number
+		});
+		prevLastIndex = re.lastIndex;
+	}
+	re.lastIndex = lastIndex;
+	return _elm_lang$core$Native_List.fromArray(out);
+}
+
+function replace(n, re, replacer, string)
+{
+	n = n.ctor === 'All' ? Infinity : n._0;
+	var count = 0;
+	function jsReplacer(match)
+	{
+		if (count++ >= n)
+		{
+			return match;
+		}
+		var i = arguments.length - 3;
+		var submatches = new Array(i);
+		while (i > 0)
+		{
+			var submatch = arguments[i];
+			submatches[--i] = submatch === undefined
+				? _elm_lang$core$Maybe$Nothing
+				: _elm_lang$core$Maybe$Just(submatch);
+		}
+		return replacer({
+			match: match,
+			submatches: _elm_lang$core$Native_List.fromArray(submatches),
+			index: arguments[i - 1],
+			number: count
+		});
+	}
+	return string.replace(re, jsReplacer);
+}
+
+function split(n, re, str)
+{
+	n = n.ctor === 'All' ? Infinity : n._0;
+	if (n === Infinity)
+	{
+		return _elm_lang$core$Native_List.fromArray(str.split(re));
+	}
+	var string = str;
+	var result;
+	var out = [];
+	var start = re.lastIndex;
+	while (n--)
+	{
+		if (!(result = re.exec(string))) break;
+		out.push(string.slice(start, result.index));
+		start = re.lastIndex;
+	}
+	out.push(string.slice(start));
+	return _elm_lang$core$Native_List.fromArray(out);
+}
+
+return {
+	regex: regex,
+	caseInsensitive: caseInsensitive,
+	escape: escape,
+
+	contains: F2(contains),
+	find: F3(find),
+	replace: F4(replace),
+	split: F3(split)
+};
+
+}();
+
+var _elm_lang$core$Regex$split = _elm_lang$core$Native_Regex.split;
+var _elm_lang$core$Regex$replace = _elm_lang$core$Native_Regex.replace;
+var _elm_lang$core$Regex$find = _elm_lang$core$Native_Regex.find;
+var _elm_lang$core$Regex$contains = _elm_lang$core$Native_Regex.contains;
+var _elm_lang$core$Regex$caseInsensitive = _elm_lang$core$Native_Regex.caseInsensitive;
+var _elm_lang$core$Regex$regex = _elm_lang$core$Native_Regex.regex;
+var _elm_lang$core$Regex$escape = _elm_lang$core$Native_Regex.escape;
+var _elm_lang$core$Regex$Match = F4(
+	function (a, b, c, d) {
+		return {match: a, submatches: b, index: c, number: d};
+	});
+var _elm_lang$core$Regex$Regex = {ctor: 'Regex'};
+var _elm_lang$core$Regex$AtMost = function (a) {
+	return {ctor: 'AtMost', _0: a};
+};
+var _elm_lang$core$Regex$All = {ctor: 'All'};
+
 //import Native.Json //
 
 var _elm_lang$virtual_dom$Native_VirtualDom = function() {
@@ -7897,25 +8032,70 @@ var _elm_lang$html$Html_Events$Options = F2(
 		return {stopPropagation: a, preventDefault: b};
 	});
 
-var _user$project$Main$minMax = F2(
-	function (cluster, range) {
-		var _p0 = range;
-		var min = _p0._0;
-		var max = _p0._1;
-		var currentLength = _elm_lang$core$List$length(cluster.data);
-		return {
-			ctor: '_Tuple2',
-			_0: A2(_elm_lang$core$Basics$min, currentLength, min),
-			_1: A2(_elm_lang$core$Basics$max, currentLength, max)
+var _user$project$Main$hasPattern = F2(
+	function (pattern, cluster) {
+		var clusterContain = function (d) {
+			var _p0 = d.name;
+			if (_p0.ctor === 'Nothing') {
+				return false;
+			} else {
+				return A2(
+					_elm_lang$core$Regex$contains,
+					_elm_lang$core$Regex$caseInsensitive(
+						_elm_lang$core$Regex$regex(pattern)),
+					_p0._0);
+			}
 		};
+		var _p1 = cluster.name;
+		if (_p1.ctor === 'Nothing') {
+			return false;
+		} else {
+			return A2(
+				_elm_lang$core$Regex$contains,
+				_elm_lang$core$Regex$caseInsensitive(
+					_elm_lang$core$Regex$regex(pattern)),
+				_p1._0) || A2(_elm_lang$core$List$any, clusterContain, cluster.data);
+		}
 	});
-var _user$project$Main$betweenRange = F3(
-	function (min, max, cluster) {
-		return (_elm_lang$core$Native_Utils.cmp(
-			_elm_lang$core$List$length(cluster.data),
-			min) > -1) && (_elm_lang$core$Native_Utils.cmp(
-			_elm_lang$core$List$length(cluster.data),
-			max) < 1);
+var _user$project$Main$getMinMaxClusterSize = function (cluster) {
+	var minMax = F2(
+		function (cluster, range) {
+			var _p2 = range;
+			var min = _p2._0;
+			var max = _p2._1;
+			var currentLength = _elm_lang$core$List$length(cluster.data);
+			return {
+				ctor: '_Tuple2',
+				_0: A2(_elm_lang$core$Basics$min, currentLength, min),
+				_1: A2(_elm_lang$core$Basics$max, currentLength, max)
+			};
+		});
+	return A3(
+		_elm_lang$core$List$foldr,
+		minMax,
+		{ctor: '_Tuple2', _0: 0, _1: 0},
+		cluster);
+};
+var _user$project$Main$preprocessCluster = F3(
+	function (min, max, clusters) {
+		var betweenRange = F3(
+			function (min, max, cluster) {
+				return (_elm_lang$core$Native_Utils.cmp(
+					_elm_lang$core$List$length(cluster.data),
+					min) > -1) && (_elm_lang$core$Native_Utils.cmp(
+					_elm_lang$core$List$length(cluster.data),
+					max) < 1);
+			});
+		return _elm_lang$core$List$reverse(
+			A2(
+				_elm_lang$core$List$sortBy,
+				function (n) {
+					return _elm_lang$core$List$length(n.data);
+				},
+				A2(
+					_elm_lang$core$List$filter,
+					A2(betweenRange, min, max),
+					clusters)));
 	});
 var _user$project$Main$parameters = function (params) {
 	var row = function (param) {
@@ -8051,6 +8231,14 @@ var _user$project$Main$draw = _elm_lang$core$Native_Platform.outgoingPort(
 	});
 var _user$project$Main$sliderRange = _elm_lang$core$Native_Platform.outgoingPort(
 	'sliderRange',
+	function (v) {
+		return _elm_lang$core$Native_List.toArray(v).map(
+			function (v) {
+				return v;
+			});
+	});
+var _user$project$Main$sliderValue = _elm_lang$core$Native_Platform.outgoingPort(
+	'sliderValue',
 	function (v) {
 		return _elm_lang$core$Native_List.toArray(v).map(
 			function (v) {
@@ -8291,8 +8479,13 @@ var _user$project$Main$dataClusters = _elm_lang$core$Native_Platform.incomingPor
 																			'histogramData',
 																			_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$int)),
 																		function (histogramData) {
-																			return _elm_lang$core$Json_Decode$succeed(
-																				{distanceClusters: distanceClusters, taxonomicClusters: taxonomicClusters, displayedClusters: displayedClusters, parameters: parameters, title: title, min: min, max: max, numberOfClusters: numberOfClusters, histogramData: histogramData});
+																			return A2(
+																				_elm_lang$core$Json_Decode$andThen,
+																				A2(_elm_lang$core$Json_Decode_ops[':='], 'pattern', _elm_lang$core$Json_Decode$string),
+																				function (pattern) {
+																					return _elm_lang$core$Json_Decode$succeed(
+																						{distanceClusters: distanceClusters, taxonomicClusters: taxonomicClusters, displayedClusters: displayedClusters, parameters: parameters, title: title, min: min, max: max, numberOfClusters: numberOfClusters, histogramData: histogramData, pattern: pattern});
+																				});
 																		});
 																});
 														});
@@ -8316,71 +8509,99 @@ var _user$project$Main$sliderChange = _elm_lang$core$Native_Platform.incomingPor
 						{min: min, max: max});
 				});
 		}));
-var _user$project$Main$Model = F9(
-	function (a, b, c, d, e, f, g, h, i) {
-		return {distanceClusters: a, taxonomicClusters: b, displayedClusters: c, parameters: d, title: e, min: f, max: g, numberOfClusters: h, histogramData: i};
-	});
+var _user$project$Main$Model = function (a) {
+	return function (b) {
+		return function (c) {
+			return function (d) {
+				return function (e) {
+					return function (f) {
+						return function (g) {
+							return function (h) {
+								return function (i) {
+									return function (j) {
+										return {distanceClusters: a, taxonomicClusters: b, displayedClusters: c, parameters: d, title: e, min: f, max: g, numberOfClusters: h, histogramData: i, pattern: j};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
 var _user$project$Main$init = {
 	ctor: '_Tuple2',
-	_0: A9(
-		_user$project$Main$Model,
+	_0: _user$project$Main$Model(
 		_elm_lang$core$Native_List.fromArray(
-			[]),
+			[]))(
 		_elm_lang$core$Native_List.fromArray(
-			[]),
+			[]))(
 		_elm_lang$core$Native_List.fromArray(
-			[]),
+			[]))(
 		_elm_lang$core$Native_List.fromArray(
-			[]),
-		'',
-		0,
-		1,
-		0,
+			[]))('')(0)(1)(0)(
 		_elm_lang$core$Native_List.fromArray(
-			[0])),
+			[0]))(''),
 	_1: _elm_lang$core$Platform_Cmd$none
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p1 = msg;
-		switch (_p1.ctor) {
+		var _p3 = msg;
+		switch (_p3.ctor) {
 			case 'DataClusters':
-				var _p2 = _p1._0;
+				var _p5 = _p3._0;
+				var _p4 = _user$project$Main$getMinMaxClusterSize(_p5.distanceClusters);
+				var min = _p4._0;
+				var max = _p4._1;
+				var filteredClusters = A3(
+					_user$project$Main$preprocessCluster,
+					min,
+					max,
+					A2(
+						_elm_lang$core$List$filter,
+						_user$project$Main$hasPattern(model.pattern),
+						_p5.distanceClusters));
+				var histogramData = A2(
+					_elm_lang$core$List$map,
+					function (n) {
+						return _elm_lang$core$List$length(n.data);
+					},
+					filteredClusters);
 				return {
 					ctor: '_Tuple2',
-					_0: A9(
-						_user$project$Main$Model,
-						_p2.distanceClusters,
-						_p2.taxonomicClusters,
-						_p2.displayedClusters,
-						_p2.parameters,
-						'Distance Clusters',
-						_p2.min,
-						_p2.max,
-						_elm_lang$core$List$length(_p2.displayedClusters),
-						_p2.histogramData),
-					_1: _user$project$Main$draw(
-						{ctor: '_Tuple2', _0: _p2.displayedClusters, _1: _p2.histogramData})
+					_0: _user$project$Main$Model(_p5.distanceClusters)(_p5.taxonomicClusters)(_p5.displayedClusters)(_p5.parameters)('Distance Clusters')(min)(max)(
+						_elm_lang$core$List$length(filteredClusters))(histogramData)(_p5.pattern),
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Main$sliderRange(
+								_elm_lang$core$Native_List.fromArray(
+									[min, max])),
+								_user$project$Main$sliderValue(
+								_elm_lang$core$Native_List.fromArray(
+									[min, max])),
+								_user$project$Main$draw(
+								{ctor: '_Tuple2', _0: filteredClusters, _1: histogramData})
+							]))
 				};
 			case 'TaxonomicCluster':
-				var _p3 = A3(
-					_elm_lang$core$List$foldr,
-					_user$project$Main$minMax,
-					{ctor: '_Tuple2', _0: 0, _1: 0},
-					model.taxonomicClusters);
-				var min = _p3._0;
-				var max = _p3._1;
-				var filteredClusters = A2(
-					_elm_lang$core$List$filter,
-					A2(_user$project$Main$betweenRange, model.min, model.max),
-					model.taxonomicClusters);
+				var _p6 = _user$project$Main$getMinMaxClusterSize(model.taxonomicClusters);
+				var min = _p6._0;
+				var max = _p6._1;
+				var filteredClusters = A3(
+					_user$project$Main$preprocessCluster,
+					min,
+					max,
+					A2(
+						_elm_lang$core$List$filter,
+						_user$project$Main$hasPattern(model.pattern),
+						model.taxonomicClusters));
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
 					{
 						title: 'Taxonomic clusters',
 						displayedClusters: model.taxonomicClusters,
-						min: min,
-						max: max,
 						numberOfClusters: _elm_lang$core$List$length(filteredClusters),
 						histogramData: A2(
 							_elm_lang$core$List$map,
@@ -8396,6 +8617,9 @@ var _user$project$Main$update = F2(
 						_elm_lang$core$Native_List.fromArray(
 							[
 								_user$project$Main$sliderRange(
+								_elm_lang$core$Native_List.fromArray(
+									[min, max])),
+								_user$project$Main$sliderValue(
 								_elm_lang$core$Native_List.fromArray(
 									[min, max])),
 								_user$project$Main$draw(
@@ -8403,24 +8627,22 @@ var _user$project$Main$update = F2(
 							]))
 				};
 			case 'DistanceCluster':
-				var _p4 = A3(
-					_elm_lang$core$List$foldr,
-					_user$project$Main$minMax,
-					{ctor: '_Tuple2', _0: 0, _1: 0},
-					model.distanceClusters);
-				var min = _p4._0;
-				var max = _p4._1;
-				var filteredClusters = A2(
-					_elm_lang$core$List$filter,
-					A2(_user$project$Main$betweenRange, model.min, model.max),
-					model.distanceClusters);
+				var _p7 = _user$project$Main$getMinMaxClusterSize(model.distanceClusters);
+				var min = _p7._0;
+				var max = _p7._1;
+				var filteredClusters = A3(
+					_user$project$Main$preprocessCluster,
+					min,
+					max,
+					A2(
+						_elm_lang$core$List$filter,
+						_user$project$Main$hasPattern(model.pattern),
+						model.distanceClusters));
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
 					{
 						title: 'Distance Clusters',
 						displayedClusters: model.distanceClusters,
-						min: min,
-						max: max,
 						numberOfClusters: _elm_lang$core$List$length(filteredClusters),
 						histogramData: A2(
 							_elm_lang$core$List$map,
@@ -8438,21 +8660,28 @@ var _user$project$Main$update = F2(
 								_user$project$Main$sliderRange(
 								_elm_lang$core$Native_List.fromArray(
 									[min, max])),
+								_user$project$Main$sliderValue(
+								_elm_lang$core$Native_List.fromArray(
+									[min, max])),
 								_user$project$Main$draw(
 								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
 							]))
 				};
-			default:
-				var _p5 = _p1._0;
-				var filteredClusters = A2(
-					_elm_lang$core$List$filter,
-					A2(_user$project$Main$betweenRange, _p5.min, _p5.max),
-					model.displayedClusters);
+			case 'SliderChange':
+				var _p8 = _p3._0;
+				var filteredClusters = A3(
+					_user$project$Main$preprocessCluster,
+					_p8.min,
+					_p8.max,
+					A2(
+						_elm_lang$core$List$filter,
+						_user$project$Main$hasPattern(model.pattern),
+						model.displayedClusters));
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
 					{
-						min: _p5.min,
-						max: _p5.max,
+						min: _p8.min,
+						max: _p8.max,
 						numberOfClusters: _elm_lang$core$List$length(filteredClusters),
 						histogramData: A2(
 							_elm_lang$core$List$map,
@@ -8469,6 +8698,46 @@ var _user$project$Main$update = F2(
 							[
 								_user$project$Main$draw(
 								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
+							]))
+				};
+			default:
+				var _p10 = _p3._0;
+				var filteredClusters = A3(
+					_user$project$Main$preprocessCluster,
+					model.min,
+					model.max,
+					A2(
+						_elm_lang$core$List$filter,
+						_user$project$Main$hasPattern(_p10),
+						model.displayedClusters));
+				var _p9 = _user$project$Main$getMinMaxClusterSize(filteredClusters);
+				var min = _p9._0;
+				var max = _p9._1;
+				var maxCorrected = (_elm_lang$core$Native_Utils.cmp(max, 0) < 1) ? 1 : max;
+				var newModel = _elm_lang$core$Native_Utils.update(
+					model,
+					{
+						title: model.title,
+						numberOfClusters: _elm_lang$core$List$length(filteredClusters),
+						histogramData: A2(
+							_elm_lang$core$List$map,
+							function (n) {
+								return _elm_lang$core$List$length(n.data);
+							},
+							filteredClusters),
+						pattern: _p10
+					});
+				return {
+					ctor: '_Tuple2',
+					_0: newModel,
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Main$sliderValue(
+								_elm_lang$core$Native_List.fromArray(
+									[model.min, model.max])),
+								_user$project$Main$draw(
+								{ctor: '_Tuple2', _0: filteredClusters, _1: model.histogramData})
 							]))
 				};
 		}
@@ -8489,6 +8758,9 @@ var _user$project$Main$ClusterObject = F3(
 	function (a, b, c) {
 		return {name: a, id: b, count: c};
 	});
+var _user$project$Main$FilterClusters = function (a) {
+	return {ctor: 'FilterClusters', _0: a};
+};
 var _user$project$Main$SliderChange = function (a) {
 	return {ctor: 'SliderChange', _0: a};
 };
@@ -8539,6 +8811,15 @@ var _user$project$Main$view = function (model) {
 					[
 						_elm_lang$html$Html$text('Taxonomic Clusters')
 					])),
+				A2(
+				_elm_lang$html$Html$input,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$placeholder('Filter clusters'),
+						_elm_lang$html$Html_Events$onInput(_user$project$Main$FilterClusters)
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[])),
 				A2(
 				_elm_lang$html$Html$div,
 				_elm_lang$core$Native_List.fromArray(

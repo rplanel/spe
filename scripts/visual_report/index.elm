@@ -4,6 +4,9 @@ import Html exposing (..)
 import Html.App as App
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Regex
+
+
 -- import Http exposing (..)
 -- import Json.Decode as Json exposing ((:=))
 -- import Task
@@ -33,6 +36,7 @@ type alias Model =
     , max : Int
     , numberOfClusters : Int
     , histogramData : List Int
+    , pattern : String
     }
 
 
@@ -64,7 +68,7 @@ type alias ClusterObject =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model [] [] [] [] "" 0 1 0 [0], Cmd.none )
+    ( Model [] [] [] [] "" 0 1 0 [ 0 ] "", Cmd.none )
 
 
 
@@ -76,96 +80,147 @@ type Msg
     | DistanceCluster
     | DataClusters Model
     | SliderChange Range
+    | FilterClusters String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         DataClusters m ->
-            ( Model
-                m.distanceClusters
-                m.taxonomicClusters
-                m.displayedClusters
-                m.parameters
-                "Distance Clusters"
-                m.min
-                m.max
-                (List.length m.displayedClusters)
-                m.histogramData
-            , draw (m.displayedClusters, m.histogramData)
-            )
+            let
+                ( min, max ) =
+                    getMinMaxClusterSize m.distanceClusters
+
+                filteredClusters =
+                    m.distanceClusters
+                        |> List.filter (hasPattern model.pattern)
+                        |> preprocessCluster min max
+
+                histogramData =
+                    (List.map (\n -> List.length n.data) filteredClusters)
+            in
+                ( Model
+                    m.distanceClusters
+                    m.taxonomicClusters
+                    m.displayedClusters
+                    m.parameters
+                    "Distance Clusters"
+                    min
+                    max
+                    (List.length filteredClusters)
+                    histogramData
+                    m.pattern
+                , Cmd.batch
+                    [ sliderRange [ min, max ]
+                    , sliderValue [ min, max ]
+                    , draw ( filteredClusters, histogramData )
+                    ]
+                )
 
         TaxonomicCluster ->
             let
                 filteredClusters =
-                    List.filter
-                        (betweenRange model.min model.max)
-                        model.taxonomicClusters
-                            
-                (min, max) = (List.foldr minMax (0,0) model.taxonomicClusters)
-                             
+                    model.taxonomicClusters
+                        |> List.filter (hasPattern model.pattern)
+                        |> preprocessCluster min max
+
+                ( min, max ) =
+                    getMinMaxClusterSize model.taxonomicClusters
+
                 newModel =
                     { model
                         | title = "Taxonomic clusters"
-                        , displayedClusters = model.taxonomicClusters
-                        , min = min
-                        , max = max
+                        , displayedClusters =
+                            model.taxonomicClusters
                         , numberOfClusters = List.length filteredClusters
-                        , histogramData    = List.map (\n -> List.length n.data) filteredClusters
+                        , histogramData = List.map (\n -> List.length n.data) filteredClusters
                     }
-
-
             in
-                ( newModel, Cmd.batch
-                    [ sliderRange [min, max]
-                    , draw (filteredClusters, newModel.histogramData)
+                ( newModel
+                , Cmd.batch
+                    [ sliderRange [ min, max ]
+                    , sliderValue [ min, max ]
+                    , draw ( filteredClusters, newModel.histogramData )
                     ]
                 )
 
+        -- DISTANCE
         DistanceCluster ->
             let
                 filteredClusters =
-                    List.filter
-                        (betweenRange model.min model.max)
-                        model.distanceClusters
+                    model.distanceClusters
+                        |> List.filter (hasPattern model.pattern)
+                        |> preprocessCluster min max
 
+                ( min, max ) =
+                    getMinMaxClusterSize model.distanceClusters
 
-                (min, max) = (List.foldr minMax (0,0) model.distanceClusters)
-                             
                 newModel =
                     { model
                         | title = "Distance Clusters"
-                        , displayedClusters = model.distanceClusters
-                        , min = min
-                        , max = max
+                        , displayedClusters =
+                            model.distanceClusters
                         , numberOfClusters = List.length filteredClusters
-                        , histogramData    = List.map (\n -> List.length n.data) filteredClusters
+                        , histogramData = List.map (\n -> List.length n.data) filteredClusters
                     }
             in
-                ( newModel, Cmd.batch
-                      [ sliderRange [min, max]
-                      , draw (filteredClusters, newModel.histogramData)
-                      ]
+                ( newModel
+                , Cmd.batch
+                    [ sliderRange [ min, max ]
+                    , sliderValue [ min, max ]
+                    , draw ( filteredClusters, newModel.histogramData )
+                    ]
                 )
 
         SliderChange range ->
             let
                 filteredClusters =
-                    List.filter
-                        (betweenRange range.min range.max)
-                        model.displayedClusters
+                    model.displayedClusters
+                        |> List.filter (hasPattern model.pattern)
+                        |> preprocessCluster range.min range.max
 
                 newModel =
                     { model
                         | min = range.min
                         , max = range.max
                         , numberOfClusters = List.length filteredClusters
-                        , histogramData    = List.map (\n -> List.length n.data) filteredClusters
+                        , histogramData = List.map (\n -> List.length n.data) filteredClusters
                     }
             in
                 ( newModel
                 , Cmd.batch
-                    [ draw (filteredClusters, newModel.histogramData)
+                    [ draw ( filteredClusters, newModel.histogramData )
+                    ]
+                )
+
+        FilterClusters pattern ->
+            let
+                filteredClusters =
+                    model.displayedClusters
+                        |> List.filter (hasPattern pattern)
+                        |> preprocessCluster model.min model.max
+
+                ( min, max ) =
+                    getMinMaxClusterSize filteredClusters
+
+                maxCorrected =
+                    if max <= 0 then
+                        1
+                    else
+                        max
+
+                newModel =
+                    { model
+                        | title = model.title
+                        , numberOfClusters = List.length filteredClusters
+                        , histogramData = List.map (\n -> List.length n.data) filteredClusters
+                        , pattern = pattern
+                    }
+            in
+                ( newModel
+                , Cmd.batch
+                    [ sliderValue [ model.min, model.max ]
+                    , draw ( filteredClusters, model.histogramData )
                     ]
                 )
 
@@ -174,12 +229,19 @@ update msg model =
 -- SUBSCRIPTIONS
 
 
-port draw : (Clusters, List Int) -> Cmd msg
-port sliderRange : (List Int) -> Cmd msg
+port draw : ( Clusters, List Int ) -> Cmd msg
+
+
+port sliderRange : List Int -> Cmd msg
+
+
+port sliderValue : List Int -> Cmd msg
+
 
 port dataClusters : (Model -> msg) -> Sub msg
-port sliderChange : (Range -> msg) -> Sub msg
 
+
+port sliderChange : (Range -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
@@ -194,6 +256,7 @@ subscriptions model =
 -- VIEW
 
 
+view : Model -> Html Msg
 view model =
     div
         [ classList
@@ -203,9 +266,10 @@ view model =
         [ parameters model.parameters
         , button [ onClick (DistanceCluster) ] [ text "Distance Clusters" ]
         , button [ onClick (TaxonomicCluster) ] [ text "Taxonomic Clusters" ]
+        , input [ placeholder "Filter clusters", onInput FilterClusters ] []
         , div
             []
-            [ h4 [] [ text (model.title ++ " ("++ toString model.numberOfClusters ++ ")") ] ]
+            [ h4 [] [ text (model.title ++ " (" ++ toString model.numberOfClusters ++ ")") ] ]
         ]
 
 
@@ -237,13 +301,49 @@ parameters params =
             ]
 
 
-betweenRange min max cluster =
-    List.length cluster.data >= min && List.length cluster.data <= max
-
-
-minMax cluster range =
+preprocessCluster : Int -> Int -> Clusters -> Clusters
+preprocessCluster min max clusters =
     let
-        currentLength = List.length cluster.data
-        (min,max) = range
+        betweenRange min max cluster =
+            List.length cluster.data >= min && List.length cluster.data <= max
     in
-        (Basics.min currentLength min, Basics.max currentLength max)
+        clusters
+            |> List.filter (betweenRange min max)
+            |> List.sortBy (\n -> List.length n.data)
+            |> List.reverse
+
+
+getMinMaxClusterSize : Clusters -> ( Int, Int )
+getMinMaxClusterSize cluster =
+    let
+        minMax cluster range =
+            let
+                currentLength =
+                    List.length cluster.data
+
+                ( min, max ) =
+                    range
+            in
+                ( Basics.min currentLength min, Basics.max currentLength max )
+    in
+        List.foldr minMax ( 0, 0 ) cluster
+
+
+hasPattern : String -> Cluster -> Bool
+hasPattern pattern cluster =
+    let
+        clusterContain d =
+            case d.name of
+                Nothing ->
+                    False
+
+                Just name ->
+                    Regex.contains (Regex.caseInsensitive (Regex.regex pattern)) name
+    in
+        case cluster.name of
+            Nothing ->
+                False
+
+            Just name ->
+                Regex.contains (Regex.caseInsensitive (Regex.regex pattern )) name
+                    || List.any clusterContain cluster.data
