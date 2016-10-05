@@ -34,8 +34,8 @@ while (my $l = <$CLUSTER>) {
   chomp $l;
   my @line = split(/\t+/,$l);
   my $id      = $line[0];
-  my $rankVal = $line[4];
-  my $taxid   = $line[6];
+  my $rankVal = $line[6];
+  my $taxid   = $line[7];
 
   $taxid2name->{$taxid} = $rankVal;
   

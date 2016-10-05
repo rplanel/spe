@@ -9,12 +9,17 @@ my $silix       = $ARGV[1];
 
 open (my $ANNO, '<', $annotations) or die ("Cannot open the file $annotations\nERROR:$!");
 
-
+my $ranks = ['species', 'genus', 'family', 'order', 'class', 'phylum'];
 my $annotationsDico = {};
 while (my $l = <$ANNO>) {
     chomp $l;
-    my ($oid, $anno) = split(/\t+/,$l,2);
-    $annotationsDico->{$oid} = $anno;
+    my ($oid, $strain, $name, $rank_name, $rank, $taxid) = split(/\t+/,$l);
+    $annotationsDico->{$oid}->{'oid_name'}  = $name;
+    $annotationsDico->{$oid}->{'strain'}    = $strain;
+    $annotationsDico->{$oid}->{$rank} = {
+        'taxid'     => $taxid,
+        'rank_name' => $rank_name,
+    };
 }
 
 open (my $SILIX, '<', $silix) or die ("Cannot open the file $silix\nERROR:$!");
@@ -22,5 +27,18 @@ open (my $SILIX, '<', $silix) or die ("Cannot open the file $silix\nERROR:$!");
 while (my $l = <$SILIX>) {
     chomp $l;
     my ($fam, $id) = split(/\t+/,$l);
-    print $l,"\t",$annotationsDico->{$id},"\n";
+
+    my $annoObj = $annotationsDico->{$id};
+    my $anno = $annotationsDico->{$id}->{'oid_name'}."\t".$annotationsDico->{$id}->{'strain'}."\t";
+    foreach my $rank (@$ranks) {
+      if (defined $annoObj->{$rank}) {
+        $anno .= $annoObj->{$rank}->{rank_name}."\t";
+        $anno .= $annoObj->{$rank}->{taxid}."\t";
+      }
+      else {
+        $anno .= "\t";
+      }
+    }
+    chop $anno;
+    print $l,"\t",$anno,"\n";
 }

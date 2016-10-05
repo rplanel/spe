@@ -387,7 +387,7 @@ process extractAnnotation {
   mysql --max_allowed-packet=1G -ABqr pkgdb_dev -e \
     \" SELECT o.O_id, o.O_Strain, o.O_name, t.name_txt, t.rank, t.tax_id  \
        FROM   Organism o INNER JOIN O_Taxonomy t USING (O_id)
-       WHERE  rank = 'genus' \" >  ${out}
+       WHERE  rank = 'species' OR rank = 'genus' OR rank = 'family' OR rank = 'order' OR rank = 'class' OR rank = 'phylum' \" >  ${out}
 
   """
  }
@@ -524,7 +524,7 @@ process createJsonData {
   echo -e \";\n var rawRankData = \" | cat - $rankStats > rankData
   cat clusterData rankData > data.js
   echo -e \";\n\" >> data.js
-  echo -e 'var parameters = {'pvalue':${pvalueThreshold},distance:${distanceThreshold},kmer:${kmerSize},sketch:${sketchSize}};' >> data.js
+  echo -e 'var parametersData = {'pvalue':${pvalueThreshold},distance:${distanceThreshold},kmer:${kmerSize},sketch:${sketchSize}};' >> data.js
   """
   
 
