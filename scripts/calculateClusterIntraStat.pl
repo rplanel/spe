@@ -29,69 +29,93 @@ my $currentClusterId;
 my $totalPerCluster;
 my $rankStat = {};
 my $taxid2name = {};
+my $ranks = ['species', 'genus', 'family', 'order', 'class', 'phylum'];
 
 while (my $l = <$CLUSTER>) {
   chomp $l;
   my @line = split(/\t+/,$l);
-  my $id      = $line[0];
-  my $rankVal = $line[6];
-  my $taxid   = $line[7];
+  
+  my $clusterId      = $line[0];
 
-  $taxid2name->{$taxid} = $rankVal;
+  my $startParse = 6;
   
-  next if (scalar @line < 1);
-  
-  ## calculate cluster stats
-  $cluster->{$id}->{stat}->{$taxid}++;
-  $cluster->{$id}->{total}++;
-  
-
-  
-  ## Calculate rank stats
-  $rankStat->{$taxid}->{total}++;
-  $rankStat->{$taxid}->{stat}->{$id}++;
+  foreach my $rank (@$ranks) {
+      
+      ## Group on the genus
+      my $rankVal = $line[$startParse];
+      my $taxid   = $line[$startParse+1];
+      
+      $taxid2name->{$taxid} = $rankVal;
+      
+      next if (scalar @line < 1);
+      
+      ## calculate cluster stats
+      $cluster->{$rank}->{$clusterId}->{stat}->{$taxid}++;
+      $cluster->{$rank}->{$clusterId}->{total}++;
+      
+      
+      
+      ## Calculate rank stats
+      $rankStat->{$rank}->{$taxid}->{total}++;
+      $rankStat->{$rank}->{$taxid}->{stat}->{$clusterId}++;
+      $startParse += 2;
+  }
 }
 
 
-my $clusterStatToJson = [];
-while ( my ($k, $v) = each %$cluster ) {
-    ## for each cluster
-    my $clusterStat = {
-	name => $k,
-	id   => $k,
-	data => [],
-    };
-    my $tot = $v->{total};
-    while (my ($taxid,$count) = each %{$v->{stat}}) {
-	push(
-	    @{$clusterStat->{data}}, {
-		count => $count,
-		name  => $taxid2name->{$taxid},
-		id => $taxid
-	    });
-    	print $CLUSTAT $k,"\t",$tot,"\t",$taxid,"\t",$taxid2name->{$taxid},"\t",$count,"\n";
+
+## transform cluster stat to json
+my $clusterStatToJson = {};
+
+foreach my $rank (@$ranks) {
+    $clusterStatToJson->{$rank} = [];
+    while ( my ($k, $v) = each %{$cluster->{$rank}} ) {
+        ## for each cluster
+        my $clusterStat = {
+            name => $k,
+            id   => $k,
+            data => [],
+        };
+                
+        my $tot = $v->{total};
+        while (my ($taxid,$count) = each %{$v->{stat}}) {
+            push(
+                @{$clusterStat->{'data'}}, {
+                    count => $count,
+                    name  => $taxid2name->{$taxid},
+                    id    => $taxid
+                });
+            print $CLUSTAT $k,"\t",$tot,"\t",$taxid,"\t",$taxid2name->{$taxid},"\t",$count,"\n";
+        }
+        push(@{$clusterStatToJson->{$rank}},$clusterStat);
     }
-    push(@$clusterStatToJson,$clusterStat);
 }
 print $CLUSTATJ encode_json $clusterStatToJson;
 
-my $rankStatToJson = [];
-while ( my ($k, $v) = each %$rankStat ) {
-    my $rankStat = {
-	name  => $taxid2name->{$k},
-	id =>  $k,
-	data => []
-    };
-    my $tot = $v->{total};
-    while (my ($clusterId,$count) = each %{$v->{stat}}) {
-	push(
-	    @{$rankStat->{data}}, {
-		count => $count,
-		name  => $clusterId,
-		id    => $clusterId
-	    });
-	print $RANKSTAT $k,"\t",$taxid2name->{$k},"\t",$tot,"\t",$clusterId,"\t",$count,"\n";
+
+
+## Transform rank stat to Json
+my $rankStatToJson = {};
+foreach my $rank (@$ranks) {  
+    $rankStatToJson->{$rank} = [];
+    while ( my ($k, $v) = each %{$rankStat->{$rank}} ) {
+    
+        my $rankStat = {
+            name => $taxid2name->{$k},
+            id   => $k,
+            data => [],
+        };
+        my $tot = $v->{total};
+        while (my ($clusterId,$count) = each %{$v->{stat}}) {
+            push(
+                @{$rankStat->{data}}, {
+                    count => $count,
+                    name  => $clusterId,
+                    id    => $clusterId
+                });
+            print $RANKSTAT $k,"\t",$taxid2name->{$k},"\t",$tot,"\t",$clusterId,"\t",$count,"\n";
+        }
+        push(@{$rankStatToJson->{$rank}},$rankStat);
     }
-    push(@$rankStatToJson,$rankStat);
 }
 print $RANKSTATJ encode_json $rankStatToJson;
