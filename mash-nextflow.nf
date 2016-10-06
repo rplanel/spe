@@ -519,12 +519,13 @@ process createJsonData {
   
 
   script:
+  baseName = "${kmerSize}-${sketchSize}-${distanceThreshold}-${pvalueThreshold}-data.js"
   """
   echo 'var rawClusterData = ' | cat - $clusterStats > clusterData
   echo -e \";\n var rawRankData = \" | cat - $rankStats > rankData
-  cat clusterData rankData > data.js
-  echo -e \";\n\" >> data.js
-  echo -e 'var parametersData = {'pvalue':${pvalueThreshold},distance:${distanceThreshold},kmer:${kmerSize},sketch:${sketchSize}};' >> data.js
+  cat clusterData rankData > $baseName
+  echo -e \";\n\" >> $baseName
+  echo -e 'var parametersData = {'pvalue':${pvalueThreshold},distance:${distanceThreshold},kmer:${kmerSize},sketch:${sketchSize}};' >> $baseName
   """
   
 
