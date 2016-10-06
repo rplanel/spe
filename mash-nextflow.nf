@@ -515,7 +515,7 @@ process createJsonData {
   
 
   output:
-  file 'data.js' into data
+  file "$baseName" into data
   
 
   script:
