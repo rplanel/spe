@@ -502,7 +502,7 @@ process calculateClusterIntraStat {
 
 process createJsonData {
   
-  publishDir 'report', mode: 'copy'
+  publishDir 'result', mode: 'copy'
   
   input:
   file rankStats
