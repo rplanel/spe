@@ -29,14 +29,15 @@ while (my $l = <$SILIX>) {
     my ($fam, $id) = split(/\t+/,$l);
 
     my $annoObj = $annotationsDico->{$id};
-    my $anno = $annotationsDico->{$id}->{'oid_name'}."\t".$annotationsDico->{$id}->{'strain'}."\t";
+    my $anno = $annotationsDico->{$id}->{'oid_name'}." ".$annotationsDico->{$id}->{'strain'}."\t";
     foreach my $rank (@$ranks) {
-      if (defined $annoObj->{$rank}) {
-        $anno .= $annoObj->{$rank}->{rank_name}."\t";
-        $anno .= $annoObj->{$rank}->{taxid}."\t";
+	if (defined $annoObj->{$rank}) {
+	    $anno .= $annoObj->{$rank}->{taxid}."\t";
+	    $anno .= $annoObj->{$rank}->{rank_name}."\t";
+        
       }
       else {
-        $anno .= "\t";
+        $anno .= "\t\t";
       }
     }
     chop $anno;

@@ -158,21 +158,30 @@ process merge_same_organism {
   input:
   each g from genomesInput 
   file mergeFastaScript
-
+  file script from splitFastaScript
+  
   output:
-  file out into mergedGenomes
+  file "${outdir}/*.fasta" into countFasta, fastaGenomes mode flatten
 
   script:
   baseName = g.getBaseName()
   out      = "${baseName}.merged.fasta"
-  "perl ${mergeFastaScript} ${g} ${out}"
+  outdir = "per_oid"
+  f = file("$outdir")
+  f.mkdir()
+  """
+  perl ${mergeFastaScript} ${g} ${out}
+  perl ${script} ${out} ${outdir}
+  rm -rf ${out}
+  """
 }
 
 
 
-
+/*
 process splitFasta {
   tag { mergedGenomes }
+  storeDir 'data/genomes/fasta'
   
   input:
   file mergedGenomes
@@ -190,7 +199,7 @@ process splitFasta {
   """
 }
 
-
+*/
 
 /*  Calculate the sketches */
 
@@ -278,9 +287,10 @@ incrementalQuery.into {queryToSketch; queryToDist}
 
 // Calculate the distances
 process all_vs_all_distance {
-  tag { query }
-  publishDir 'result'
-
+  tag { "${query} distance=${distanceThreshold} pvalue=${pvalueThreshold}"}
+  publishDir { resDir }
+  // scratch true
+  
   input:
   file sketchesDb from allVsAllQuery
   file query from sketchesFilenameToDist
@@ -295,7 +305,9 @@ process all_vs_all_distance {
 
   script:
   baseName = sketchesDb.getBaseName()
-  out = "${baseName}-distance.tab"
+  resDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
+  out = "${baseName}-${pvalueThreshold}-${distanceThreshold}-distance.tab"
+  
   """
   mash dist -v $pvalueThreshold -d $distanceThreshold ${sketchesDb} -l ${query} > $out
   """
@@ -326,21 +338,24 @@ process paste_sketch_to_db {
 
 
 process incremental_distance {
-  publishDir 'result'
+  publishDir { resultDir }
   
   input:
   file querySketch from sketchesFilenameToDistUpdate
   file sketches from updatedSketchesDB
   val pvalueThreshold
   val distanceThreshold
-
+  val sketchSize
+  val kmerSize  
+  
   
   output:
   file out into queryDistanceResult
   
   script:
+  resultDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
   baseName = querySketch.getBaseName()
-  out      = "${baseName}-distance.tab"
+  out      = "${baseName}-${distanceThreshold}-${pvalueThreshold}-distance.tab"
   """
   mash dist -v $pvalueThreshold -d $distanceThreshold ${sketches} -l ${querySketch} > $out
   """
@@ -364,7 +379,7 @@ process filterEdges {
 
   script:
   baseName = dist.getBaseName()
-  out = "${baseName}-${distanceThreshold}-${pvalueThreshold}.tab"
+  out = "${baseName}-filtered.tab"
   """
   perl $script $dist ${distanceThreshold} ${pvalueThreshold} > $out
   """
@@ -372,7 +387,7 @@ process filterEdges {
 }
 
 process extractAnnotation {
-  //publishDir 'result'
+  storeDir "data/annotations"
   
   input:
   file dist from filteredDistance
@@ -422,17 +437,26 @@ numOfFasta = countFasta.count()
 
 
 process silixx {
+  publishDir { resDir }
   
   validExitStatus 0,1
+  
+  module 'silixx'
   
   input:
   file edges from edgesFile
   val num from numOfFasta
+  val pvalueThreshold
+  val distanceThreshold
+  val sketchSize
+  val kmerSize  
+
 
   output:
   file "$out" into silixClusterFile
 
   script:
+  resDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
   baseName = edges.getBaseName()
   out = "${baseName}.silix"
   """
@@ -443,16 +467,22 @@ process silixx {
 }
 
 process addAnnotation {
-
+  publishDir { resDir }
+  
   input:
   file silixRes from silixClusterFile
   file anno     from annotations
   file script from addAnnotationScript
+  val pvalueThreshold
+  val distanceThreshold
+  val sketchSize
+  val kmerSize  
 
   output:
   file "$out" into annotatedSilixClusterFile, annotatedSilixCluster
 
   script:
+  resDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
   base = silixRes.getBaseName()
   out = "${base}-annotated.silix"
   """
@@ -480,11 +510,16 @@ process extractCluster {
 
 
 process calculateClusterIntraStat {
-  publishDir 'result'
+  publishDir { resultDir }
   
   input:
   file cluster from annotatedSilixCluster
   file script from calculateClusterIntraStatScript
+  val pvalueThreshold
+  val distanceThreshold
+  val sketchSize
+  val kmerSize  
+
 
   output:
   file "*rank.json" into rankStats
@@ -492,6 +527,7 @@ process calculateClusterIntraStat {
   file "$cluster" into clu
   
   script:
+  resultDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
   base = cluster.getBaseName()
   out = "${base}-stat"
   """
@@ -502,7 +538,7 @@ process calculateClusterIntraStat {
 
 process createJsonData {
   
-  publishDir 'result', mode: 'copy'
+  publishDir { resultDir }
   
   input:
   file rankStats
@@ -519,6 +555,7 @@ process createJsonData {
   
 
   script:
+  resultDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
   baseName = "${kmerSize}-${sketchSize}-${distanceThreshold}-${pvalueThreshold}-data.js"
   """
   echo 'var rawClusterData = ' | cat - $clusterStats > clusterData

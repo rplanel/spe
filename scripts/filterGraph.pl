@@ -23,9 +23,10 @@ while (my $l = <$EDGES>) {
       $nodeIdRecord->{$oid2}++;
   }
   if (
-      !exists $nodeIdRecord->{$oid1} 
+      $oid1 == $oid2
+      || (!exists $nodeIdRecord->{$oid1} 
       && $dist <= $distanceT
-      && $pval <= $pvalueT
+      && $pval <= $pvalueT)
       ) {
     print "$l\n";
   }

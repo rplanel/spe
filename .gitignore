@@ -3,6 +3,7 @@
 flymd*
 .markdown*
 data
+*.data
 result
 report
 elm-stuff/

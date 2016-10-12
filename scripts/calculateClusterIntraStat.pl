@@ -29,7 +29,7 @@ my $currentClusterId;
 my $totalPerCluster;
 my $rankStat = {};
 my $taxid2name = {};
-my $ranks = ['species', 'genus', 'family', 'order', 'class', 'phylum'];
+my $ranks = ['strain', 'species', 'genus', 'family', 'order', 'class', 'phylum'];
 
 while (my $l = <$CLUSTER>) {
   chomp $l;
@@ -37,15 +37,17 @@ while (my $l = <$CLUSTER>) {
   
   my $clusterId      = $line[0];
 
-  my $startParse = 6;
+  my $startParse = 1;
   
   foreach my $rank (@$ranks) {
       
       ## Group on the genus
-      my $rankVal = $line[$startParse];
-      my $taxid   = $line[$startParse+1];
-      
-      $taxid2name->{$taxid} = $rankVal;
+      my $rankVal = $line[$startParse+1];
+      my $taxid   = $line[$startParse];
+      if ($taxid == 955) {
+	  print STDERR $rank,"\t",$l,"\n";
+      }
+      $taxid2name->{$rank}->{$taxid} = $rankVal;
       
       next if (scalar @line < 1);
       
@@ -82,10 +84,10 @@ foreach my $rank (@$ranks) {
             push(
                 @{$clusterStat->{'data'}}, {
                     count => $count,
-                    name  => $taxid2name->{$taxid},
+                    name  => $taxid2name->{$rank}->{$taxid},
                     id    => $taxid
                 });
-            print $CLUSTAT $k,"\t",$tot,"\t",$taxid,"\t",$taxid2name->{$taxid},"\t",$count,"\n";
+            print $CLUSTAT $k,"\t",$tot,"\t",$taxid,"\t",$taxid2name->{$rank}->{$taxid},"\t",$count,"\n";
         }
         push(@{$clusterStatToJson->{$rank}},$clusterStat);
     }
@@ -101,7 +103,7 @@ foreach my $rank (@$ranks) {
     while ( my ($k, $v) = each %{$rankStat->{$rank}} ) {
     
         my $rankStat = {
-            name => $taxid2name->{$k},
+            name => $taxid2name->{$rank}->{$k},
             id   => $k,
             data => [],
         };
@@ -113,7 +115,7 @@ foreach my $rank (@$ranks) {
                     name  => $clusterId,
                     id    => $clusterId
                 });
-            print $RANKSTAT $k,"\t",$taxid2name->{$k},"\t",$tot,"\t",$clusterId,"\t",$count,"\n";
+            print $RANKSTAT $k,"\t",$taxid2name->{$rank}->{$k},"\t",$tot,"\t",$clusterId,"\t",$count,"\n";
         }
         push(@{$rankStatToJson->{$rank}},$rankStat);
     }
