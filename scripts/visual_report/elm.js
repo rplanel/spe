@@ -8032,52 +8032,95 @@ var _elm_lang$html$Html_Events$Options = F2(
 		return {stopPropagation: a, preventDefault: b};
 	});
 
+var _user$project$Main$getClustersByRank = F2(
+	function (rank, clustersByRank) {
+		var _p0 = clustersByRank;
+		if (_p0.ctor === 'Nothing') {
+			return _elm_lang$core$Maybe$Nothing;
+		} else {
+			var _p2 = _p0._0;
+			var _p1 = rank;
+			switch (_p1.ctor) {
+				case 'Strain':
+					return _elm_lang$core$Maybe$Just(_p2.strain);
+				case 'Species':
+					return _elm_lang$core$Maybe$Just(_p2.species);
+				case 'Genus':
+					return _elm_lang$core$Maybe$Just(_p2.genus);
+				case 'Family':
+					return _elm_lang$core$Maybe$Just(_p2.family);
+				case 'Order':
+					return _elm_lang$core$Maybe$Just(_p2.order);
+				case 'Class':
+					return _elm_lang$core$Maybe$Just(_p2.$class);
+				default:
+					return _elm_lang$core$Maybe$Just(_p2.phylum);
+			}
+		}
+	});
 var _user$project$Main$hasPattern = F2(
 	function (pattern, cluster) {
 		var clusterContain = function (d) {
-			var _p0 = d.name;
-			if (_p0.ctor === 'Nothing') {
+			var _p3 = d.name;
+			if (_p3.ctor === 'Nothing') {
 				return false;
 			} else {
 				return A2(
 					_elm_lang$core$Regex$contains,
 					_elm_lang$core$Regex$caseInsensitive(
 						_elm_lang$core$Regex$regex(pattern)),
-					_p0._0);
+					_p3._0);
 			}
 		};
-		var _p1 = cluster.name;
-		if (_p1.ctor === 'Nothing') {
+		var _p4 = cluster.name;
+		if (_p4.ctor === 'Nothing') {
 			return false;
 		} else {
 			return A2(
 				_elm_lang$core$Regex$contains,
 				_elm_lang$core$Regex$caseInsensitive(
 					_elm_lang$core$Regex$regex(pattern)),
-				_p1._0) || A2(_elm_lang$core$List$any, clusterContain, cluster.data);
+				_p4._0) || A2(_elm_lang$core$List$any, clusterContain, cluster.data);
 		}
 	});
 var _user$project$Main$getMinMaxClusterSize = function (cluster) {
-	var minMax = F2(
-		function (cluster, range) {
-			var _p2 = range;
-			var min = _p2._0;
-			var max = _p2._1;
-			var currentLength = _elm_lang$core$List$length(cluster.data);
-			return {
-				ctor: '_Tuple2',
-				_0: A2(_elm_lang$core$Basics$min, currentLength, min),
-				_1: A2(_elm_lang$core$Basics$max, currentLength, max)
-			};
-		});
-	return A3(
-		_elm_lang$core$List$foldr,
-		minMax,
-		{ctor: '_Tuple2', _0: 0, _1: 0},
-		cluster);
+	var _p5 = cluster;
+	if (_p5.ctor === 'Nothing') {
+		return {ctor: '_Tuple2', _0: 0, _1: 0};
+	} else {
+		var minMax = F2(
+			function (cluster, range) {
+				var _p6 = range;
+				var min = _p6._0;
+				var max = _p6._1;
+				var currentLength = _elm_lang$core$List$length(cluster.data);
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_elm_lang$core$Basics$min, currentLength, min),
+					_1: A2(_elm_lang$core$Basics$max, currentLength, max)
+				};
+			});
+		return A3(
+			_elm_lang$core$List$foldr,
+			minMax,
+			{ctor: '_Tuple2', _0: 0, _1: 0},
+			_p5._0);
+	}
 };
-var _user$project$Main$preprocessCluster = F3(
-	function (min, max, clusters) {
+var _user$project$Main$preprocessCluster = F4(
+	function (min, max, showOrphan, clusters) {
+		var isOrphan = F2(
+			function (showOrphan, cluster) {
+				var count = A3(
+					_elm_lang$core$List$foldr,
+					F2(
+						function (n, c) {
+							return n.count + c;
+						}),
+					0,
+					cluster.data);
+				return (_elm_lang$core$Basics$not(showOrphan) && _elm_lang$core$Native_Utils.eq(count, 1)) ? false : true;
+			});
 		var betweenRange = F3(
 			function (min, max, cluster) {
 				return (_elm_lang$core$Native_Utils.cmp(
@@ -8095,7 +8138,10 @@ var _user$project$Main$preprocessCluster = F3(
 				A2(
 					_elm_lang$core$List$filter,
 					A2(betweenRange, min, max),
-					clusters)));
+					A2(
+						_elm_lang$core$List$filter,
+						isOrphan(showOrphan),
+						clusters))));
 	});
 var _user$project$Main$parameters = function (params) {
 	var row = function (param) {
@@ -8147,7 +8193,7 @@ var _user$project$Main$parameters = function (params) {
 		_elm_lang$html$Html$table,
 		_elm_lang$core$Native_List.fromArray(
 			[
-				_elm_lang$html$Html_Attributes$class('table table-condensed')
+				_elm_lang$html$Html_Attributes$class('ui celled table')
 			]),
 		_elm_lang$core$Native_List.fromArray(
 			[
@@ -8164,7 +8210,7 @@ var _user$project$Main$parameters = function (params) {
 						_elm_lang$core$Native_List.fromArray(
 							[
 								A2(
-								_elm_lang$html$Html$td,
+								_elm_lang$html$Html$th,
 								_elm_lang$core$Native_List.fromArray(
 									[]),
 								_elm_lang$core$Native_List.fromArray(
@@ -8172,7 +8218,7 @@ var _user$project$Main$parameters = function (params) {
 										_elm_lang$html$Html$text('Kmer size')
 									])),
 								A2(
-								_elm_lang$html$Html$td,
+								_elm_lang$html$Html$th,
 								_elm_lang$core$Native_List.fromArray(
 									[]),
 								_elm_lang$core$Native_List.fromArray(
@@ -8180,7 +8226,7 @@ var _user$project$Main$parameters = function (params) {
 										_elm_lang$html$Html$text('Number Sketches')
 									])),
 								A2(
-								_elm_lang$html$Html$td,
+								_elm_lang$html$Html$th,
 								_elm_lang$core$Native_List.fromArray(
 									[]),
 								_elm_lang$core$Native_List.fromArray(
@@ -8188,7 +8234,7 @@ var _user$project$Main$parameters = function (params) {
 										_elm_lang$html$Html$text('P-value Threshold')
 									])),
 								A2(
-								_elm_lang$html$Html$td,
+								_elm_lang$html$Html$th,
 								_elm_lang$core$Native_List.fromArray(
 									[]),
 								_elm_lang$core$Native_List.fromArray(
@@ -8229,6 +8275,11 @@ var _user$project$Main$draw = _elm_lang$core$Native_Platform.outgoingPort(
 			})
 		];
 	});
+var _user$project$Main$deletePies = _elm_lang$core$Native_Platform.outgoingPort(
+	'deletePies',
+	function (v) {
+		return v;
+	});
 var _user$project$Main$sliderRange = _elm_lang$core$Native_Platform.outgoingPort(
 	'sliderRange',
 	function (v) {
@@ -8252,66 +8303,11 @@ var _user$project$Main$dataClusters = _elm_lang$core$Native_Platform.incomingPor
 		A2(
 			_elm_lang$core$Json_Decode_ops[':='],
 			'distanceClusters',
-			_elm_lang$core$Json_Decode$list(
-				A2(
-					_elm_lang$core$Json_Decode$andThen,
-					A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
-					function (id) {
-						return A2(
-							_elm_lang$core$Json_Decode$andThen,
-							A2(
-								_elm_lang$core$Json_Decode_ops[':='],
-								'data',
-								_elm_lang$core$Json_Decode$list(
-									A2(
-										_elm_lang$core$Json_Decode$andThen,
-										A2(
-											_elm_lang$core$Json_Decode_ops[':='],
-											'name',
-											_elm_lang$core$Json_Decode$oneOf(
-												_elm_lang$core$Native_List.fromArray(
-													[
-														_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
-														A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
-													]))),
-										function (name) {
-											return A2(
-												_elm_lang$core$Json_Decode$andThen,
-												A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
-												function (id) {
-													return A2(
-														_elm_lang$core$Json_Decode$andThen,
-														A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
-														function (count) {
-															return _elm_lang$core$Json_Decode$succeed(
-																{name: name, id: id, count: count});
-														});
-												});
-										}))),
-							function (data) {
-								return A2(
-									_elm_lang$core$Json_Decode$andThen,
-									A2(
-										_elm_lang$core$Json_Decode_ops[':='],
-										'name',
-										_elm_lang$core$Json_Decode$oneOf(
-											_elm_lang$core$Native_List.fromArray(
-												[
-													_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
-													A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
-												]))),
-									function (name) {
-										return _elm_lang$core$Json_Decode$succeed(
-											{id: id, data: data, name: name});
-									});
-							});
-					}))),
-		function (distanceClusters) {
-			return A2(
+			A2(
 				_elm_lang$core$Json_Decode$andThen,
 				A2(
 					_elm_lang$core$Json_Decode_ops[':='],
-					'taxonomicClusters',
+					'strain',
 					_elm_lang$core$Json_Decode$list(
 						A2(
 							_elm_lang$core$Json_Decode$andThen,
@@ -8366,12 +8362,12 @@ var _user$project$Main$dataClusters = _elm_lang$core$Native_Platform.incomingPor
 											});
 									});
 							}))),
-				function (taxonomicClusters) {
+				function (strain) {
 					return A2(
 						_elm_lang$core$Json_Decode$andThen,
 						A2(
 							_elm_lang$core$Json_Decode_ops[':='],
-							'displayedClusters',
+							'species',
 							_elm_lang$core$Json_Decode$list(
 								A2(
 									_elm_lang$core$Json_Decode$andThen,
@@ -8426,72 +8422,783 @@ var _user$project$Main$dataClusters = _elm_lang$core$Native_Platform.incomingPor
 													});
 											});
 									}))),
-						function (displayedClusters) {
+						function (species) {
 							return A2(
 								_elm_lang$core$Json_Decode$andThen,
 								A2(
 									_elm_lang$core$Json_Decode_ops[':='],
-									'parameters',
+									'genus',
 									_elm_lang$core$Json_Decode$list(
 										A2(
 											_elm_lang$core$Json_Decode$andThen,
-											A2(_elm_lang$core$Json_Decode_ops[':='], 'pvalue', _elm_lang$core$Json_Decode$float),
-											function (pvalue) {
+											A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+											function (id) {
 												return A2(
 													_elm_lang$core$Json_Decode$andThen,
-													A2(_elm_lang$core$Json_Decode_ops[':='], 'distance', _elm_lang$core$Json_Decode$float),
-													function (distance) {
+													A2(
+														_elm_lang$core$Json_Decode_ops[':='],
+														'data',
+														_elm_lang$core$Json_Decode$list(
+															A2(
+																_elm_lang$core$Json_Decode$andThen,
+																A2(
+																	_elm_lang$core$Json_Decode_ops[':='],
+																	'name',
+																	_elm_lang$core$Json_Decode$oneOf(
+																		_elm_lang$core$Native_List.fromArray(
+																			[
+																				_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																				A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																			]))),
+																function (name) {
+																	return A2(
+																		_elm_lang$core$Json_Decode$andThen,
+																		A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																		function (id) {
+																			return A2(
+																				_elm_lang$core$Json_Decode$andThen,
+																				A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																				function (count) {
+																					return _elm_lang$core$Json_Decode$succeed(
+																						{name: name, id: id, count: count});
+																				});
+																		});
+																}))),
+													function (data) {
 														return A2(
 															_elm_lang$core$Json_Decode$andThen,
-															A2(_elm_lang$core$Json_Decode_ops[':='], 'kmer', _elm_lang$core$Json_Decode$int),
-															function (kmer) {
-																return A2(
-																	_elm_lang$core$Json_Decode$andThen,
-																	A2(_elm_lang$core$Json_Decode_ops[':='], 'sketch', _elm_lang$core$Json_Decode$int),
-																	function (sketch) {
-																		return _elm_lang$core$Json_Decode$succeed(
-																			{pvalue: pvalue, distance: distance, kmer: kmer, sketch: sketch});
-																	});
+															A2(
+																_elm_lang$core$Json_Decode_ops[':='],
+																'name',
+																_elm_lang$core$Json_Decode$oneOf(
+																	_elm_lang$core$Native_List.fromArray(
+																		[
+																			_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																			A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																		]))),
+															function (name) {
+																return _elm_lang$core$Json_Decode$succeed(
+																	{id: id, data: data, name: name});
 															});
 													});
 											}))),
-								function (parameters) {
+								function (genus) {
 									return A2(
 										_elm_lang$core$Json_Decode$andThen,
-										A2(_elm_lang$core$Json_Decode_ops[':='], 'title', _elm_lang$core$Json_Decode$string),
-										function (title) {
+										A2(
+											_elm_lang$core$Json_Decode_ops[':='],
+											'family',
+											_elm_lang$core$Json_Decode$list(
+												A2(
+													_elm_lang$core$Json_Decode$andThen,
+													A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+													function (id) {
+														return A2(
+															_elm_lang$core$Json_Decode$andThen,
+															A2(
+																_elm_lang$core$Json_Decode_ops[':='],
+																'data',
+																_elm_lang$core$Json_Decode$list(
+																	A2(
+																		_elm_lang$core$Json_Decode$andThen,
+																		A2(
+																			_elm_lang$core$Json_Decode_ops[':='],
+																			'name',
+																			_elm_lang$core$Json_Decode$oneOf(
+																				_elm_lang$core$Native_List.fromArray(
+																					[
+																						_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																						A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																					]))),
+																		function (name) {
+																			return A2(
+																				_elm_lang$core$Json_Decode$andThen,
+																				A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																				function (id) {
+																					return A2(
+																						_elm_lang$core$Json_Decode$andThen,
+																						A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																						function (count) {
+																							return _elm_lang$core$Json_Decode$succeed(
+																								{name: name, id: id, count: count});
+																						});
+																				});
+																		}))),
+															function (data) {
+																return A2(
+																	_elm_lang$core$Json_Decode$andThen,
+																	A2(
+																		_elm_lang$core$Json_Decode_ops[':='],
+																		'name',
+																		_elm_lang$core$Json_Decode$oneOf(
+																			_elm_lang$core$Native_List.fromArray(
+																				[
+																					_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																					A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																				]))),
+																	function (name) {
+																		return _elm_lang$core$Json_Decode$succeed(
+																			{id: id, data: data, name: name});
+																	});
+															});
+													}))),
+										function (family) {
 											return A2(
 												_elm_lang$core$Json_Decode$andThen,
-												A2(_elm_lang$core$Json_Decode_ops[':='], 'min', _elm_lang$core$Json_Decode$int),
-												function (min) {
+												A2(
+													_elm_lang$core$Json_Decode_ops[':='],
+													'order',
+													_elm_lang$core$Json_Decode$list(
+														A2(
+															_elm_lang$core$Json_Decode$andThen,
+															A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+															function (id) {
+																return A2(
+																	_elm_lang$core$Json_Decode$andThen,
+																	A2(
+																		_elm_lang$core$Json_Decode_ops[':='],
+																		'data',
+																		_elm_lang$core$Json_Decode$list(
+																			A2(
+																				_elm_lang$core$Json_Decode$andThen,
+																				A2(
+																					_elm_lang$core$Json_Decode_ops[':='],
+																					'name',
+																					_elm_lang$core$Json_Decode$oneOf(
+																						_elm_lang$core$Native_List.fromArray(
+																							[
+																								_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																								A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																							]))),
+																				function (name) {
+																					return A2(
+																						_elm_lang$core$Json_Decode$andThen,
+																						A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																						function (id) {
+																							return A2(
+																								_elm_lang$core$Json_Decode$andThen,
+																								A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																								function (count) {
+																									return _elm_lang$core$Json_Decode$succeed(
+																										{name: name, id: id, count: count});
+																								});
+																						});
+																				}))),
+																	function (data) {
+																		return A2(
+																			_elm_lang$core$Json_Decode$andThen,
+																			A2(
+																				_elm_lang$core$Json_Decode_ops[':='],
+																				'name',
+																				_elm_lang$core$Json_Decode$oneOf(
+																					_elm_lang$core$Native_List.fromArray(
+																						[
+																							_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																							A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																						]))),
+																			function (name) {
+																				return _elm_lang$core$Json_Decode$succeed(
+																					{id: id, data: data, name: name});
+																			});
+																	});
+															}))),
+												function (order) {
 													return A2(
 														_elm_lang$core$Json_Decode$andThen,
-														A2(_elm_lang$core$Json_Decode_ops[':='], 'max', _elm_lang$core$Json_Decode$int),
-														function (max) {
+														A2(
+															_elm_lang$core$Json_Decode_ops[':='],
+															'class',
+															_elm_lang$core$Json_Decode$list(
+																A2(
+																	_elm_lang$core$Json_Decode$andThen,
+																	A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																	function (id) {
+																		return A2(
+																			_elm_lang$core$Json_Decode$andThen,
+																			A2(
+																				_elm_lang$core$Json_Decode_ops[':='],
+																				'data',
+																				_elm_lang$core$Json_Decode$list(
+																					A2(
+																						_elm_lang$core$Json_Decode$andThen,
+																						A2(
+																							_elm_lang$core$Json_Decode_ops[':='],
+																							'name',
+																							_elm_lang$core$Json_Decode$oneOf(
+																								_elm_lang$core$Native_List.fromArray(
+																									[
+																										_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																										A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																									]))),
+																						function (name) {
+																							return A2(
+																								_elm_lang$core$Json_Decode$andThen,
+																								A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																								function (id) {
+																									return A2(
+																										_elm_lang$core$Json_Decode$andThen,
+																										A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																										function (count) {
+																											return _elm_lang$core$Json_Decode$succeed(
+																												{name: name, id: id, count: count});
+																										});
+																								});
+																						}))),
+																			function (data) {
+																				return A2(
+																					_elm_lang$core$Json_Decode$andThen,
+																					A2(
+																						_elm_lang$core$Json_Decode_ops[':='],
+																						'name',
+																						_elm_lang$core$Json_Decode$oneOf(
+																							_elm_lang$core$Native_List.fromArray(
+																								[
+																									_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																									A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																								]))),
+																					function (name) {
+																						return _elm_lang$core$Json_Decode$succeed(
+																							{id: id, data: data, name: name});
+																					});
+																			});
+																	}))),
+														function ($class) {
 															return A2(
 																_elm_lang$core$Json_Decode$andThen,
-																A2(_elm_lang$core$Json_Decode_ops[':='], 'numberOfClusters', _elm_lang$core$Json_Decode$int),
-																function (numberOfClusters) {
+																A2(
+																	_elm_lang$core$Json_Decode_ops[':='],
+																	'phylum',
+																	_elm_lang$core$Json_Decode$list(
+																		A2(
+																			_elm_lang$core$Json_Decode$andThen,
+																			A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																			function (id) {
+																				return A2(
+																					_elm_lang$core$Json_Decode$andThen,
+																					A2(
+																						_elm_lang$core$Json_Decode_ops[':='],
+																						'data',
+																						_elm_lang$core$Json_Decode$list(
+																							A2(
+																								_elm_lang$core$Json_Decode$andThen,
+																								A2(
+																									_elm_lang$core$Json_Decode_ops[':='],
+																									'name',
+																									_elm_lang$core$Json_Decode$oneOf(
+																										_elm_lang$core$Native_List.fromArray(
+																											[
+																												_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																												A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																											]))),
+																								function (name) {
+																									return A2(
+																										_elm_lang$core$Json_Decode$andThen,
+																										A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																										function (id) {
+																											return A2(
+																												_elm_lang$core$Json_Decode$andThen,
+																												A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																												function (count) {
+																													return _elm_lang$core$Json_Decode$succeed(
+																														{name: name, id: id, count: count});
+																												});
+																										});
+																								}))),
+																					function (data) {
+																						return A2(
+																							_elm_lang$core$Json_Decode$andThen,
+																							A2(
+																								_elm_lang$core$Json_Decode_ops[':='],
+																								'name',
+																								_elm_lang$core$Json_Decode$oneOf(
+																									_elm_lang$core$Native_List.fromArray(
+																										[
+																											_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																											A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																										]))),
+																							function (name) {
+																								return _elm_lang$core$Json_Decode$succeed(
+																									{id: id, data: data, name: name});
+																							});
+																					});
+																			}))),
+																function (phylum) {
+																	return _elm_lang$core$Json_Decode$succeed(
+																		{strain: strain, species: species, genus: genus, family: family, order: order, $class: $class, phylum: phylum});
+																});
+														});
+												});
+										});
+								});
+						});
+				})),
+		function (distanceClusters) {
+			return A2(
+				_elm_lang$core$Json_Decode$andThen,
+				A2(
+					_elm_lang$core$Json_Decode_ops[':='],
+					'taxonomicClusters',
+					A2(
+						_elm_lang$core$Json_Decode$andThen,
+						A2(
+							_elm_lang$core$Json_Decode_ops[':='],
+							'strain',
+							_elm_lang$core$Json_Decode$list(
+								A2(
+									_elm_lang$core$Json_Decode$andThen,
+									A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+									function (id) {
+										return A2(
+											_elm_lang$core$Json_Decode$andThen,
+											A2(
+												_elm_lang$core$Json_Decode_ops[':='],
+												'data',
+												_elm_lang$core$Json_Decode$list(
+													A2(
+														_elm_lang$core$Json_Decode$andThen,
+														A2(
+															_elm_lang$core$Json_Decode_ops[':='],
+															'name',
+															_elm_lang$core$Json_Decode$oneOf(
+																_elm_lang$core$Native_List.fromArray(
+																	[
+																		_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																		A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																	]))),
+														function (name) {
+															return A2(
+																_elm_lang$core$Json_Decode$andThen,
+																A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																function (id) {
+																	return A2(
+																		_elm_lang$core$Json_Decode$andThen,
+																		A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																		function (count) {
+																			return _elm_lang$core$Json_Decode$succeed(
+																				{name: name, id: id, count: count});
+																		});
+																});
+														}))),
+											function (data) {
+												return A2(
+													_elm_lang$core$Json_Decode$andThen,
+													A2(
+														_elm_lang$core$Json_Decode_ops[':='],
+														'name',
+														_elm_lang$core$Json_Decode$oneOf(
+															_elm_lang$core$Native_List.fromArray(
+																[
+																	_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																	A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																]))),
+													function (name) {
+														return _elm_lang$core$Json_Decode$succeed(
+															{id: id, data: data, name: name});
+													});
+											});
+									}))),
+						function (strain) {
+							return A2(
+								_elm_lang$core$Json_Decode$andThen,
+								A2(
+									_elm_lang$core$Json_Decode_ops[':='],
+									'species',
+									_elm_lang$core$Json_Decode$list(
+										A2(
+											_elm_lang$core$Json_Decode$andThen,
+											A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+											function (id) {
+												return A2(
+													_elm_lang$core$Json_Decode$andThen,
+													A2(
+														_elm_lang$core$Json_Decode_ops[':='],
+														'data',
+														_elm_lang$core$Json_Decode$list(
+															A2(
+																_elm_lang$core$Json_Decode$andThen,
+																A2(
+																	_elm_lang$core$Json_Decode_ops[':='],
+																	'name',
+																	_elm_lang$core$Json_Decode$oneOf(
+																		_elm_lang$core$Native_List.fromArray(
+																			[
+																				_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																				A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																			]))),
+																function (name) {
+																	return A2(
+																		_elm_lang$core$Json_Decode$andThen,
+																		A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																		function (id) {
+																			return A2(
+																				_elm_lang$core$Json_Decode$andThen,
+																				A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																				function (count) {
+																					return _elm_lang$core$Json_Decode$succeed(
+																						{name: name, id: id, count: count});
+																				});
+																		});
+																}))),
+													function (data) {
+														return A2(
+															_elm_lang$core$Json_Decode$andThen,
+															A2(
+																_elm_lang$core$Json_Decode_ops[':='],
+																'name',
+																_elm_lang$core$Json_Decode$oneOf(
+																	_elm_lang$core$Native_List.fromArray(
+																		[
+																			_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																			A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																		]))),
+															function (name) {
+																return _elm_lang$core$Json_Decode$succeed(
+																	{id: id, data: data, name: name});
+															});
+													});
+											}))),
+								function (species) {
+									return A2(
+										_elm_lang$core$Json_Decode$andThen,
+										A2(
+											_elm_lang$core$Json_Decode_ops[':='],
+											'genus',
+											_elm_lang$core$Json_Decode$list(
+												A2(
+													_elm_lang$core$Json_Decode$andThen,
+													A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+													function (id) {
+														return A2(
+															_elm_lang$core$Json_Decode$andThen,
+															A2(
+																_elm_lang$core$Json_Decode_ops[':='],
+																'data',
+																_elm_lang$core$Json_Decode$list(
+																	A2(
+																		_elm_lang$core$Json_Decode$andThen,
+																		A2(
+																			_elm_lang$core$Json_Decode_ops[':='],
+																			'name',
+																			_elm_lang$core$Json_Decode$oneOf(
+																				_elm_lang$core$Native_List.fromArray(
+																					[
+																						_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																						A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																					]))),
+																		function (name) {
+																			return A2(
+																				_elm_lang$core$Json_Decode$andThen,
+																				A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																				function (id) {
+																					return A2(
+																						_elm_lang$core$Json_Decode$andThen,
+																						A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																						function (count) {
+																							return _elm_lang$core$Json_Decode$succeed(
+																								{name: name, id: id, count: count});
+																						});
+																				});
+																		}))),
+															function (data) {
+																return A2(
+																	_elm_lang$core$Json_Decode$andThen,
+																	A2(
+																		_elm_lang$core$Json_Decode_ops[':='],
+																		'name',
+																		_elm_lang$core$Json_Decode$oneOf(
+																			_elm_lang$core$Native_List.fromArray(
+																				[
+																					_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																					A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																				]))),
+																	function (name) {
+																		return _elm_lang$core$Json_Decode$succeed(
+																			{id: id, data: data, name: name});
+																	});
+															});
+													}))),
+										function (genus) {
+											return A2(
+												_elm_lang$core$Json_Decode$andThen,
+												A2(
+													_elm_lang$core$Json_Decode_ops[':='],
+													'family',
+													_elm_lang$core$Json_Decode$list(
+														A2(
+															_elm_lang$core$Json_Decode$andThen,
+															A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+															function (id) {
+																return A2(
+																	_elm_lang$core$Json_Decode$andThen,
+																	A2(
+																		_elm_lang$core$Json_Decode_ops[':='],
+																		'data',
+																		_elm_lang$core$Json_Decode$list(
+																			A2(
+																				_elm_lang$core$Json_Decode$andThen,
+																				A2(
+																					_elm_lang$core$Json_Decode_ops[':='],
+																					'name',
+																					_elm_lang$core$Json_Decode$oneOf(
+																						_elm_lang$core$Native_List.fromArray(
+																							[
+																								_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																								A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																							]))),
+																				function (name) {
+																					return A2(
+																						_elm_lang$core$Json_Decode$andThen,
+																						A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																						function (id) {
+																							return A2(
+																								_elm_lang$core$Json_Decode$andThen,
+																								A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																								function (count) {
+																									return _elm_lang$core$Json_Decode$succeed(
+																										{name: name, id: id, count: count});
+																								});
+																						});
+																				}))),
+																	function (data) {
+																		return A2(
+																			_elm_lang$core$Json_Decode$andThen,
+																			A2(
+																				_elm_lang$core$Json_Decode_ops[':='],
+																				'name',
+																				_elm_lang$core$Json_Decode$oneOf(
+																					_elm_lang$core$Native_List.fromArray(
+																						[
+																							_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																							A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																						]))),
+																			function (name) {
+																				return _elm_lang$core$Json_Decode$succeed(
+																					{id: id, data: data, name: name});
+																			});
+																	});
+															}))),
+												function (family) {
+													return A2(
+														_elm_lang$core$Json_Decode$andThen,
+														A2(
+															_elm_lang$core$Json_Decode_ops[':='],
+															'order',
+															_elm_lang$core$Json_Decode$list(
+																A2(
+																	_elm_lang$core$Json_Decode$andThen,
+																	A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																	function (id) {
+																		return A2(
+																			_elm_lang$core$Json_Decode$andThen,
+																			A2(
+																				_elm_lang$core$Json_Decode_ops[':='],
+																				'data',
+																				_elm_lang$core$Json_Decode$list(
+																					A2(
+																						_elm_lang$core$Json_Decode$andThen,
+																						A2(
+																							_elm_lang$core$Json_Decode_ops[':='],
+																							'name',
+																							_elm_lang$core$Json_Decode$oneOf(
+																								_elm_lang$core$Native_List.fromArray(
+																									[
+																										_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																										A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																									]))),
+																						function (name) {
+																							return A2(
+																								_elm_lang$core$Json_Decode$andThen,
+																								A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																								function (id) {
+																									return A2(
+																										_elm_lang$core$Json_Decode$andThen,
+																										A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																										function (count) {
+																											return _elm_lang$core$Json_Decode$succeed(
+																												{name: name, id: id, count: count});
+																										});
+																								});
+																						}))),
+																			function (data) {
+																				return A2(
+																					_elm_lang$core$Json_Decode$andThen,
+																					A2(
+																						_elm_lang$core$Json_Decode_ops[':='],
+																						'name',
+																						_elm_lang$core$Json_Decode$oneOf(
+																							_elm_lang$core$Native_List.fromArray(
+																								[
+																									_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																									A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																								]))),
+																					function (name) {
+																						return _elm_lang$core$Json_Decode$succeed(
+																							{id: id, data: data, name: name});
+																					});
+																			});
+																	}))),
+														function (order) {
+															return A2(
+																_elm_lang$core$Json_Decode$andThen,
+																A2(
+																	_elm_lang$core$Json_Decode_ops[':='],
+																	'class',
+																	_elm_lang$core$Json_Decode$list(
+																		A2(
+																			_elm_lang$core$Json_Decode$andThen,
+																			A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																			function (id) {
+																				return A2(
+																					_elm_lang$core$Json_Decode$andThen,
+																					A2(
+																						_elm_lang$core$Json_Decode_ops[':='],
+																						'data',
+																						_elm_lang$core$Json_Decode$list(
+																							A2(
+																								_elm_lang$core$Json_Decode$andThen,
+																								A2(
+																									_elm_lang$core$Json_Decode_ops[':='],
+																									'name',
+																									_elm_lang$core$Json_Decode$oneOf(
+																										_elm_lang$core$Native_List.fromArray(
+																											[
+																												_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																												A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																											]))),
+																								function (name) {
+																									return A2(
+																										_elm_lang$core$Json_Decode$andThen,
+																										A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																										function (id) {
+																											return A2(
+																												_elm_lang$core$Json_Decode$andThen,
+																												A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																												function (count) {
+																													return _elm_lang$core$Json_Decode$succeed(
+																														{name: name, id: id, count: count});
+																												});
+																										});
+																								}))),
+																					function (data) {
+																						return A2(
+																							_elm_lang$core$Json_Decode$andThen,
+																							A2(
+																								_elm_lang$core$Json_Decode_ops[':='],
+																								'name',
+																								_elm_lang$core$Json_Decode$oneOf(
+																									_elm_lang$core$Native_List.fromArray(
+																										[
+																											_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																											A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																										]))),
+																							function (name) {
+																								return _elm_lang$core$Json_Decode$succeed(
+																									{id: id, data: data, name: name});
+																							});
+																					});
+																			}))),
+																function ($class) {
 																	return A2(
 																		_elm_lang$core$Json_Decode$andThen,
 																		A2(
 																			_elm_lang$core$Json_Decode_ops[':='],
-																			'histogramData',
-																			_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$int)),
-																		function (histogramData) {
-																			return A2(
-																				_elm_lang$core$Json_Decode$andThen,
-																				A2(_elm_lang$core$Json_Decode_ops[':='], 'pattern', _elm_lang$core$Json_Decode$string),
-																				function (pattern) {
-																					return _elm_lang$core$Json_Decode$succeed(
-																						{distanceClusters: distanceClusters, taxonomicClusters: taxonomicClusters, displayedClusters: displayedClusters, parameters: parameters, title: title, min: min, max: max, numberOfClusters: numberOfClusters, histogramData: histogramData, pattern: pattern});
-																				});
+																			'phylum',
+																			_elm_lang$core$Json_Decode$list(
+																				A2(
+																					_elm_lang$core$Json_Decode$andThen,
+																					A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																					function (id) {
+																						return A2(
+																							_elm_lang$core$Json_Decode$andThen,
+																							A2(
+																								_elm_lang$core$Json_Decode_ops[':='],
+																								'data',
+																								_elm_lang$core$Json_Decode$list(
+																									A2(
+																										_elm_lang$core$Json_Decode$andThen,
+																										A2(
+																											_elm_lang$core$Json_Decode_ops[':='],
+																											'name',
+																											_elm_lang$core$Json_Decode$oneOf(
+																												_elm_lang$core$Native_List.fromArray(
+																													[
+																														_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																														A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																													]))),
+																										function (name) {
+																											return A2(
+																												_elm_lang$core$Json_Decode$andThen,
+																												A2(_elm_lang$core$Json_Decode_ops[':='], 'id', _elm_lang$core$Json_Decode$string),
+																												function (id) {
+																													return A2(
+																														_elm_lang$core$Json_Decode$andThen,
+																														A2(_elm_lang$core$Json_Decode_ops[':='], 'count', _elm_lang$core$Json_Decode$int),
+																														function (count) {
+																															return _elm_lang$core$Json_Decode$succeed(
+																																{name: name, id: id, count: count});
+																														});
+																												});
+																										}))),
+																							function (data) {
+																								return A2(
+																									_elm_lang$core$Json_Decode$andThen,
+																									A2(
+																										_elm_lang$core$Json_Decode_ops[':='],
+																										'name',
+																										_elm_lang$core$Json_Decode$oneOf(
+																											_elm_lang$core$Native_List.fromArray(
+																												[
+																													_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+																													A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string)
+																												]))),
+																									function (name) {
+																										return _elm_lang$core$Json_Decode$succeed(
+																											{id: id, data: data, name: name});
+																									});
+																							});
+																					}))),
+																		function (phylum) {
+																			return _elm_lang$core$Json_Decode$succeed(
+																				{strain: strain, species: species, genus: genus, family: family, order: order, $class: $class, phylum: phylum});
 																		});
 																});
 														});
 												});
 										});
 								});
+						})),
+				function (taxonomicClusters) {
+					return A2(
+						_elm_lang$core$Json_Decode$andThen,
+						A2(
+							_elm_lang$core$Json_Decode_ops[':='],
+							'parameters',
+							_elm_lang$core$Json_Decode$list(
+								A2(
+									_elm_lang$core$Json_Decode$andThen,
+									A2(_elm_lang$core$Json_Decode_ops[':='], 'pvalue', _elm_lang$core$Json_Decode$float),
+									function (pvalue) {
+										return A2(
+											_elm_lang$core$Json_Decode$andThen,
+											A2(_elm_lang$core$Json_Decode_ops[':='], 'distance', _elm_lang$core$Json_Decode$float),
+											function (distance) {
+												return A2(
+													_elm_lang$core$Json_Decode$andThen,
+													A2(_elm_lang$core$Json_Decode_ops[':='], 'kmer', _elm_lang$core$Json_Decode$int),
+													function (kmer) {
+														return A2(
+															_elm_lang$core$Json_Decode$andThen,
+															A2(_elm_lang$core$Json_Decode_ops[':='], 'sketch', _elm_lang$core$Json_Decode$int),
+															function (sketch) {
+																return _elm_lang$core$Json_Decode$succeed(
+																	{pvalue: pvalue, distance: distance, kmer: kmer, sketch: sketch});
+															});
+													});
+											});
+									}))),
+						function (parameters) {
+							return _elm_lang$core$Json_Decode$succeed(
+								{distanceClusters: distanceClusters, taxonomicClusters: taxonomicClusters, parameters: parameters});
 						});
 				});
 		}));
@@ -8519,7 +9226,15 @@ var _user$project$Main$Model = function (a) {
 							return function (h) {
 								return function (i) {
 									return function (j) {
-										return {distanceClusters: a, taxonomicClusters: b, displayedClusters: c, parameters: d, title: e, min: f, max: g, numberOfClusters: h, histogramData: i, pattern: j};
+										return function (k) {
+											return function (l) {
+												return function (m) {
+													return function (n) {
+														return {distanceClusters: a, taxonomicClusters: b, displayedClusters: c, parameters: d, title: e, min: f, max: g, numberOfClusters: h, histogramData: i, pattern: j, rank: k, distance: l, taxonomy: m, showOrphan: n};
+													};
+												};
+											};
+										};
 									};
 								};
 							};
@@ -8530,38 +9245,100 @@ var _user$project$Main$Model = function (a) {
 		};
 	};
 };
+var _user$project$Main$ModelPort = F3(
+	function (a, b, c) {
+		return {distanceClusters: a, taxonomicClusters: b, parameters: c};
+	});
+var _user$project$Main$Range = F2(
+	function (a, b) {
+		return {min: a, max: b};
+	});
+var _user$project$Main$Parameters = F4(
+	function (a, b, c, d) {
+		return {pvalue: a, distance: b, kmer: c, sketch: d};
+	});
+var _user$project$Main$ClustersByRank = F7(
+	function (a, b, c, d, e, f, g) {
+		return {strain: a, species: b, genus: c, family: d, order: e, $class: f, phylum: g};
+	});
+var _user$project$Main$Cluster = F3(
+	function (a, b, c) {
+		return {id: a, data: b, name: c};
+	});
+var _user$project$Main$ClusterObject = F3(
+	function (a, b, c) {
+		return {name: a, id: b, count: c};
+	});
+var _user$project$Main$Phylum = {ctor: 'Phylum'};
+var _user$project$Main$Class = {ctor: 'Class'};
+var _user$project$Main$Order = {ctor: 'Order'};
+var _user$project$Main$Family = {ctor: 'Family'};
+var _user$project$Main$Genus = {ctor: 'Genus'};
 var _user$project$Main$init = {
 	ctor: '_Tuple2',
-	_0: _user$project$Main$Model(
-		_elm_lang$core$Native_List.fromArray(
-			[]))(
-		_elm_lang$core$Native_List.fromArray(
-			[]))(
-		_elm_lang$core$Native_List.fromArray(
-			[]))(
+	_0: _user$project$Main$Model(_elm_lang$core$Maybe$Nothing)(_elm_lang$core$Maybe$Nothing)(_elm_lang$core$Maybe$Nothing)(
 		_elm_lang$core$Native_List.fromArray(
 			[]))('')(0)(1)(0)(
 		_elm_lang$core$Native_List.fromArray(
-			[0]))(''),
+			[0]))('')(_user$project$Main$Genus)(true)(false)(false),
 	_1: _elm_lang$core$Platform_Cmd$none
+};
+var _user$project$Main$Species = {ctor: 'Species'};
+var _user$project$Main$Strain = {ctor: 'Strain'};
+var _user$project$Main$getRank = function (rankStr) {
+	var _p7 = rankStr;
+	switch (_p7) {
+		case 'strain':
+			return _user$project$Main$Strain;
+		case 'species':
+			return _user$project$Main$Species;
+		case 'genus':
+			return _user$project$Main$Genus;
+		case 'family':
+			return _user$project$Main$Family;
+		case 'order':
+			return _user$project$Main$Order;
+		case 'class':
+			return _user$project$Main$Class;
+		case 'phylum':
+			return _user$project$Main$Phylum;
+		default:
+			return _user$project$Main$Genus;
+	}
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p3 = msg;
-		switch (_p3.ctor) {
+		var _p8 = msg;
+		switch (_p8.ctor) {
 			case 'DataClusters':
-				var _p5 = _p3._0;
-				var _p4 = _user$project$Main$getMinMaxClusterSize(_p5.distanceClusters);
-				var min = _p4._0;
-				var max = _p4._1;
-				var filteredClusters = A3(
-					_user$project$Main$preprocessCluster,
-					min,
-					max,
-					A2(
-						_elm_lang$core$List$filter,
-						_user$project$Main$hasPattern(model.pattern),
-						_p5.distanceClusters));
+				var _p11 = _p8._0;
+				var taxonomicClusters = _elm_lang$core$Maybe$Just(
+					A7(_user$project$Main$ClustersByRank, _p11.taxonomicClusters.strain, _p11.taxonomicClusters.species, _p11.taxonomicClusters.genus, _p11.taxonomicClusters.family, _p11.taxonomicClusters.order, _p11.taxonomicClusters.$class, _p11.taxonomicClusters.phylum));
+				var distanceClusters = _elm_lang$core$Maybe$Just(
+					A7(_user$project$Main$ClustersByRank, _p11.distanceClusters.strain, _p11.distanceClusters.species, _p11.distanceClusters.genus, _p11.distanceClusters.family, _p11.distanceClusters.order, _p11.distanceClusters.$class, _p11.distanceClusters.phylum));
+				var rank = _user$project$Main$Genus;
+				var rankedDistanceClusters = A2(_user$project$Main$getClustersByRank, rank, distanceClusters);
+				var _p9 = _user$project$Main$getMinMaxClusterSize(rankedDistanceClusters);
+				var min = _p9._0;
+				var max = _p9._1;
+				var filteredClusters = function () {
+					var _p10 = rankedDistanceClusters;
+					if (_p10.ctor === 'Nothing') {
+						return _elm_lang$core$Native_List.fromArray(
+							[]);
+					} else {
+						return A4(
+							_user$project$Main$preprocessCluster,
+							min,
+							max,
+							model.showOrphan,
+							A2(
+								_elm_lang$core$List$filter,
+								_user$project$Main$hasPattern(''),
+								_p10._0));
+					}
+				}();
+				var numOfClusters = _elm_lang$core$List$length(filteredClusters);
 				var histogramData = A2(
 					_elm_lang$core$List$map,
 					function (n) {
@@ -8570,8 +9347,7 @@ var _user$project$Main$update = F2(
 					filteredClusters);
 				return {
 					ctor: '_Tuple2',
-					_0: _user$project$Main$Model(_p5.distanceClusters)(_p5.taxonomicClusters)(_p5.displayedClusters)(_p5.parameters)('Distance Clusters')(min)(max)(
-						_elm_lang$core$List$length(filteredClusters))(histogramData)(_p5.pattern),
+					_0: _user$project$Main$Model(distanceClusters)(taxonomicClusters)(distanceClusters)(_p11.parameters)('Distance Clusters')(min)(max)(numOfClusters)(histogramData)('')(rank)(true)(false)(false),
 					_1: _elm_lang$core$Platform_Cmd$batch(
 						_elm_lang$core$Native_List.fromArray(
 							[
@@ -8586,17 +9362,27 @@ var _user$project$Main$update = F2(
 							]))
 				};
 			case 'TaxonomicCluster':
-				var _p6 = _user$project$Main$getMinMaxClusterSize(model.taxonomicClusters);
-				var min = _p6._0;
-				var max = _p6._1;
-				var filteredClusters = A3(
-					_user$project$Main$preprocessCluster,
-					min,
-					max,
-					A2(
-						_elm_lang$core$List$filter,
-						_user$project$Main$hasPattern(model.pattern),
-						model.taxonomicClusters));
+				var clusters = A2(_user$project$Main$getClustersByRank, model.rank, model.taxonomicClusters);
+				var _p12 = _user$project$Main$getMinMaxClusterSize(clusters);
+				var min = _p12._0;
+				var max = _p12._1;
+				var filteredClusters = function () {
+					var _p13 = clusters;
+					if (_p13.ctor === 'Nothing') {
+						return _elm_lang$core$Native_List.fromArray(
+							[]);
+					} else {
+						return A4(
+							_user$project$Main$preprocessCluster,
+							min,
+							max,
+							model.showOrphan,
+							A2(
+								_elm_lang$core$List$filter,
+								_user$project$Main$hasPattern(model.pattern),
+								_p13._0));
+					}
+				}();
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
 					{
@@ -8608,7 +9394,9 @@ var _user$project$Main$update = F2(
 							function (n) {
 								return _elm_lang$core$List$length(n.data);
 							},
-							filteredClusters)
+							filteredClusters),
+						taxonomy: true,
+						distance: false
 					});
 				return {
 					ctor: '_Tuple2',
@@ -8627,17 +9415,27 @@ var _user$project$Main$update = F2(
 							]))
 				};
 			case 'DistanceCluster':
-				var _p7 = _user$project$Main$getMinMaxClusterSize(model.distanceClusters);
-				var min = _p7._0;
-				var max = _p7._1;
-				var filteredClusters = A3(
-					_user$project$Main$preprocessCluster,
-					min,
-					max,
-					A2(
-						_elm_lang$core$List$filter,
-						_user$project$Main$hasPattern(model.pattern),
-						model.distanceClusters));
+				var clusters = A2(_user$project$Main$getClustersByRank, model.rank, model.distanceClusters);
+				var _p14 = _user$project$Main$getMinMaxClusterSize(clusters);
+				var min = _p14._0;
+				var max = _p14._1;
+				var filteredClusters = function () {
+					var _p15 = clusters;
+					if (_p15.ctor === 'Nothing') {
+						return _elm_lang$core$Native_List.fromArray(
+							[]);
+					} else {
+						return A4(
+							_user$project$Main$preprocessCluster,
+							min,
+							max,
+							model.showOrphan,
+							A2(
+								_elm_lang$core$List$filter,
+								_user$project$Main$hasPattern(model.pattern),
+								_p15._0));
+					}
+				}();
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
 					{
@@ -8649,7 +9447,9 @@ var _user$project$Main$update = F2(
 							function (n) {
 								return _elm_lang$core$List$length(n.data);
 							},
-							filteredClusters)
+							filteredClusters),
+						taxonomy: false,
+						distance: true
 					});
 				return {
 					ctor: '_Tuple2',
@@ -8668,20 +9468,30 @@ var _user$project$Main$update = F2(
 							]))
 				};
 			case 'SliderChange':
-				var _p8 = _p3._0;
-				var filteredClusters = A3(
-					_user$project$Main$preprocessCluster,
-					_p8.min,
-					_p8.max,
-					A2(
-						_elm_lang$core$List$filter,
-						_user$project$Main$hasPattern(model.pattern),
-						model.displayedClusters));
+				var _p17 = _p8._0;
+				var displayedClusters = A2(_user$project$Main$getClustersByRank, model.rank, model.displayedClusters);
+				var filteredClusters = function () {
+					var _p16 = displayedClusters;
+					if (_p16.ctor === 'Nothing') {
+						return _elm_lang$core$Native_List.fromArray(
+							[]);
+					} else {
+						return A4(
+							_user$project$Main$preprocessCluster,
+							_p17.min,
+							_p17.max,
+							model.showOrphan,
+							A2(
+								_elm_lang$core$List$filter,
+								_user$project$Main$hasPattern(model.pattern),
+								_p16._0));
+					}
+				}();
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
 					{
-						min: _p8.min,
-						max: _p8.max,
+						min: _p17.min,
+						max: _p17.max,
 						numberOfClusters: _elm_lang$core$List$length(filteredClusters),
 						histogramData: A2(
 							_elm_lang$core$List$map,
@@ -8700,19 +9510,30 @@ var _user$project$Main$update = F2(
 								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
 							]))
 				};
-			default:
-				var _p10 = _p3._0;
-				var filteredClusters = A3(
-					_user$project$Main$preprocessCluster,
-					model.min,
-					model.max,
-					A2(
-						_elm_lang$core$List$filter,
-						_user$project$Main$hasPattern(_p10),
-						model.displayedClusters));
-				var _p9 = _user$project$Main$getMinMaxClusterSize(filteredClusters);
-				var min = _p9._0;
-				var max = _p9._1;
+			case 'FilterClusters':
+				var _p20 = _p8._0;
+				var displayedClusters = A2(_user$project$Main$getClustersByRank, model.rank, model.displayedClusters);
+				var filteredClusters = function () {
+					var _p18 = displayedClusters;
+					if (_p18.ctor === 'Nothing') {
+						return _elm_lang$core$Native_List.fromArray(
+							[]);
+					} else {
+						return A4(
+							_user$project$Main$preprocessCluster,
+							model.min,
+							model.max,
+							model.showOrphan,
+							A2(
+								_elm_lang$core$List$filter,
+								_user$project$Main$hasPattern(_p20),
+								_p18._0));
+					}
+				}();
+				var _p19 = _user$project$Main$getMinMaxClusterSize(
+					_elm_lang$core$Maybe$Just(filteredClusters));
+				var min = _p19._0;
+				var max = _p19._1;
 				var maxCorrected = (_elm_lang$core$Native_Utils.cmp(max, 0) < 1) ? 1 : max;
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
@@ -8725,7 +9546,7 @@ var _user$project$Main$update = F2(
 								return _elm_lang$core$List$length(n.data);
 							},
 							filteredClusters),
-						pattern: _p10
+						pattern: _p20
 					});
 				return {
 					ctor: '_Tuple2',
@@ -8740,24 +9561,217 @@ var _user$project$Main$update = F2(
 								{ctor: '_Tuple2', _0: filteredClusters, _1: model.histogramData})
 							]))
 				};
+			case 'ChangeRank':
+				var rank = _user$project$Main$getRank(_p8._0);
+				var displayedClusters = A2(_user$project$Main$getClustersByRank, rank, model.displayedClusters);
+				var _p21 = _user$project$Main$getMinMaxClusterSize(displayedClusters);
+				var min = _p21._0;
+				var max = _p21._1;
+				var filteredClusters = function () {
+					var _p22 = displayedClusters;
+					if (_p22.ctor === 'Nothing') {
+						return _elm_lang$core$Native_List.fromArray(
+							[]);
+					} else {
+						return A4(
+							_user$project$Main$preprocessCluster,
+							min,
+							max,
+							model.showOrphan,
+							A2(
+								_elm_lang$core$List$filter,
+								_user$project$Main$hasPattern(model.pattern),
+								_p22._0));
+					}
+				}();
+				var newModel = _elm_lang$core$Native_Utils.update(
+					model,
+					{
+						numberOfClusters: _elm_lang$core$List$length(filteredClusters),
+						histogramData: A2(
+							_elm_lang$core$List$map,
+							function (n) {
+								return _elm_lang$core$List$length(n.data);
+							},
+							filteredClusters),
+						rank: rank
+					});
+				return {
+					ctor: '_Tuple2',
+					_0: newModel,
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Main$sliderRange(
+								_elm_lang$core$Native_List.fromArray(
+									[min, max])),
+								_user$project$Main$sliderValue(
+								_elm_lang$core$Native_List.fromArray(
+									[min, max])),
+								_user$project$Main$draw(
+								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
+							]))
+				};
+			default:
+				var showOrphan = _elm_lang$core$Basics$not(model.showOrphan);
+				var displayedClusters = A2(_user$project$Main$getClustersByRank, model.rank, model.displayedClusters);
+				var _p23 = _user$project$Main$getMinMaxClusterSize(displayedClusters);
+				var min = _p23._0;
+				var max = _p23._1;
+				var filteredClusters = function () {
+					var _p24 = displayedClusters;
+					if (_p24.ctor === 'Nothing') {
+						return _elm_lang$core$Native_List.fromArray(
+							[]);
+					} else {
+						return A4(
+							_user$project$Main$preprocessCluster,
+							min,
+							max,
+							showOrphan,
+							A2(
+								_elm_lang$core$List$filter,
+								_user$project$Main$hasPattern(model.pattern),
+								_p24._0));
+					}
+				}();
+				var numOfClusters = _elm_lang$core$List$length(filteredClusters);
+				var newModel = _elm_lang$core$Native_Utils.update(
+					model,
+					{
+						showOrphan: showOrphan,
+						histogramData: A2(
+							_elm_lang$core$List$map,
+							function (n) {
+								return _elm_lang$core$List$length(n.data);
+							},
+							filteredClusters),
+						numberOfClusters: numOfClusters
+					});
+				return {
+					ctor: '_Tuple2',
+					_0: newModel,
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Main$sliderRange(
+								_elm_lang$core$Native_List.fromArray(
+									[min, max])),
+								_user$project$Main$sliderValue(
+								_elm_lang$core$Native_List.fromArray(
+									[min, max])),
+								_user$project$Main$draw(
+								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
+							]))
+				};
 		}
 	});
-var _user$project$Main$Range = F2(
-	function (a, b) {
-		return {min: a, max: b};
-	});
-var _user$project$Main$Parameters = F4(
-	function (a, b, c, d) {
-		return {pvalue: a, distance: b, kmer: c, sketch: d};
-	});
-var _user$project$Main$Cluster = F3(
-	function (a, b, c) {
-		return {id: a, data: b, name: c};
-	});
-var _user$project$Main$ClusterObject = F3(
-	function (a, b, c) {
-		return {name: a, id: b, count: c};
-	});
+var _user$project$Main$rankOptions = function (model) {
+	var rankModel = model.rank;
+	var toOption = function (rank) {
+		var _p25 = rank;
+		switch (_p25.ctor) {
+			case 'Strain':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('strain'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Strain')
+						]));
+			case 'Species':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('species'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Species')
+						]));
+			case 'Genus':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('genus'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Genus')
+						]));
+			case 'Family':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('family'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Family')
+						]));
+			case 'Order':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('order'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Order')
+						]));
+			case 'Class':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('class'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Class')
+						]));
+			default:
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('phylum'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Phylum')
+						]));
+		}
+	};
+	var ranks = _elm_lang$core$Native_List.fromArray(
+		[_user$project$Main$Strain, _user$project$Main$Species, _user$project$Main$Genus, _user$project$Main$Family, _user$project$Main$Order, _user$project$Main$Class, _user$project$Main$Phylum]);
+	return A2(_elm_lang$core$List$map, toOption, ranks);
+};
+var _user$project$Main$ShowOrphan = {ctor: 'ShowOrphan'};
+var _user$project$Main$ChangeRank = function (a) {
+	return {ctor: 'ChangeRank', _0: a};
+};
 var _user$project$Main$FilterClusters = function (a) {
 	return {ctor: 'FilterClusters', _0: a};
 };
@@ -8779,70 +9793,166 @@ var _user$project$Main$DistanceCluster = {ctor: 'DistanceCluster'};
 var _user$project$Main$TaxonomicCluster = {ctor: 'TaxonomicCluster'};
 var _user$project$Main$view = function (model) {
 	return A2(
-		_elm_lang$html$Html$div,
+		_elm_lang$html$Html$form,
 		_elm_lang$core$Native_List.fromArray(
 			[
 				_elm_lang$html$Html_Attributes$classList(
 				_elm_lang$core$Native_List.fromArray(
 					[
-						{ctor: '_Tuple2', _0: 'row', _1: true}
+						{ctor: '_Tuple2', _0: 'ui', _1: true},
+						{ctor: '_Tuple2', _0: 'form', _1: true}
 					]))
 			]),
 		_elm_lang$core$Native_List.fromArray(
 			[
 				_user$project$Main$parameters(model.parameters),
 				A2(
-				_elm_lang$html$Html$button,
-				_elm_lang$core$Native_List.fromArray(
-					[
-						_elm_lang$html$Html_Events$onClick(_user$project$Main$DistanceCluster)
-					]),
-				_elm_lang$core$Native_List.fromArray(
-					[
-						_elm_lang$html$Html$text('Distance Clusters')
-					])),
-				A2(
-				_elm_lang$html$Html$button,
-				_elm_lang$core$Native_List.fromArray(
-					[
-						_elm_lang$html$Html_Events$onClick(_user$project$Main$TaxonomicCluster)
-					]),
-				_elm_lang$core$Native_List.fromArray(
-					[
-						_elm_lang$html$Html$text('Taxonomic Clusters')
-					])),
-				A2(
-				_elm_lang$html$Html$input,
-				_elm_lang$core$Native_List.fromArray(
-					[
-						_elm_lang$html$Html_Attributes$placeholder('Filter clusters'),
-						_elm_lang$html$Html_Events$onInput(_user$project$Main$FilterClusters)
-					]),
-				_elm_lang$core$Native_List.fromArray(
-					[])),
-				A2(
 				_elm_lang$html$Html$div,
 				_elm_lang$core$Native_List.fromArray(
-					[]),
+					[
+						_elm_lang$html$Html_Attributes$class('inline fields')
+					]),
 				_elm_lang$core$Native_List.fromArray(
 					[
 						A2(
-						_elm_lang$html$Html$h4,
-						_elm_lang$core$Native_List.fromArray(
-							[]),
+						_elm_lang$html$Html$div,
 						_elm_lang$core$Native_List.fromArray(
 							[
-								_elm_lang$html$Html$text(
+								_elm_lang$html$Html_Attributes$class('field')
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
 								A2(
-									_elm_lang$core$Basics_ops['++'],
-									model.title,
-									A2(
-										_elm_lang$core$Basics_ops['++'],
-										' (',
+								_elm_lang$html$Html$select,
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_elm_lang$html$Html_Attributes$class('ui dropdown'),
 										A2(
-											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString(model.numberOfClusters),
-											')'))))
+										_elm_lang$html$Html_Events$on,
+										'change',
+										A2(_elm_lang$core$Json_Decode$map, _user$project$Main$ChangeRank, _elm_lang$html$Html_Events$targetValue))
+									]),
+								_user$project$Main$rankOptions(model))
+							])),
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Attributes$class('field')
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								A2(
+								_elm_lang$html$Html$input,
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_elm_lang$html$Html_Attributes$placeholder('Filter clusters'),
+										_elm_lang$html$Html_Events$onInput(_user$project$Main$FilterClusters)
+									]),
+								_elm_lang$core$Native_List.fromArray(
+									[]))
+							])),
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Attributes$class('field')
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								A2(
+								_elm_lang$html$Html$div,
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_elm_lang$html$Html_Attributes$class('ui checkbox')
+									]),
+								_elm_lang$core$Native_List.fromArray(
+									[
+										A2(
+										_elm_lang$html$Html$input,
+										_elm_lang$core$Native_List.fromArray(
+											[
+												_elm_lang$html$Html_Attributes$type$('checkbox'),
+												_elm_lang$html$Html_Events$onClick(_user$project$Main$ShowOrphan)
+											]),
+										_elm_lang$core$Native_List.fromArray(
+											[
+												_elm_lang$html$Html$text('orphan')
+											])),
+										A2(
+										_elm_lang$html$Html$label,
+										_elm_lang$core$Native_List.fromArray(
+											[
+												_elm_lang$html$Html_Attributes$checked(model.showOrphan)
+											]),
+										_elm_lang$core$Native_List.fromArray(
+											[
+												_elm_lang$html$Html$text('Show Orphan')
+											]))
+									]))
+							])),
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Attributes$class('field')
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								A2(
+								_elm_lang$html$Html$div,
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_elm_lang$html$Html_Attributes$class('ui basic buttons')
+									]),
+								_elm_lang$core$Native_List.fromArray(
+									[
+										A2(
+										_elm_lang$html$Html$div,
+										_elm_lang$core$Native_List.fromArray(
+											[
+												_elm_lang$html$Html_Attributes$classList(
+												_elm_lang$core$Native_List.fromArray(
+													[
+														{ctor: '_Tuple2', _0: 'ui', _1: true},
+														{ctor: '_Tuple2', _0: 'button', _1: true},
+														{ctor: '_Tuple2', _0: 'active', _1: model.distance}
+													])),
+												_elm_lang$html$Html_Events$onClick(_user$project$Main$DistanceCluster)
+											]),
+										_elm_lang$core$Native_List.fromArray(
+											[
+												_elm_lang$html$Html$text('Distance Clusters')
+											])),
+										A2(
+										_elm_lang$html$Html$div,
+										_elm_lang$core$Native_List.fromArray(
+											[
+												_elm_lang$html$Html_Attributes$classList(
+												_elm_lang$core$Native_List.fromArray(
+													[
+														{ctor: '_Tuple2', _0: 'ui', _1: true},
+														{ctor: '_Tuple2', _0: 'button', _1: true},
+														{ctor: '_Tuple2', _0: 'active', _1: model.taxonomy}
+													])),
+												_elm_lang$html$Html_Events$onClick(_user$project$Main$TaxonomicCluster)
+											]),
+										_elm_lang$core$Native_List.fromArray(
+											[
+												_elm_lang$html$Html$text('Taxonomic Clusters')
+											]))
+									])),
+								A2(
+								_elm_lang$html$Html$a,
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_elm_lang$html$Html_Attributes$class('ui grey circular label')
+									]),
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_elm_lang$html$Html$text(
+										_elm_lang$core$Basics$toString(model.numberOfClusters))
+									]))
 							]))
 					]))
 			]));

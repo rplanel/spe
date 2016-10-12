@@ -1,5 +1,5 @@
 // Setup Elm app
-var node = document.getElementById('control-btn')
+var node = document.getElementById('cluster-form')
 var app = Elm.Main.embed(node);
 
 // Initialize D3 component
@@ -39,14 +39,14 @@ slider.noUiSlider.on('change', function(range){
 app.ports.dataClusters.send({
     "distanceClusters" : dataCluster,
     "taxonomicClusters": taxoCluster,
-    "displayedClusters" : dataCluster,
+    "displayedClusters" : undefined,
     "parameters"       : [ parametersData ],
-    "title"            : "",
-    "min"              : 0.0,
-    "max"              : 1.0,
-    "numberOfClusters" : 0,
-    "histogramData"    : [0],
-    "pattern"          : ""
+    //"title"            : "",
+    //"min"              : 0.0,
+    //"max"              : 1.0,
+    //"numberOfClusters" : 0,
+    //"histogramData"    : [0],
+    //"pattern"          : ""
 });
 
 app.ports.sliderRange.subscribe(function(range){
@@ -63,6 +63,9 @@ app.ports.sliderValue.subscribe(function(range){
 });
 
 
+app.ports.deletePies.subscribe(function(params){
+    d3.selectAll('g.piecharts').remove()
+});
 
 app.ports.draw.subscribe(function(params){
     var data = params[0];
@@ -79,7 +82,7 @@ app.ports.draw.subscribe(function(params){
     d3.select('g.histogram').datum(histoData).call(histogram,500,500);
     
     d3.select('g.clusters')
-        .attr('transform', "translate(0,300)")
+        .attr('transform', "translate(0,400)")
         .datum(data)
         .call(piechart,piechartRadius,piechartRadius,numColumn);
 });

@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8">
     <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"> -->
     <!-- Compiled and minified CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.5.1/nouislider.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.4/semantic.min.css">
     <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
     <style>
       text {font-family:'Inconsolata', monospace !important; font-size: 12px}
@@ -23,24 +24,24 @@
   </head>
   
   <body>
-    <div id="main" class="container-fluid" style="padding:40px 40px 40px 40px;">
-      <div class="row">
-	<div class="col-md-5">
-	  <div id="control-btn" class="control-cluster btn-group " role="group"></div>
-	</div>
-	<div id="slider-degre" class="col-md-4"></div>
+    <div id="main" class="ui two column grid container" style="padding:40px 40px 40px 40px;">
+      <div class="one column row">
+        <div id="cluster-form"></div>
       </div>
-      
-      <div class="row">
-	<svg width="960" height="500">
-	  <text y="10px" id="count-cluster"></text>
-	  <g class="histogram"></g>
-	  <g class="clusters"></g>
-	</svg>
+      <div class="one column row">
+        <div id="slider-degre" style="width:100%;"></div>
       </div>
-      
+      <div class="one column row">
+        <div class="wide column">
+	  <svg width="960" height="500">
+	    <text y="10px" id="count-cluster"></text>
+	    <g class="histogram"></g>
+	    <g class="clusters"></g>
+	  </svg>
+        </div>
+      </div>
     </div>
-    
+
     <!-- Compressed JavaScript -->
     
     <!-- Compiled and minified JavaScript -->
@@ -48,7 +49,8 @@
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <!-- Latest compiled and minified JavaScript -->
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.4/semantic.min.js"></script>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script src="data.js"></script>
     <script src="piechart.js"></script>

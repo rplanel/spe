@@ -27,7 +27,6 @@ function piechart () {
 	    var pie = d3.pie()
 		.sort(null)
 		.value(function(d) { return d.count; });
-	    
 
 	    var updateSelection = context
 		.selectAll('g.pieDraw')
@@ -62,7 +61,7 @@ function piechart () {
                 .select('text.title')
                 .style('font-size','14px')
                 .style('text-decoration','underline')
-                .text(function(d){return d.name;})
+                .text(function(d){return d.name+"("+d.id+")";})
             
 	    update.attr('transform',function(d,i){
                 var column = i % numCol;
@@ -102,7 +101,7 @@ function piechart () {
 		.selectAll('g.arc')
 		.data(function(d){
 		    return pie(d.data);
-		});
+		}, function(d) {return d.data.id});
 	    
 	    
 	    var arcEnter = arcSelection
@@ -143,7 +142,7 @@ function piechart () {
 		    return transform;
 		})
 		.text(function(d){
-		    return d.data.name;
+		    return d.data.name + '(' + d.data.count + ')';
 		});
 
 	    

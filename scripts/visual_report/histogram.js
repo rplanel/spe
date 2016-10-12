@@ -2,8 +2,10 @@ function histogram () {
     function exports(_selection, width, height) {
 	_selection.each(function(data, i) {
 	    var formatCount = d3.format("d");
+            var formatStat = d3.format(".6f");
+            
 	    
-	    var margin = {top: 10, right: 30, bottom: 30, left: 30},
+	    var margin = {top: 10, right: 30, bottom: 30, left: 130},
 		width = 960 - margin.left - margin.right,
 		height = 250 - margin.top - margin.bottom;
 
@@ -12,6 +14,10 @@ function histogram () {
                 .domain(domain)
 		.range([0, width]);
 
+            var mean     = d3.mean(data);
+            var median   = d3.median(data);
+            var variance = d3.variance(data);
+            var deviation = d3.deviation(data);
             
 	    var bins = d3.histogram()
 		.domain(domain)
@@ -23,21 +29,48 @@ function histogram () {
 		.range([height, 0]);
 	    
 	    var container = d3.select(this)
-            
-            
-		.attr("width", width + margin.left + margin.right)
+            	.attr("width", width + margin.left + margin.right)
 		.attr("height", height + margin.top + margin.bottom)
 		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-            container.select('g.axis').remove();
+
+            // mean
+
+            container.select('g.stat').remove();
+
+            var stat = container
+                .append('g')
+                .attr('transform','translate(-130,0)')
+                .classed('stat',true);
             
+            
+            stat
+                .append('text')
+                .attr('transform','translate(0,20)')
+                .text('Mean = '+formatStat(mean));
+            stat
+                .append('text')
+                .attr('transform','translate(0,40)')
+                .text('Median = '+formatStat(median));
+            stat
+                .append('text')
+                .attr('transform','translate(0,60)')
+                .text('Variance = '+formatStat(variance));
+            stat
+                .append('text')
+                .attr('transform','translate(0,80)')
+                .text('Deviation = '+formatStat(deviation));
+            
+            
+            container.select('g.axis').remove();
+            var thicks = (domain[1] > 30 ) ? 30 : domain[1];
             if (bins.length > 0) {
                 container
                     .append("g")
 	            .attr("class", "axis axis-x")
 	            .attr("transform", "translate(0," + height + ")")
-                    .call(d3.axisBottom(x).ticks(domain[1]));
+                    .call(d3.axisBottom(x).ticks(thicks));
             }
             
 	    var bar = container.selectAll("g.bar")
@@ -60,7 +93,8 @@ function histogram () {
             
             barE
                 .append("text")
-		.attr("dy", ".75em")
+		.attr("dy", "-.75em")
+                .style("fill","brown")
             	.attr("text-anchor", "middle")
 		.attr("y", 6);
             
@@ -99,7 +133,7 @@ function histogram () {
             update
                 .select('text')
 		.attr("x", (x(bins[0].x1) - x(bins[0].x0)) / 2)
-		.text(function(d) { return formatCount(d.length); });
+		.text(function(d) { return (formatCount(d.length) > 0) ? formatCount(d.length):''; });
             // update
             //     .select('g.axis')
             //     .call(d3.axisBottom(x));
