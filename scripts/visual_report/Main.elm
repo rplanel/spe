@@ -6,11 +6,8 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Regex
 import Json.Decode as Json
+import MashTree
 
-
--- import Http exposing (..)
--- import Json.Decode as Json exposing ((:=))
--- import Task
 
 
 main : Program Never
@@ -426,6 +423,8 @@ update msg model =
 -- SUBSCRIPTIONS
 
 
+-- send through port
+
 port draw : ( Clusters, List Int ) -> Cmd msg
 
 
@@ -438,6 +437,8 @@ port sliderRange : List Int -> Cmd msg
 port sliderValue : List Int -> Cmd msg
 
 
+-- Get from port
+                   
 port dataClusters : (ModelPort -> msg) -> Sub msg
 
 

@@ -1,0 +1,19 @@
+{
+  "name": "visual_report",
+  "version": "1.0.0",
+  "description": "interface to visualize cluster data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "browserify": "^13.1.0",
+    "d3": "^4.2.7",
+    "elm": "^0.17.1",
+    "neighbor-joining": "^1.0.4",
+    "nouislider": "^9.0.0",
+    "semantic-ui": "^2.2.4"
+  }
+}

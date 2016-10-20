@@ -9,3 +9,5 @@ report
 elm-stuff/
 out/
 tmp/
+node_modules/
+

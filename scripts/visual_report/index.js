@@ -1,3 +1,6 @@
+// var noUiSlider = require('nouislider');
+// var d3 = require('d3');
+// var NJ = require('neighbor-joining');
 // Setup Elm app
 var node = document.getElementById('cluster-form')
 var app = Elm.Main.embed(node);
@@ -12,6 +15,7 @@ var piechartRadius = 80;
 var numColumn = 4;
 
 // Get the data
+
 var dataCluster = rawClusterData;
 var taxoCluster = rawRankData;
 
@@ -41,12 +45,6 @@ app.ports.dataClusters.send({
     "taxonomicClusters": taxoCluster,
     "displayedClusters" : undefined,
     "parameters"       : [ parametersData ],
-    //"title"            : "",
-    //"min"              : 0.0,
-    //"max"              : 1.0,
-    //"numberOfClusters" : 0,
-    //"histogramData"    : [0],
-    //"pattern"          : ""
 });
 
 app.ports.sliderRange.subscribe(function(range){
@@ -86,3 +84,6 @@ app.ports.draw.subscribe(function(params){
         .datum(data)
         .call(piechart,piechartRadius,piechartRadius,numColumn);
 });
+
+
+// For the MashTree

@@ -28,13 +28,62 @@ nextflow run mash-nextflow.nf -resume \
 
 ### Single thread sur etna0 ###
 
-|task_id|hash|native_id|name|status|exit|submit|duration|realtime|%cpu|rss|vmem|rchar|wchar|
-|-------|----|---------|----|------|----|------|--------|--------|----|---|----|-----|-----|
+
+
+## Resultats ##
+
+### Raw data description ###
+
+|Rank   |Number of ranks| Orphan|
+|-------|:-------------:|:-----:|
+|Strain |5407           |5407   |
+|Species|2052           |1556   |
+|Genus  |703            |348    |
+|Family |312/311        |108    |
+|Order  |164/163        |44     |
+|Class  |71/70          |16     |
+|Phylum |29/28          |5      |
+
+
+### P-Value threshold ###
+
+It seems that the p-value has no effect when distance threshold less than 0.2
+
+### Sketches and kmers effect ###
+
+Need to more analysis
+
+### Best parameters per rank ###
+
+We need to have almost the same clustering as the ncbi one but not exactly the same. 
+To check that we can look at:
+* The number of cluster per ranks. More the mean is close to 1 (For all the ranks (Species, Genus) how many cluster do I have).
+* For a cluster, how many different ranks value do we have (Mean closest to 1).
+
+#### Species ####
+
+|Rank   |Number of ranks| Orphan|
+|-------|:-------------:|:-----:|
+|Species|2052           |1556   |
+
+
+|Distance|Number of cluster|Orphan|Nb Species per Cluster (mean)| Nb Cluster per Species(mean)|
+|--------|-----------------|------|-----------------------------|-----------------------------|
+|0.03    |2417             |1873  |1.1299                       |1.3304                       |
+|0.06    |2125             |1587  |1.1802                       |1.2217                       |
+|0.065   |2076             |1536  |1.1965                       |1.2100                       |
+|0.07    |2033             |1491  |1.2090                       |1.1973                       |
+|0.1     |1791             |1275  |1.3093                       |1.1423                       |
 
 
 ## Problèmes ##
 
-L'utilisation de la fonction *splitFasta* pour découper un multifasta en chunk pose des problèmes de mémoire. La raison vient probablement de la taille des séquences qui peuvent être grande (un génome entier). -> **java heap space**
+* L'utilisation de la fonction *splitFasta* pour découper un multifasta en chunk pose des problèmes de mémoire. La raison vient probablement de la taille des séquences qui peuvent être grande (un génome entier). -> **java heap space**
+* mash dist ne support pas une p-value inférieur à 1e-30 pour le filtre. 
+
+
+
+loadFileToMySQLDB.sh cluster.DB GO_SPE MASH_cluster '\t' '\n' no yes
 
 
 
