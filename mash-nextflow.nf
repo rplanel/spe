@@ -24,7 +24,6 @@ params.kmerSize
 
 
 
-
 sketchesOutName = "sketches-db"
 
 
@@ -36,11 +35,14 @@ splitFastaScript     = Channel.value(file('scripts/splitFasta.pl'))
 filterGraphScript    = Channel.value(file('scripts/filterGraph.pl'))
 addAnnotationScript  = Channel.value(file('scripts/addAnnotation.pl'))
 extractClusterScript = Channel.value(file('scripts/extractCluster.pl'))
+extractDistance      = Channel.value(file('scripts/extractClusterDistanceMatrix.pl'))
 calculateClusterIntraStatScript = Channel.value(file('scripts/calculateClusterIntraStat.pl'))
 
-indexHtml = Channel.value(file('scripts/index.html'))
-indexJs   = Channel.value(file('scripts/index.js'))
-piechart  = Channel.value(file('scripts/piechart.js'))
+indexHtml  = Channel.value(file('scripts/visual_report/index.html'))
+indexJs    = Channel.value(file('scripts/visual_report/index.js'))
+piechart   = Channel.value(file('scripts/visual_report/piechart.js'))
+histogram  = Channel.value(file('scripts/visual_report/histogram.js'))
+parameters = Channel.value(file('scripts/visual_report/parameters.js'))
 
 
 /*
@@ -182,7 +184,7 @@ process merge_same_organism {
 process splitFasta {
   tag { mergedGenomes }
   storeDir 'data/genomes/fasta'
-  
+ 
   input:
   file mergedGenomes
   file script from splitFastaScript
@@ -244,18 +246,19 @@ querySketch
 process paste_query_sketches_together {
   tag { filesList }
   // Do not store dir because will not redo this file if use a subset.
-  //storeDir 'data/sketches' 
+  storeDir 'data/sketches' 
 
   input:
   file filesList from sketchesFilenameToPaste
   val sketchSize
   val kmerSize
+  val numOfGenomes
   
   output:
   file "${out}.msh" into genomeSketches
   
   script:
-  out = "genome-sketches-${kmerSize}-${sketchSize}"
+  out = "genome-sketches-${kmerSize}-${sketchSize}-${numOfGenomes}"
   "mash paste ${out} -l ${filesList}"
 
 }
@@ -287,29 +290,28 @@ incrementalQuery.into {queryToSketch; queryToDist}
 
 // Calculate the distances
 process all_vs_all_distance {
-  tag { "${query} distance=${distanceThreshold} pvalue=${pvalueThreshold}"}
-  publishDir { resDir }
-  // scratch true
+  tag { "${query} distance=${sketchSize} pvalue=${kmerSize} $sketchesDb" } 
+  
+  //scratch true
+  storeDir "data/distance"
   
   input:
   file sketchesDb from allVsAllQuery
   file query from sketchesFilenameToDist
-  val pvalueThreshold
-  val distanceThreshold
   val sketchSize
   val kmerSize  
 
   
   output:
-  file out into allVsAllDistances
+  file out into allVsAllDistances, allVsAllDistances2
 
   script:
   baseName = sketchesDb.getBaseName()
-  resDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
-  out = "${baseName}-${pvalueThreshold}-${distanceThreshold}-distance.tab"
-  
+  out = "${baseName}-distance.tab"
+
+  // mash dist -v $pvalueThreshold -d $distanceThreshold ${sketchesDb} -l ${query} > $out
   """
-  mash dist -v $pvalueThreshold -d $distanceThreshold ${sketchesDb} -l ${query} > $out
+  mash dist ${sketchesDb} -l ${query} > $out
   """
 
 }
@@ -365,19 +367,26 @@ process incremental_distance {
 
 
 process filterEdges {
-  //publishDir 'result'
+
+  tag { "distance = ${distanceThreshold} - pvalue = ${pvalueThreshold}" }
+  
+  publishDir { resultDir }
+
 
   input:
   file dist from allVsAllDistances
   file script from filterGraphScript
   val pvalueThreshold
   val distanceThreshold
+  val sketchSize
+  val kmerSize  
 
 
   output:
   file "${out}" into filteredDistance, filteredEdges
 
   script:
+  resultDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
   baseName = dist.getBaseName()
   out = "${baseName}-filtered.tab"
   """
@@ -398,6 +407,8 @@ process extractAnnotation {
   script:
   out = "annotations.tab"
 
+
+  // faire un in 
   """
   mysql --max_allowed-packet=1G -ABqr pkgdb_dev -e \
     \" SELECT o.O_id, o.O_Strain, o.O_name, t.name_txt, t.rank, t.tax_id  \
@@ -492,18 +503,65 @@ process addAnnotation {
 
 }
 
-process extractCluster {
-
+process extractGraph {
+  
+  publishDir { resDir }
+  
+  
+  
   input:
-  file multipleCluster from annotatedSilixClusterFile
+  file dico from annotatedSilixClusterFile
+  file edges from allVsAllDistances2
   file script from extractClusterScript
+  val pvalueThreshold
+  val distanceThreshold
+  val sketchSize
+  val kmerSize  
+
 
   output:
-  file "CL*.tab" into clusterFiles
+  file "CL*-nodes.tab" into nodes mode flatten
+  file "CL*-edges.tab" into edges mode flatten
   
   script:
+  resDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results/graph"
   """
-  perl $script $multipleCluster
+  perl $script $dico $edges
+  """
+
+}
+
+
+
+nodes
+.phase(edges) {file ->
+  (m) = (file.baseName =~ /(CL\d+)/)[0]
+  return m
+ }
+.set { tupleGraph }
+
+
+process extractClusterDistanceMatrix {
+  tag { "${nodes} - ${edges}" }
+  
+  publishDir { resDir }
+  
+  input:
+  file script from extractDistance
+  set file(nodes), file(edges) from tupleGraph
+  val pvalueThreshold
+  val distanceThreshold
+  val sketchSize
+  val kmerSize  
+
+
+  output:
+  file "CL*.json" into distanceMatrix
+
+  script:
+  resDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results/distance-matrices"
+  """
+  perl $script $nodes $edges
   """
 
 }
@@ -555,8 +613,8 @@ process createJsonData {
   
 
   script:
-  resultDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
-  baseName = "${kmerSize}-${sketchSize}-${distanceThreshold}-${pvalueThreshold}-data.js"
+  resultDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}"
+  baseName = "data.js"
   """
   echo 'var rawClusterData = ' | cat - $clusterStats > clusterData
   echo -e \";\n var rawRankData = \" | cat - $rankStats > rankData
@@ -568,10 +626,34 @@ process createJsonData {
 
 }
 
-// process htmlReport {
+/*
+process htmlReport {
+
+  input:
+  val pvalueThreshold  
+  val distanceThreshold
+  val sketchSize       
+  val kmerSize
+  file data
+  file indexHtml  
+  file indexJs    
+  file piechart   
+  file histogram  
+  file parameters 
+
 
   
-// }
+  
+  script:
+  reportDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}"
+  dataName = data.getName()
+  dataLink = file("results/${dataName}")
+  dataLink.mklink("${reportDir}/data.js")
+}
+*/
+
+
+
 
 
 
@@ -581,8 +663,8 @@ workflow.onComplete {
   println "Cmd line    : $workflow.commandLine"   
   println "Completed at: ${workflow.complete}"
   println "Duration    : ${workflow.duration}"
-  println "Success     : ${workflow.success}"
   println "workDir     : ${workflow.workDir}"
   println "exit status : ${workflow.exitStatus}"
   println "Error report: ${workflow.errorReport ?: '-'}"
+  println "Success     : ${workflow.success}"
 }

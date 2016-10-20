@@ -7,3 +7,5 @@ data
 result
 report
 elm-stuff/
+out/
+tmp/

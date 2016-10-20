@@ -33,10 +33,15 @@ my $ranks = ['strain', 'species', 'genus', 'family', 'order', 'class', 'phylum']
 
 while (my $l = <$CLUSTER>) {
   chomp $l;
-  my @line = split(/\t+/,$l);
+  my @line = split(/\t/,$l);
   
   my $clusterId      = $line[0];
 
+
+  if ($line[1]== 2481) {
+      print STDERR Dumper \@line;
+  }
+  
   my $startParse = 1;
   
   foreach my $rank (@$ranks) {
@@ -44,7 +49,7 @@ while (my $l = <$CLUSTER>) {
       ## Group on the genus
       my $rankVal = $line[$startParse+1];
       my $taxid   = $line[$startParse];
-      if ($taxid == 955) {
+      if ($taxid == 2481) {
 	  print STDERR $rank,"\t",$l,"\n";
       }
       $taxid2name->{$rank}->{$taxid} = $rankVal;
