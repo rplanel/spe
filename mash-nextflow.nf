@@ -37,6 +37,7 @@ addAnnotationScript  = Channel.value(file('scripts/addAnnotation.pl'))
 extractClusterScript = Channel.value(file('scripts/extractCluster.pl'))
 extractDistance      = Channel.value(file('scripts/extractClusterDistanceMatrix.pl'))
 calculateClusterIntraStatScript = Channel.value(file('scripts/calculateClusterIntraStat.pl'))
+nj = Channel.value(file('scripts/calculate-nj-tree.js'))
 
 indexHtml  = Channel.value(file('scripts/visual_report/index.html'))
 indexJs    = Channel.value(file('scripts/visual_report/index.js'))
@@ -556,7 +557,8 @@ process extractClusterDistanceMatrix {
 
 
   output:
-  file "CL*.json" into distanceMatrix
+  file "CL*-distance-matrix.json" into distanceMatrix
+  file "CL*-taxa.json" into taxa
 
   script:
   resDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results/distance-matrices"
@@ -564,6 +566,43 @@ process extractClusterDistanceMatrix {
   perl $script $nodes $edges
   """
 
+}
+
+distanceMatrix
+.phase(taxa) { file ->
+  (m) = (file.baseName =~ /(CL\d+)/)[0]
+  return m
+ }
+.set { tupleDistance }
+
+
+process calculateNJTree {
+   publishDir { resDir }
+
+   tag { "${distance} - ${taxa}" }
+
+  input:
+  file script from nj
+  set file(distance), file(taxa) from tupleDistance
+  val pvalueThreshold
+  val distanceThreshold
+  val sketchSize
+  val kmerSize
+
+
+  output:
+  file "CL*-tree.json" into trees
+  
+  
+  script:
+  resDir =  "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results/trees"
+  (clusterId) = (distance =~ /(CL\d+)/ )[0]
+  out = "${clusterId}-tree.json"
+  
+  """
+  node $script $distance $taxa $out
+  """
+  
 }
 
 

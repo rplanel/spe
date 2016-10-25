@@ -10,4 +10,7 @@ elm-stuff/
 out/
 tmp/
 node_modules/
-
+timeline.html*
+trace.txt*
+workflow.pdf*
+.nfs*
