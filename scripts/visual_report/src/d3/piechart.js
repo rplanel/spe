@@ -3,7 +3,7 @@ function piechart () {
     var getAngle = function (d) {
 	return (180 / Math.PI * (d.startAngle + d.endAngle) / 2 - 90);
     };
-    function exports(_selection, width, height, numCol) {
+    function exports(_selection, width, height, numCol, url) {
 	_selection.each(function(d, i) {
 	    
 	    var context = d3.select(this).select('g.piecharts');
@@ -42,8 +42,9 @@ function piechart () {
 
             
             enterSelection
-                .append('text')
+                .append('a')
                 .attr('transform', 'translate(0,-100)')
+                .append('text')
                 .classed('title',true);
                 
 
@@ -58,6 +59,11 @@ function piechart () {
 		.merge(updateSelection);
 
             update
+                .select('a')
+                .attr('target', '_blank')
+                .attr('href',function(d){
+                    return url + 'tree.html?' +d.name;
+                })
                 .select('text.title')
                 .style('font-size','14px')
                 .style('text-decoration','underline')

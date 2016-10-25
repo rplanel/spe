@@ -13,6 +13,11 @@ var histogram = histogram();
 // Set parameters
 var piechartRadius = 80;
 var numColumn = 4;
+var href = window.location.href;
+var url = href.replace(/index.html/,'');
+
+console.log(url);
+
 
 // Get the data
 
@@ -65,7 +70,7 @@ app.ports.deletePies.subscribe(function(params){
     d3.selectAll('g.piecharts').remove()
 });
 
-app.ports.draw.subscribe(function(params){
+app.ports.draw.subscribe(function(params) {
     var data = params[0];
     var histoData = params[1];
     d3
@@ -82,7 +87,7 @@ app.ports.draw.subscribe(function(params){
     d3.select('g.clusters')
         .attr('transform', "translate(0,400)")
         .datum(data)
-        .call(piechart,piechartRadius,piechartRadius,numColumn);
+        .call(piechart,piechartRadius,piechartRadius,numColumn, url);
 });
 
 

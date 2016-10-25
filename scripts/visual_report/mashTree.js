@@ -8326,6 +8326,107 @@ var _elm_lang$html$Html_Attributes$classList = function (list) {
 };
 var _elm_lang$html$Html_Attributes$style = _elm_lang$virtual_dom$VirtualDom$style;
 
+var _elm_lang$html$Html_Events$keyCode = A2(_elm_lang$core$Json_Decode_ops[':='], 'keyCode', _elm_lang$core$Json_Decode$int);
+var _elm_lang$html$Html_Events$targetChecked = A2(
+	_elm_lang$core$Json_Decode$at,
+	_elm_lang$core$Native_List.fromArray(
+		['target', 'checked']),
+	_elm_lang$core$Json_Decode$bool);
+var _elm_lang$html$Html_Events$targetValue = A2(
+	_elm_lang$core$Json_Decode$at,
+	_elm_lang$core$Native_List.fromArray(
+		['target', 'value']),
+	_elm_lang$core$Json_Decode$string);
+var _elm_lang$html$Html_Events$defaultOptions = _elm_lang$virtual_dom$VirtualDom$defaultOptions;
+var _elm_lang$html$Html_Events$onWithOptions = _elm_lang$virtual_dom$VirtualDom$onWithOptions;
+var _elm_lang$html$Html_Events$on = _elm_lang$virtual_dom$VirtualDom$on;
+var _elm_lang$html$Html_Events$onFocus = function (msg) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'focus',
+		_elm_lang$core$Json_Decode$succeed(msg));
+};
+var _elm_lang$html$Html_Events$onBlur = function (msg) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'blur',
+		_elm_lang$core$Json_Decode$succeed(msg));
+};
+var _elm_lang$html$Html_Events$onSubmitOptions = _elm_lang$core$Native_Utils.update(
+	_elm_lang$html$Html_Events$defaultOptions,
+	{preventDefault: true});
+var _elm_lang$html$Html_Events$onSubmit = function (msg) {
+	return A3(
+		_elm_lang$html$Html_Events$onWithOptions,
+		'submit',
+		_elm_lang$html$Html_Events$onSubmitOptions,
+		_elm_lang$core$Json_Decode$succeed(msg));
+};
+var _elm_lang$html$Html_Events$onCheck = function (tagger) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'change',
+		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$targetChecked));
+};
+var _elm_lang$html$Html_Events$onInput = function (tagger) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'input',
+		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$targetValue));
+};
+var _elm_lang$html$Html_Events$onMouseOut = function (msg) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'mouseout',
+		_elm_lang$core$Json_Decode$succeed(msg));
+};
+var _elm_lang$html$Html_Events$onMouseOver = function (msg) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'mouseover',
+		_elm_lang$core$Json_Decode$succeed(msg));
+};
+var _elm_lang$html$Html_Events$onMouseLeave = function (msg) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'mouseleave',
+		_elm_lang$core$Json_Decode$succeed(msg));
+};
+var _elm_lang$html$Html_Events$onMouseEnter = function (msg) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'mouseenter',
+		_elm_lang$core$Json_Decode$succeed(msg));
+};
+var _elm_lang$html$Html_Events$onMouseUp = function (msg) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'mouseup',
+		_elm_lang$core$Json_Decode$succeed(msg));
+};
+var _elm_lang$html$Html_Events$onMouseDown = function (msg) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'mousedown',
+		_elm_lang$core$Json_Decode$succeed(msg));
+};
+var _elm_lang$html$Html_Events$onDoubleClick = function (msg) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'dblclick',
+		_elm_lang$core$Json_Decode$succeed(msg));
+};
+var _elm_lang$html$Html_Events$onClick = function (msg) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'click',
+		_elm_lang$core$Json_Decode$succeed(msg));
+};
+var _elm_lang$html$Html_Events$Options = F2(
+	function (a, b) {
+		return {stopPropagation: a, preventDefault: b};
+	});
+
 //import Dict, List, Maybe, Native.Scheduler //
 
 var _evancz$elm_http$Native_Http = function() {
@@ -8718,26 +8819,156 @@ var _user$project$MashTree$distanceMatrixTable = function (matrix) {
 			]),
 		A2(_elm_lang$core$List$map, distanceRow, matrix));
 };
+var _user$project$MashTree$encodeRank = function (record) {
+	return _elm_lang$core$Json_Encode$object(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				{
+				ctor: '_Tuple2',
+				_0: 'taxid',
+				_1: _elm_lang$core$Json_Encode$int(record.taxid)
+			},
+				{
+				ctor: '_Tuple2',
+				_0: 'name',
+				_1: _elm_lang$core$Json_Encode$string(record.name)
+			}
+			]));
+};
+var _user$project$MashTree$encodeTaxonomy = function (record) {
+	return _elm_lang$core$Json_Encode$object(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				{
+				ctor: '_Tuple2',
+				_0: 'species',
+				_1: _user$project$MashTree$encodeRank(record.species)
+			},
+				{
+				ctor: '_Tuple2',
+				_0: 'genus',
+				_1: _user$project$MashTree$encodeRank(record.genus)
+			},
+				{
+				ctor: '_Tuple2',
+				_0: 'family',
+				_1: _user$project$MashTree$encodeRank(record.family)
+			},
+				{
+				ctor: '_Tuple2',
+				_0: 'order',
+				_1: _user$project$MashTree$encodeRank(record.order)
+			},
+				{
+				ctor: '_Tuple2',
+				_0: 'class_',
+				_1: _user$project$MashTree$encodeRank(record.class_)
+			},
+				{
+				ctor: '_Tuple2',
+				_0: 'phylum',
+				_1: _user$project$MashTree$encodeRank(record.phylum)
+			}
+			]));
+};
+var _user$project$MashTree$encodeTaxa = function (record) {
+	return _elm_lang$core$Json_Encode$object(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				{
+				ctor: '_Tuple2',
+				_0: 'id',
+				_1: _elm_lang$core$Json_Encode$int(record.id)
+			},
+				{
+				ctor: '_Tuple2',
+				_0: 'name',
+				_1: _elm_lang$core$Json_Encode$string(record.name)
+			},
+				{
+				ctor: '_Tuple2',
+				_0: 'taxonomy',
+				_1: _user$project$MashTree$encodeTaxonomy(record.taxonomy)
+			}
+			]));
+};
+var _user$project$MashTree$encodeTree = function (record) {
+	var children = function () {
+		var _p1 = record.children;
+		if (_p1.ctor === 'Nothing') {
+			return _elm_lang$core$Json_Encode$null;
+		} else {
+			var _p3 = _p1._0;
+			var _p2 = _p3;
+			return _elm_lang$core$Native_Utils.eq(
+				_elm_lang$core$List$length(_p2._0),
+				0) ? _elm_lang$core$Json_Encode$null : _user$project$MashTree$encodeNodes(_p3);
+		}
+	}();
+	var taxon = function () {
+		var _p4 = record.taxon;
+		if (_p4.ctor === 'Nothing') {
+			return _elm_lang$core$Json_Encode$null;
+		} else {
+			return _user$project$MashTree$encodeTaxa(_p4._0);
+		}
+	}();
+	var length = function () {
+		var _p5 = record.length;
+		if (_p5.ctor === 'Nothing') {
+			return _elm_lang$core$Json_Encode$null;
+		} else {
+			return _elm_lang$core$Json_Encode$float(_p5._0);
+		}
+	}();
+	return _elm_lang$core$Json_Encode$object(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				{ctor: '_Tuple2', _0: 'children', _1: children},
+				{ctor: '_Tuple2', _0: 'length', _1: length},
+				{ctor: '_Tuple2', _0: 'taxon', _1: taxon}
+			]));
+};
+var _user$project$MashTree$encodeNodes = function (nodes) {
+	var _p6 = nodes;
+	var children = A2(_elm_lang$core$List$map, _user$project$MashTree$encodeTree, _p6._0);
+	return _elm_lang$core$Json_Encode$list(children);
+};
+var _user$project$MashTree$lazy = function (thunk) {
+	return A2(
+		_elm_lang$core$Json_Decode$customDecoder,
+		_elm_lang$core$Json_Decode$value,
+		function (js) {
+			return A2(
+				_elm_lang$core$Json_Decode$decodeValue,
+				thunk(
+					{ctor: '_Tuple0'}),
+				js);
+		});
+};
+var _user$project$MashTree$decodeDistanceUrl = _elm_lang$core$Json_Decode$list(
+	_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string));
+var _user$project$MashTree$toValidTaxid = function (taxid) {
+	return _elm_lang$core$Native_Utils.eq(taxid, '') ? _elm_lang$core$Result$Ok(0) : _elm_lang$core$String$toInt(taxid);
+};
 var _user$project$MashTree$number = _elm_lang$core$Json_Decode$oneOf(
 	_elm_lang$core$Native_List.fromArray(
 		[
 			_elm_lang$core$Json_Decode$int,
-			A2(_elm_lang$core$Json_Decode$customDecoder, _elm_lang$core$Json_Decode$string, _elm_lang$core$String$toInt)
+			A2(_elm_lang$core$Json_Decode$customDecoder, _elm_lang$core$Json_Decode$string, _elm_lang$core$String$toInt),
+			A2(_elm_lang$core$Json_Decode$customDecoder, _elm_lang$core$Json_Decode$string, _user$project$MashTree$toValidTaxid)
 		]));
-var _user$project$MashTree$decodeDistanceUrl = _elm_lang$core$Json_Decode$list(
-	_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string));
-var _user$project$MashTree$view = function (model) {
-	return A2(
-		_elm_lang$html$Html$div,
-		_elm_lang$core$Native_List.fromArray(
-			[]),
-		_elm_lang$core$Native_List.fromArray(
-			[
-				_elm_lang$html$Html$text(model.clusterId),
-				_user$project$MashTree$distanceMatrixTable(model.clusterDistance)
-			]));
-};
 var _user$project$MashTree$clusterId = _elm_lang$core$Native_Platform.incomingPort('clusterId', _elm_lang$core$Json_Decode$string);
+var _user$project$MashTree$url = _elm_lang$core$Native_Platform.incomingPort(
+	'url',
+	A3(
+		_elm_lang$core$Json_Decode$tuple2,
+		F2(
+			function (x1, x2) {
+				return {ctor: '_Tuple2', _0: x1, _1: x2};
+			}),
+		_elm_lang$core$Json_Decode$string,
+		_elm_lang$core$Json_Decode$string));
 var _user$project$MashTree$calculateTree = _elm_lang$core$Native_Platform.outgoingPort(
 	'calculateTree',
 	function (v) {
@@ -8766,20 +8997,32 @@ var _user$project$MashTree$calculateTree = _elm_lang$core$Native_Platform.outgoi
 			})
 		];
 	});
-var _user$project$MashTree$Model = F3(
-	function (a, b, c) {
-		return {clusterId: a, clusterDistance: b, clusterTaxa: c};
+var _user$project$MashTree$drawTree = _elm_lang$core$Native_Platform.outgoingPort(
+	'drawTree',
+	function (v) {
+		return [v._0, v._1];
 	});
-var _user$project$MashTree$defaultModel = A3(
-	_user$project$MashTree$Model,
-	'',
-	_elm_lang$core$Native_List.fromArray(
-		[
-			_elm_lang$core$Native_List.fromArray(
-			[_elm_lang$core$Maybe$Nothing])
-		]),
-	_elm_lang$core$Maybe$Nothing);
-var _user$project$MashTree$init = {ctor: '_Tuple2', _0: _user$project$MashTree$defaultModel, _1: _elm_lang$core$Platform_Cmd$none};
+var _user$project$MashTree$Model = F6(
+	function (a, b, c, d, e, f) {
+		return {clusterId: a, clusterDistance: b, clusterTaxa: c, tree: d, rank: e, url: f};
+	});
+var _user$project$MashTree$Tree = F4(
+	function (a, b, c, d) {
+		return {children: a, length: b, taxon: c, height: d};
+	});
+var _user$project$MashTree$TreeHeight = F2(
+	function (a, b) {
+		return {left: a, right: b};
+	});
+var _user$project$MashTree$decodeHeight = A3(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+	'right',
+	_elm_lang$core$Json_Decode$int,
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'left',
+		_elm_lang$core$Json_Decode$int,
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$MashTree$TreeHeight)));
 var _user$project$MashTree$Taxa = F3(
 	function (a, b, c) {
 		return {id: a, name: b, taxonomy: c};
@@ -8840,45 +9083,251 @@ var _user$project$MashTree$decodeTaxa = A3(
 			_user$project$MashTree$number,
 			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$MashTree$Taxa))));
 var _user$project$MashTree$decodeTaxaUrl = _elm_lang$core$Json_Decode$list(_user$project$MashTree$decodeTaxa);
+var _user$project$MashTree$Nodes = function (a) {
+	return {ctor: 'Nodes', _0: a};
+};
+var _user$project$MashTree$decodeNodes = A2(
+	_elm_lang$core$Json_Decode$map,
+	_user$project$MashTree$Nodes,
+	_elm_lang$core$Json_Decode$list(
+		_user$project$MashTree$lazy(
+			function (_p7) {
+				return _user$project$MashTree$decodeTree;
+			})));
+var _user$project$MashTree$decodeTree = A4(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+	'height',
+	_elm_lang$core$Json_Decode$maybe(_user$project$MashTree$decodeHeight),
+	_elm_lang$core$Maybe$Nothing,
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'taxon',
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$nullable(_user$project$MashTree$decodeTaxa),
+		A3(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+			'length',
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$nullable(_elm_lang$core$Json_Decode$float),
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+				'children',
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$nullable(_user$project$MashTree$decodeNodes),
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$MashTree$Tree)))));
+var _user$project$MashTree$decodeChildren = A2(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom,
+	_elm_lang$core$Json_Decode$list(_user$project$MashTree$decodeTree),
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$MashTree$Nodes));
+var _user$project$MashTree$Phylum = {ctor: 'Phylum'};
+var _user$project$MashTree$Class = {ctor: 'Class'};
+var _user$project$MashTree$Order = {ctor: 'Order'};
+var _user$project$MashTree$Family = {ctor: 'Family'};
+var _user$project$MashTree$Genus = {ctor: 'Genus'};
+var _user$project$MashTree$Species = {ctor: 'Species'};
+var _user$project$MashTree$defaultModel = A6(
+	_user$project$MashTree$Model,
+	'',
+	_elm_lang$core$Native_List.fromArray(
+		[
+			_elm_lang$core$Native_List.fromArray(
+			[_elm_lang$core$Maybe$Nothing])
+		]),
+	_elm_lang$core$Maybe$Nothing,
+	_elm_lang$core$Maybe$Nothing,
+	_user$project$MashTree$Species,
+	'');
+var _user$project$MashTree$init = {ctor: '_Tuple2', _0: _user$project$MashTree$defaultModel, _1: _elm_lang$core$Platform_Cmd$none};
+var _user$project$MashTree$rankOptions = function (model) {
+	var rankModel = model.rank;
+	var toOption = function (rank) {
+		var _p8 = rank;
+		switch (_p8.ctor) {
+			case 'Species':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('species'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Species')
+						]));
+			case 'Genus':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('genus'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Genus')
+						]));
+			case 'Family':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('family'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Family')
+						]));
+			case 'Order':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('order'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Order')
+						]));
+			case 'Class':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('class'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Class')
+						]));
+			default:
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('phylum'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Phylum')
+						]));
+		}
+	};
+	var ranks = _elm_lang$core$Native_List.fromArray(
+		[_user$project$MashTree$Species, _user$project$MashTree$Genus, _user$project$MashTree$Family, _user$project$MashTree$Order, _user$project$MashTree$Class, _user$project$MashTree$Phylum]);
+	return A2(_elm_lang$core$List$map, toOption, ranks);
+};
+var _user$project$MashTree$getRank = function (rankStr) {
+	var _p9 = rankStr;
+	switch (_p9) {
+		case 'species':
+			return _user$project$MashTree$Species;
+		case 'genus':
+			return _user$project$MashTree$Genus;
+		case 'family':
+			return _user$project$MashTree$Family;
+		case 'order':
+			return _user$project$MashTree$Order;
+		case 'class':
+			return _user$project$MashTree$Class;
+		case 'phylum':
+			return _user$project$MashTree$Phylum;
+		default:
+			return _user$project$MashTree$Genus;
+	}
+};
+var _user$project$MashTree$ChangeRank = function (a) {
+	return {ctor: 'ChangeRank', _0: a};
+};
+var _user$project$MashTree$view = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html_Attributes$class('sixteen wide column')
+			]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$class('row')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html$a,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Attributes$href(
+								A2(_elm_lang$core$Basics_ops['++'], model.url, '/index.html'))
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html$text('Go back to the clusters')
+							]))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$class('row')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(model.clusterId),
+						A2(
+						_elm_lang$html$Html$select,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Attributes$class('ui dropdown'),
+								A2(
+								_elm_lang$html$Html_Events$on,
+								'change',
+								A2(_elm_lang$core$Json_Decode$map, _user$project$MashTree$ChangeRank, _elm_lang$html$Html_Events$targetValue))
+							]),
+						_user$project$MashTree$rankOptions(model))
+					]))
+			]));
+};
+var _user$project$MashTree$FetchTreeSucceed = function (a) {
+	return {ctor: 'FetchTreeSucceed', _0: a};
+};
 var _user$project$MashTree$FetchFail = function (a) {
 	return {ctor: 'FetchFail', _0: a};
 };
-var _user$project$MashTree$FetchTaxaSucceed = function (a) {
-	return {ctor: 'FetchTaxaSucceed', _0: a};
-};
-var _user$project$MashTree$getTaxa = function (id) {
-	var url = A2(
-		_elm_lang$core$Basics_ops['++'],
-		'http://localhost:8000/results/distance-matrices/',
-		A2(_elm_lang$core$Basics_ops['++'], id, '-taxa.json'));
-	var _p1 = A2(_elm_lang$core$Debug$log, 'url', url);
-	return A3(
-		_elm_lang$core$Task$perform,
-		_user$project$MashTree$FetchFail,
-		_user$project$MashTree$FetchTaxaSucceed,
-		A2(_evancz$elm_http$Http$get, _user$project$MashTree$decodeTaxaUrl, url));
-};
-var _user$project$MashTree$FetchSucceed = function (a) {
-	return {ctor: 'FetchSucceed', _0: a};
-};
-var _user$project$MashTree$getDistance = function (id) {
-	var url = A2(
-		_elm_lang$core$Basics_ops['++'],
-		'http://localhost:8000/results/distance-matrices/',
-		A2(_elm_lang$core$Basics_ops['++'], id, '-distance-matrix.json'));
-	return A3(
-		_elm_lang$core$Task$perform,
-		_user$project$MashTree$FetchFail,
-		_user$project$MashTree$FetchSucceed,
-		A2(_evancz$elm_http$Http$get, _user$project$MashTree$decodeDistanceUrl, url));
-};
+var _user$project$MashTree$getTree = F2(
+	function (baseUrl, id) {
+		var url = A2(
+			_elm_lang$core$Basics_ops['++'],
+			baseUrl,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'/results/trees/',
+				A2(_elm_lang$core$Basics_ops['++'], id, '-tree.json')));
+		var _p10 = A2(_elm_lang$core$Debug$log, 'url', url);
+		return A3(
+			_elm_lang$core$Task$perform,
+			_user$project$MashTree$FetchFail,
+			_user$project$MashTree$FetchTreeSucceed,
+			A2(_evancz$elm_http$Http$get, _user$project$MashTree$decodeTree, url));
+	});
 var _user$project$MashTree$update = F2(
 	function (msg, model) {
-		var _p2 = msg;
-		switch (_p2.ctor) {
+		var _p11 = msg;
+		switch (_p11.ctor) {
 			case 'ClusterId':
-				var _p3 = _elm_lang$core$Debug$log('Get id');
-				var cleanId = A2(_elm_lang$core$String$dropLeft, 1, _p2._0);
+				var _p13 = _p11._0;
+				var _p12 = A2(_elm_lang$core$Debug$log, 'Get id', _p13);
+				var cleanId = A2(_elm_lang$core$String$dropLeft, 1, _p13);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -8887,8 +9336,25 @@ var _user$project$MashTree$update = F2(
 					_1: _elm_lang$core$Platform_Cmd$batch(
 						_elm_lang$core$Native_List.fromArray(
 							[
-								_user$project$MashTree$getTaxa(cleanId),
-								_user$project$MashTree$getDistance(cleanId)
+								A2(_user$project$MashTree$getTree, model.url, cleanId)
+							]))
+				};
+			case 'ReceiveUrl':
+				var _p14 = _p11._0;
+				var url = _p14._0;
+				var id = _p14._1;
+				var cleanId = A2(_elm_lang$core$String$dropLeft, 1, id);
+				var _p15 = A2(_elm_lang$core$Debug$log, 'init url = ', cleanId);
+				var _p16 = A2(_elm_lang$core$Debug$log, 'init url = ', url);
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{url: url, clusterId: cleanId}),
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						_elm_lang$core$Native_List.fromArray(
+							[
+								A2(_user$project$MashTree$getTree, url, cleanId)
 							]))
 				};
 			case 'FetchSucceed':
@@ -8903,7 +9369,7 @@ var _user$project$MashTree$update = F2(
 							},
 							tab);
 					},
-					_p2._0);
+					_p11._0);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -8912,33 +9378,112 @@ var _user$project$MashTree$update = F2(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'FetchFail':
-				var _p4 = A2(_elm_lang$core$Debug$log, 'error : ', _p2._0);
+				var _p17 = A2(_elm_lang$core$Debug$log, 'error : ', _p11._0);
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-			default:
-				var _p7 = _p2._0;
-				var _p5 = A2(_elm_lang$core$Debug$log, 'Taxo', _p7);
-				var _p6 = A2(_elm_lang$core$Debug$log, 'model dans fetchTaxa', model);
+			case 'FetchTaxaSucceed':
 				return {
 					ctor: '_Tuple2',
 					_0: model,
 					_1: _user$project$MashTree$calculateTree(
-						{ctor: '_Tuple2', _0: model.clusterDistance, _1: _p7})
+						{ctor: '_Tuple2', _0: model.clusterDistance, _1: _p11._0})
+				};
+			case 'FetchTreeSucceed':
+				var _p20 = _p11._0;
+				var rankStr = _elm_lang$core$String$toLower(
+					_elm_lang$core$Basics$toString(model.rank));
+				var _p18 = A2(_elm_lang$core$Debug$log, 'rank Str = ', rankStr);
+				var jsonTree = _user$project$MashTree$encodeTree(_p20);
+				var _p19 = A2(_elm_lang$core$Debug$log, 'tree : ', _p20);
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							tree: _elm_lang$core$Maybe$Just(_p20)
+						}),
+					_1: _user$project$MashTree$drawTree(
+						{ctor: '_Tuple2', _0: jsonTree, _1: rankStr})
+				};
+			default:
+				var _p23 = _p11._0;
+				var listCommand = function () {
+					var _p21 = model.tree;
+					if (_p21.ctor === 'Nothing') {
+						return _elm_lang$core$Native_List.fromArray(
+							[_elm_lang$core$Platform_Cmd$none]);
+					} else {
+						var jsonTree = _user$project$MashTree$encodeTree(_p21._0);
+						return _elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$MashTree$drawTree(
+								{ctor: '_Tuple2', _0: jsonTree, _1: _p23})
+							]);
+					}
+				}();
+				var _p22 = A2(_elm_lang$core$Debug$log, 'Rank = ', _p23);
+				var newRank = _user$project$MashTree$getRank(_p23);
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{rank: newRank}),
+					_1: _elm_lang$core$Platform_Cmd$batch(listCommand)
 				};
 		}
 	});
-var _user$project$MashTree$ClusterId = function (a) {
-	return {ctor: 'ClusterId', _0: a};
+var _user$project$MashTree$FetchTaxaSucceed = function (a) {
+	return {ctor: 'FetchTaxaSucceed', _0: a};
+};
+var _user$project$MashTree$getTaxa = F2(
+	function (baseUrl, id) {
+		var url = A2(
+			_elm_lang$core$Basics_ops['++'],
+			baseUrl,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'/results/distance-matrices/',
+				A2(_elm_lang$core$Basics_ops['++'], id, '-taxa.json')));
+		var _p24 = A2(_elm_lang$core$Debug$log, 'url', url);
+		return A3(
+			_elm_lang$core$Task$perform,
+			_user$project$MashTree$FetchFail,
+			_user$project$MashTree$FetchTaxaSucceed,
+			A2(_evancz$elm_http$Http$get, _user$project$MashTree$decodeTaxaUrl, url));
+	});
+var _user$project$MashTree$FetchSucceed = function (a) {
+	return {ctor: 'FetchSucceed', _0: a};
+};
+var _user$project$MashTree$getDistance = F2(
+	function (baseUrl, id) {
+		var url = A2(
+			_elm_lang$core$Basics_ops['++'],
+			baseUrl,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'/results/distance-matrices/',
+				A2(_elm_lang$core$Basics_ops['++'], id, '-distance-matrix.json')));
+		return A3(
+			_elm_lang$core$Task$perform,
+			_user$project$MashTree$FetchFail,
+			_user$project$MashTree$FetchSucceed,
+			A2(_evancz$elm_http$Http$get, _user$project$MashTree$decodeDistanceUrl, url));
+	});
+var _user$project$MashTree$ReceiveUrl = function (a) {
+	return {ctor: 'ReceiveUrl', _0: a};
 };
 var _user$project$MashTree$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$batch(
 		_elm_lang$core$Native_List.fromArray(
 			[
-				_user$project$MashTree$clusterId(_user$project$MashTree$ClusterId)
+				_user$project$MashTree$url(_user$project$MashTree$ReceiveUrl)
 			]));
 };
 var _user$project$MashTree$main = {
 	main: _elm_lang$html$Html_App$program(
 		{init: _user$project$MashTree$init, view: _user$project$MashTree$view, update: _user$project$MashTree$update, subscriptions: _user$project$MashTree$subscriptions})
+};
+var _user$project$MashTree$ClusterId = function (a) {
+	return {ctor: 'ClusterId', _0: a};
 };
 
 var Elm = {};
