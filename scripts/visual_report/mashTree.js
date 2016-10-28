@@ -9552,42 +9552,6 @@ var _user$project$MashTree$encodeRank = function (record) {
 				{ctor: '_Tuple2', _0: 'name', _1: name}
 			]));
 };
-var _user$project$MashTree$encodeTaxonomy = function (record) {
-	return _elm_lang$core$Json_Encode$object(
-		_elm_lang$core$Native_List.fromArray(
-			[
-				{
-				ctor: '_Tuple2',
-				_0: 'species',
-				_1: _user$project$MashTree$encodeRank(record.species)
-			},
-				{
-				ctor: '_Tuple2',
-				_0: 'genus',
-				_1: _user$project$MashTree$encodeRank(record.genus)
-			},
-				{
-				ctor: '_Tuple2',
-				_0: 'family',
-				_1: _user$project$MashTree$encodeRank(record.family)
-			},
-				{
-				ctor: '_Tuple2',
-				_0: 'order',
-				_1: _user$project$MashTree$encodeRank(record.order)
-			},
-				{
-				ctor: '_Tuple2',
-				_0: 'class_',
-				_1: _user$project$MashTree$encodeRank(record.class_)
-			},
-				{
-				ctor: '_Tuple2',
-				_0: 'phylum',
-				_1: _user$project$MashTree$encodeRank(record.phylum)
-			}
-			]));
-};
 var _user$project$MashTree$encodeTaxa = function (record) {
 	return _elm_lang$core$Json_Encode$object(
 		_elm_lang$core$Native_List.fromArray(
@@ -9760,35 +9724,6 @@ var _user$project$MashTree$decodeRank = A3(
 		'taxid',
 		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$nullable(_user$project$MashTree$number),
 		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$MashTree$Rank)));
-var _user$project$MashTree$Taxonomy = F6(
-	function (a, b, c, d, e, f) {
-		return {species: a, genus: b, family: c, order: d, class_: e, phylum: f};
-	});
-var _user$project$MashTree$decodeTaxonomy = A3(
-	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-	'phylum',
-	_user$project$MashTree$decodeRank,
-	A3(
-		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-		'class_',
-		_user$project$MashTree$decodeRank,
-		A3(
-			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-			'order',
-			_user$project$MashTree$decodeRank,
-			A3(
-				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-				'family',
-				_user$project$MashTree$decodeRank,
-				A3(
-					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-					'genus',
-					_user$project$MashTree$decodeRank,
-					A3(
-						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-						'species',
-						_user$project$MashTree$decodeRank,
-						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$MashTree$Taxonomy)))))));
 var _user$project$MashTree$Nodes = function (a) {
 	return {ctor: 'Nodes', _0: a};
 };

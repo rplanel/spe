@@ -73,15 +73,6 @@ type alias Rank =
     , name  : Maybe String
     }
 
-type alias Taxonomy =
-    { species : Rank
-    , genus   : Rank
-    , family  : Rank
-    , order   : Rank
-    , class_  : Rank
-    , phylum  : Rank
-    }
-
 defaultModel : Model
 defaultModel = Model "" ([[Nothing]]) Nothing Nothing Species "" ""
     
@@ -424,17 +415,6 @@ decodeRank =
         |> Json.Decode.Pipeline.required "name" (Json.Decode.Pipeline.nullable Json.string)
 
 
-decodeTaxonomy : Json.Decoder Taxonomy
-decodeTaxonomy =
-    decode Taxonomy
-        |> Json.Decode.Pipeline.required "species" decodeRank
-        |> Json.Decode.Pipeline.required "genus"   decodeRank
-        |> Json.Decode.Pipeline.required "family"  decodeRank
-        |> Json.Decode.Pipeline.required "order"   decodeRank
-        |> Json.Decode.Pipeline.required "class_"  decodeRank
-        |> Json.Decode.Pipeline.required "phylum"  decodeRank
-
-
 encodeTree : Tree -> Value
 encodeTree record =
     let
@@ -483,18 +463,6 @@ encodeTaxa record =
         , ("taxonomy", Taxo.encodeTaxonomy record.taxonomy)
         ]
 
-
-
-encodeTaxonomy : Taxonomy -> Value
-encodeTaxonomy record =
-    Json.Encode.object
-        [ ("species", encodeRank record.species)
-        , ("genus"  , encodeRank record.genus)
-        , ("family" , encodeRank record.family)
-        , ("order"  , encodeRank record.order)
-        , ("class_" , encodeRank record.class_)
-        , ("phylum" , encodeRank record.phylum)
-        ]
   
 
 encodeRank : Rank -> Value
