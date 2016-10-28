@@ -60,7 +60,6 @@ function piechart () {
 
             update
                 .select('a')
-                .attr('target', '_blank')
                 .attr('href',function(d){
                     return url + 'tree.html?' +d.name;
                 })
