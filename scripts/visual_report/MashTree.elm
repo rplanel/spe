@@ -11,7 +11,7 @@ import Json.Encode exposing (..)
 import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
 import String
 import Task
---import Taxonomy as Taxo exposing (..)
+import Taxonomy as Taxo exposing (..)
 --import Taxonomy.Rank as Rank exposing (..)
 
 main : Program Never
@@ -65,7 +65,7 @@ type alias TreeHeight =
 type alias Taxa =
     { id : Int
     , name : String
-    , taxonomy : Taxonomy
+    , taxonomy : Taxo.Taxonomy
     }
 
 type alias Rank =
@@ -414,7 +414,7 @@ decodeTaxa =
     decode Taxa
         |> Json.Decode.Pipeline.required "id" number
         |> Json.Decode.Pipeline.required "name"     Json.string
-        |> Json.Decode.Pipeline.required "taxonomy" decodeTaxonomy
+        |> Json.Decode.Pipeline.required "taxonomy" Taxo.decodeTaxonomy
 
            
 decodeRank : Json.Decoder Rank
@@ -480,7 +480,7 @@ encodeTaxa record =
     Json.Encode.object
         [ ("id", Json.Encode.int record.id)
         , ("name", Json.Encode.string record.name)
-        , ("taxonomy", encodeTaxonomy record.taxonomy)
+        , ("taxonomy", Taxo.encodeTaxonomy record.taxonomy)
         ]
 
 

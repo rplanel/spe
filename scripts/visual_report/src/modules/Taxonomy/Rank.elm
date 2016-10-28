@@ -268,7 +268,7 @@ toValidTaxid taxid =
     else
         case (String.toInt taxid) of
             Ok taxidInt ->
-                Json.map Just Json.int
+                Json.maybe Json.int
 
             Err error ->
                 Json.fail (taxid ++ " is not a valid taxid")
@@ -285,6 +285,7 @@ taxid =
         [ Json.map Just Json.int
         , decodeTaxid
         , Json.null Nothing
+        , fail "test"
         ]
 
 

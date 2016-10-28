@@ -8785,6 +8785,715 @@ var _evancz$elm_http$Http$post = F3(
 			A2(_evancz$elm_http$Http$send, _evancz$elm_http$Http$defaultSettings, request));
 	});
 
+var _user$project$Taxonomy_Rank$toValidTaxid = function (taxid) {
+	if (_elm_lang$core$Native_Utils.eq(taxid, '')) {
+		return _elm_lang$core$Json_Decode$succeed(_elm_lang$core$Maybe$Nothing);
+	} else {
+		var _p0 = _elm_lang$core$String$toInt(taxid);
+		if (_p0.ctor === 'Ok') {
+			return _elm_lang$core$Json_Decode$maybe(_elm_lang$core$Json_Decode$int);
+		} else {
+			return _elm_lang$core$Json_Decode$fail(
+				A2(_elm_lang$core$Basics_ops['++'], taxid, ' is not a valid taxid'));
+		}
+	}
+};
+var _user$project$Taxonomy_Rank$decodeTaxid = A2(_elm_lang$core$Json_Decode$andThen, _elm_lang$core$Json_Decode$string, _user$project$Taxonomy_Rank$toValidTaxid);
+var _user$project$Taxonomy_Rank$taxid = _elm_lang$core$Json_Decode$oneOf(
+	_elm_lang$core$Native_List.fromArray(
+		[
+			A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$int),
+			_user$project$Taxonomy_Rank$decodeTaxid,
+			_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+			_elm_lang$core$Json_Decode$fail('test')
+		]));
+var _user$project$Taxonomy_Rank$nameOfRank = function (rank) {
+	var _p1 = rank;
+	switch (_p1.ctor) {
+		case 'Oid':
+			var _p2 = _p1._0;
+			if (_p2.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p2._0.name;
+			}
+		case 'Strain':
+			var _p3 = _p1._0;
+			if (_p3.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p3._0.name;
+			}
+		case 'Species':
+			var _p4 = _p1._0;
+			if (_p4.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p4._0.name;
+			}
+		case 'Genus':
+			var _p5 = _p1._0;
+			if (_p5.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p5._0.name;
+			}
+		case 'Family':
+			var _p6 = _p1._0;
+			if (_p6.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p6._0.name;
+			}
+		case 'Order':
+			var _p7 = _p1._0;
+			if (_p7.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p7._0.name;
+			}
+		case 'Class':
+			var _p8 = _p1._0;
+			if (_p8.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p8._0.name;
+			}
+		default:
+			var _p9 = _p1._0;
+			if (_p9.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p9._0.name;
+			}
+	}
+};
+var _user$project$Taxonomy_Rank$taxidOfRank = function (rank) {
+	var _p10 = rank;
+	switch (_p10.ctor) {
+		case 'Oid':
+			var _p11 = _p10._0;
+			if (_p11.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p11._0.taxid;
+			}
+		case 'Strain':
+			var _p12 = _p10._0;
+			if (_p12.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p12._0.taxid;
+			}
+		case 'Species':
+			var _p13 = _p10._0;
+			if (_p13.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p13._0.taxid;
+			}
+		case 'Genus':
+			var _p14 = _p10._0;
+			if (_p14.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p14._0.taxid;
+			}
+		case 'Family':
+			var _p15 = _p10._0;
+			if (_p15.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p15._0.taxid;
+			}
+		case 'Order':
+			var _p16 = _p10._0;
+			if (_p16.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p16._0.taxid;
+			}
+		case 'Class':
+			var _p17 = _p10._0;
+			if (_p17.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p17._0.taxid;
+			}
+		default:
+			var _p18 = _p10._0;
+			if (_p18.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p18._0.taxid;
+			}
+	}
+};
+var _user$project$Taxonomy_Rank$encodeRank = function (rank) {
+	var name = function () {
+		var _p19 = _user$project$Taxonomy_Rank$nameOfRank(rank);
+		if (_p19.ctor === 'Nothing') {
+			return _elm_lang$core$Json_Encode$null;
+		} else {
+			return _elm_lang$core$Json_Encode$string(_p19._0);
+		}
+	}();
+	var taxid = function () {
+		var _p20 = _user$project$Taxonomy_Rank$taxidOfRank(rank);
+		if (_p20.ctor === 'Nothing') {
+			return _elm_lang$core$Json_Encode$null;
+		} else {
+			return _elm_lang$core$Json_Encode$int(_p20._0);
+		}
+	}();
+	return _elm_lang$core$Json_Encode$object(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				{ctor: '_Tuple2', _0: 'name', _1: name},
+				{ctor: '_Tuple2', _0: 'taxid', _1: taxid}
+			]));
+};
+var _user$project$Taxonomy_Rank$encodeMaybeRank = function (rank) {
+	var _p21 = rank;
+	if (_p21.ctor === 'Nothing') {
+		return _elm_lang$core$Json_Encode$null;
+	} else {
+		return _user$project$Taxonomy_Rank$encodeRank(_p21._0);
+	}
+};
+var _user$project$Taxonomy_Rank$rankToString = function (rank) {
+	var _p22 = rank;
+	if (_p22.ctor === 'Ok') {
+		return _elm_lang$core$Basics$toString(
+			_user$project$Taxonomy_Rank$encodeRank(_p22._0));
+	} else {
+		return _elm_lang$core$Basics$toString(_p22._0);
+	}
+};
+var _user$project$Taxonomy_Rank$typeOfRank = function (rank) {
+	var _p23 = rank;
+	switch (_p23.ctor) {
+		case 'Oid':
+			return 'oid';
+		case 'Strain':
+			return 'strain';
+		case 'Species':
+			return 'species';
+		case 'Genus':
+			return 'genus';
+		case 'Family':
+			return 'family';
+		case 'Order':
+			return 'order';
+		case 'Class':
+			return 'class';
+		default:
+			return 'phylum';
+	}
+};
+var _user$project$Taxonomy_Rank$getListRankString = function (ranks) {
+	return A2(
+		_elm_lang$core$List$map,
+		function (rank) {
+			return _user$project$Taxonomy_Rank$typeOfRank(rank);
+		},
+		ranks);
+};
+var _user$project$Taxonomy_Rank$RankInfo = F2(
+	function (a, b) {
+		return {name: a, taxid: b};
+	});
+var _user$project$Taxonomy_Rank$decodeRankInfo = A4(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+	'taxid',
+	_user$project$Taxonomy_Rank$taxid,
+	_elm_lang$core$Maybe$Nothing,
+	A4(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+		'name',
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$nullable(_elm_lang$core$Json_Decode$string),
+		_elm_lang$core$Maybe$Nothing,
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$Taxonomy_Rank$RankInfo)));
+var _user$project$Taxonomy_Rank$Phylum = function (a) {
+	return {ctor: 'Phylum', _0: a};
+};
+var _user$project$Taxonomy_Rank$Class = function (a) {
+	return {ctor: 'Class', _0: a};
+};
+var _user$project$Taxonomy_Rank$Order = function (a) {
+	return {ctor: 'Order', _0: a};
+};
+var _user$project$Taxonomy_Rank$Family = function (a) {
+	return {ctor: 'Family', _0: a};
+};
+var _user$project$Taxonomy_Rank$Genus = function (a) {
+	return {ctor: 'Genus', _0: a};
+};
+var _user$project$Taxonomy_Rank$Species = function (a) {
+	return {ctor: 'Species', _0: a};
+};
+var _user$project$Taxonomy_Rank$Strain = function (a) {
+	return {ctor: 'Strain', _0: a};
+};
+var _user$project$Taxonomy_Rank$Oid = function (a) {
+	return {ctor: 'Oid', _0: a};
+};
+var _user$project$Taxonomy_Rank$getAllRankString = _user$project$Taxonomy_Rank$getListRankString(
+	_elm_lang$core$Native_List.fromArray(
+		[
+			_user$project$Taxonomy_Rank$Oid(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Strain(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Species(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Genus(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Family(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Order(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Class(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Phylum(_elm_lang$core$Maybe$Nothing)
+		]));
+var _user$project$Taxonomy_Rank$maybeRankOfString = F2(
+	function (rankStr, rankInfo) {
+		var lowerStr = _elm_lang$core$String$toLower(rankStr);
+		var _p24 = lowerStr;
+		switch (_p24) {
+			case 'oid':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Oid(rankInfo));
+			case 'strain':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Strain(rankInfo));
+			case 'species':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Species(rankInfo));
+			case 'genus':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Genus(rankInfo));
+			case 'family':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Family(rankInfo));
+			case 'order':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Order(rankInfo));
+			case 'class':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Class(rankInfo));
+			case 'phylum':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Phylum(rankInfo));
+			default:
+				return _elm_lang$core$Maybe$Nothing;
+		}
+	});
+var _user$project$Taxonomy_Rank$resultRankOfMaybeRankInfo = F2(
+	function (rankStr, rankInfo) {
+		var rank = A2(_user$project$Taxonomy_Rank$maybeRankOfString, rankStr, rankInfo);
+		return A2(
+			_elm_lang$core$Result$fromMaybe,
+			A2(_elm_lang$core$Basics_ops['++'], rankStr, ' is not a rank'),
+			rank);
+	});
+var _user$project$Taxonomy_Rank$resultRankOfRankInfo = F2(
+	function (rankStr, rankInfo) {
+		return A2(
+			_user$project$Taxonomy_Rank$resultRankOfMaybeRankInfo,
+			rankStr,
+			_elm_lang$core$Maybe$Just(rankInfo));
+	});
+var _user$project$Taxonomy_Rank$decodeRank = function (rank) {
+	var lowerRank = _elm_lang$core$String$toLower(rank);
+	return A2(
+		_elm_lang$core$Json_Decode$customDecoder,
+		_user$project$Taxonomy_Rank$decodeRankInfo,
+		_user$project$Taxonomy_Rank$resultRankOfRankInfo(lowerRank));
+};
+var _user$project$Taxonomy_Rank$decodeMaybeRank = function (rankName) {
+	return _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$nullable(
+		_user$project$Taxonomy_Rank$decodeRank(rankName));
+};
+var _user$project$Taxonomy_Rank$main = {
+	main: function () {
+		var res8 = A2(
+			_elm_lang$core$Json_Decode$decodeString,
+			_user$project$Taxonomy_Rank$decodeRank('species'),
+			' { \"taxid\" : 23 }');
+		var res7 = A2(
+			_elm_lang$core$Json_Decode$decodeString,
+			_user$project$Taxonomy_Rank$decodeRank('species'),
+			' { \"name\" : \"toto\", \"taxid\" : null }');
+		var res6 = A2(
+			_elm_lang$core$Json_Decode$decodeString,
+			_user$project$Taxonomy_Rank$decodeRank('species'),
+			' { \"name\" : \"toto\", \"taxid\" : \"\" }');
+		var res5 = A2(
+			_elm_lang$core$Json_Decode$decodeString,
+			_user$project$Taxonomy_Rank$decodeRank('species'),
+			' {\"name\": \"not valid taxid\", \"taxid\":\"rere\" } ');
+		var res4 = A2(
+			_elm_lang$core$Json_Decode$decodeString,
+			_user$project$Taxonomy_Rank$decodeRank('species'),
+			'null');
+		var res3 = A2(
+			_elm_lang$core$Json_Decode$decodeString,
+			_user$project$Taxonomy_Rank$decodeRank('foo'),
+			' { \"name\" : \"toto\", \"taxid\" : null }');
+		var res2 = A2(
+			_elm_lang$core$Json_Decode$decodeString,
+			_user$project$Taxonomy_Rank$decodeRank('Phylum'),
+			' { \"name\" : \"Prote\", \"taxid\" : 0 }');
+		var res = A2(
+			_elm_lang$core$Json_Decode$decodeString,
+			_user$project$Taxonomy_Rank$decodeRank('species'),
+			'{ \"name\" : null, \"taxid\" : null }');
+		var list = _elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(
+							_user$project$Taxonomy_Rank$Phylum(
+								_elm_lang$core$Maybe$Just(
+									A2(
+										_user$project$Taxonomy_Rank$RankInfo,
+										_elm_lang$core$Maybe$Just('Proteo'),
+										_elm_lang$core$Maybe$Just(10))))))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(res))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'encode : ',
+							_user$project$Taxonomy_Rank$rankToString(res)))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(res2))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'encode : ',
+							_user$project$Taxonomy_Rank$rankToString(res2)))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(res3))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'encode : ',
+							_user$project$Taxonomy_Rank$rankToString(res3)))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(res4))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'encode : ',
+							_user$project$Taxonomy_Rank$rankToString(res4)))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(res5))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'encode : ',
+							_user$project$Taxonomy_Rank$rankToString(res5)))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(res6))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'encode : ',
+							_user$project$Taxonomy_Rank$rankToString(res6)))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(res7))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'encode : ',
+							_user$project$Taxonomy_Rank$rankToString(res7)))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(res8))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'encode : ',
+							_user$project$Taxonomy_Rank$rankToString(res8)))
+					]))
+			]);
+		return A2(
+			_elm_lang$html$Html$div,
+			_elm_lang$core$Native_List.fromArray(
+				[]),
+			list);
+	}()
+};
+
+var _user$project$Taxonomy$extractRank = F2(
+	function (rankName, taxoInfo) {
+		var lowerRankName = _elm_lang$core$String$toLower(rankName);
+		var _p0 = lowerRankName;
+		switch (_p0) {
+			case 'oid':
+				return function (_) {
+					return _.oid;
+				}(taxoInfo);
+			case 'species':
+				return function (_) {
+					return _.species;
+				}(taxoInfo);
+			default:
+				return _elm_lang$core$Maybe$Nothing;
+		}
+	});
+var _user$project$Taxonomy$encodeTaxonomyInfo = function (taxoInfo) {
+	var typeNameToValue = function (typeName) {
+		return {
+			ctor: '_Tuple2',
+			_0: typeName,
+			_1: _user$project$Taxonomy_Rank$encodeMaybeRank(
+				A2(_user$project$Taxonomy$extractRank, typeName, taxoInfo))
+		};
+	};
+	var listEncode = A2(_elm_lang$core$List$map, typeNameToValue, _user$project$Taxonomy_Rank$getAllRankString);
+	return _elm_lang$core$Json_Encode$object(listEncode);
+};
+var _user$project$Taxonomy$encodeTaxonomy = function (taxonomy) {
+	var _p1 = taxonomy;
+	if (_p1.ctor === 'Empty') {
+		return _elm_lang$core$Json_Encode$null;
+	} else {
+		return _user$project$Taxonomy$encodeTaxonomyInfo(_p1._0);
+	}
+};
+var _user$project$Taxonomy$taxonomyToString = function (taxonomy) {
+	var _p2 = taxonomy;
+	if (_p2.ctor === 'Ok') {
+		return _elm_lang$core$Basics$toString(
+			_user$project$Taxonomy$encodeTaxonomy(_p2._0));
+	} else {
+		return _elm_lang$core$Basics$toString(_p2._0);
+	}
+};
+var _user$project$Taxonomy$TaxonomyInfo = F8(
+	function (a, b, c, d, e, f, g, h) {
+		return {oid: a, strain: b, species: c, genus: d, family: e, order: f, class_: g, phylum: h};
+	});
+var _user$project$Taxonomy$decodeTaxonomyInfo = A4(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+	'phylum',
+	_user$project$Taxonomy_Rank$decodeMaybeRank('phylum'),
+	_elm_lang$core$Maybe$Nothing,
+	A4(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+		'class_',
+		_user$project$Taxonomy_Rank$decodeMaybeRank('class'),
+		_elm_lang$core$Maybe$Nothing,
+		A4(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+			'order',
+			_user$project$Taxonomy_Rank$decodeMaybeRank('order'),
+			_elm_lang$core$Maybe$Nothing,
+			A4(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+				'family',
+				_user$project$Taxonomy_Rank$decodeMaybeRank('family'),
+				_elm_lang$core$Maybe$Nothing,
+				A4(
+					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+					'genus',
+					_user$project$Taxonomy_Rank$decodeMaybeRank('genus'),
+					_elm_lang$core$Maybe$Nothing,
+					A4(
+						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+						'species',
+						_user$project$Taxonomy_Rank$decodeMaybeRank('species'),
+						_elm_lang$core$Maybe$Nothing,
+						A4(
+							_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+							'strain',
+							_user$project$Taxonomy_Rank$decodeMaybeRank('strain'),
+							_elm_lang$core$Maybe$Nothing,
+							A4(
+								_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+								'oid',
+								_user$project$Taxonomy_Rank$decodeMaybeRank('oid'),
+								_elm_lang$core$Maybe$Nothing,
+								_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$Taxonomy$TaxonomyInfo)))))))));
+var _user$project$Taxonomy$Taxonomy = function (a) {
+	return {ctor: 'Taxonomy', _0: a};
+};
+var _user$project$Taxonomy$constructTaxonomy = function (taxoInfo) {
+	return _elm_lang$core$Result$Ok(
+		_user$project$Taxonomy$Taxonomy(taxoInfo));
+};
+var _user$project$Taxonomy$decodeTaxonomy = A2(_elm_lang$core$Json_Decode$customDecoder, _user$project$Taxonomy$decodeTaxonomyInfo, _user$project$Taxonomy$constructTaxonomy);
+var _user$project$Taxonomy$main = {
+	main: function () {
+		var taxo2 = A2(_elm_lang$core$Json_Decode$decodeString, _user$project$Taxonomy$decodeTaxonomy, ' { \"species\" : { \"name\" : \"oid_rank\", \"taxid\" : \"\" } } ');
+		var taxo = A2(_elm_lang$core$Json_Decode$decodeString, _user$project$Taxonomy$decodeTaxonomy, ' { \"oid\" : { \"name\" : \"oid_rank\", \"taxid\" : \"\" } } ');
+		var list = _elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(taxo))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'encode : ',
+							_user$project$Taxonomy$taxonomyToString(taxo)))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(taxo2))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'encode : ',
+							_user$project$Taxonomy$taxonomyToString(taxo2)))
+					]))
+			]);
+		return A2(
+			_elm_lang$html$Html$div,
+			_elm_lang$core$Native_List.fromArray(
+				[]),
+			list);
+	}()
+};
+var _user$project$Taxonomy$Empty = {ctor: 'Empty'};
+
 var _user$project$MashTree$distanceMatrixTable = function (matrix) {
 	var distanceCol = function (distance) {
 		var dist = function () {
@@ -8896,7 +9605,7 @@ var _user$project$MashTree$encodeTaxa = function (record) {
 				{
 				ctor: '_Tuple2',
 				_0: 'taxonomy',
-				_1: _user$project$MashTree$encodeTaxonomy(record.taxonomy)
+				_1: _user$project$Taxonomy$encodeTaxonomy(record.taxonomy)
 			}
 			]));
 };
@@ -9024,6 +9733,20 @@ var _user$project$MashTree$Taxa = F3(
 	function (a, b, c) {
 		return {id: a, name: b, taxonomy: c};
 	});
+var _user$project$MashTree$decodeTaxa = A3(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+	'taxonomy',
+	_user$project$Taxonomy$decodeTaxonomy,
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'name',
+		_elm_lang$core$Json_Decode$string,
+		A3(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+			'id',
+			_user$project$MashTree$number,
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$MashTree$Taxa))));
+var _user$project$MashTree$decodeTaxaUrl = _elm_lang$core$Json_Decode$list(_user$project$MashTree$decodeTaxa);
 var _user$project$MashTree$Rank = F2(
 	function (a, b) {
 		return {taxid: a, name: b};
@@ -9066,20 +9789,6 @@ var _user$project$MashTree$decodeTaxonomy = A3(
 						'species',
 						_user$project$MashTree$decodeRank,
 						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$MashTree$Taxonomy)))))));
-var _user$project$MashTree$decodeTaxa = A3(
-	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-	'taxonomy',
-	_user$project$MashTree$decodeTaxonomy,
-	A3(
-		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-		'name',
-		_elm_lang$core$Json_Decode$string,
-		A3(
-			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-			'id',
-			_user$project$MashTree$number,
-			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$MashTree$Taxa))));
-var _user$project$MashTree$decodeTaxaUrl = _elm_lang$core$Json_Decode$list(_user$project$MashTree$decodeTaxa);
 var _user$project$MashTree$Nodes = function (a) {
 	return {ctor: 'Nodes', _0: a};
 };
