@@ -8820,19 +8820,27 @@ var _user$project$MashTree$distanceMatrixTable = function (matrix) {
 		A2(_elm_lang$core$List$map, distanceRow, matrix));
 };
 var _user$project$MashTree$encodeRank = function (record) {
+	var name = function () {
+		var _p1 = record.name;
+		if (_p1.ctor === 'Nothing') {
+			return _elm_lang$core$Json_Encode$null;
+		} else {
+			return _elm_lang$core$Json_Encode$string(_p1._0);
+		}
+	}();
+	var taxid = function () {
+		var _p2 = record.taxid;
+		if (_p2.ctor === 'Nothing') {
+			return _elm_lang$core$Json_Encode$null;
+		} else {
+			return _elm_lang$core$Json_Encode$int(_p2._0);
+		}
+	}();
 	return _elm_lang$core$Json_Encode$object(
 		_elm_lang$core$Native_List.fromArray(
 			[
-				{
-				ctor: '_Tuple2',
-				_0: 'taxid',
-				_1: _elm_lang$core$Json_Encode$int(record.taxid)
-			},
-				{
-				ctor: '_Tuple2',
-				_0: 'name',
-				_1: _elm_lang$core$Json_Encode$string(record.name)
-			}
+				{ctor: '_Tuple2', _0: 'taxid', _1: taxid},
+				{ctor: '_Tuple2', _0: 'name', _1: name}
 			]));
 };
 var _user$project$MashTree$encodeTaxonomy = function (record) {
@@ -8894,31 +8902,31 @@ var _user$project$MashTree$encodeTaxa = function (record) {
 };
 var _user$project$MashTree$encodeTree = function (record) {
 	var children = function () {
-		var _p1 = record.children;
-		if (_p1.ctor === 'Nothing') {
+		var _p3 = record.children;
+		if (_p3.ctor === 'Nothing') {
 			return _elm_lang$core$Json_Encode$null;
 		} else {
-			var _p3 = _p1._0;
-			var _p2 = _p3;
+			var _p5 = _p3._0;
+			var _p4 = _p5;
 			return _elm_lang$core$Native_Utils.eq(
-				_elm_lang$core$List$length(_p2._0),
-				0) ? _elm_lang$core$Json_Encode$null : _user$project$MashTree$encodeNodes(_p3);
+				_elm_lang$core$List$length(_p4._0),
+				0) ? _elm_lang$core$Json_Encode$null : _user$project$MashTree$encodeNodes(_p5);
 		}
 	}();
 	var taxon = function () {
-		var _p4 = record.taxon;
-		if (_p4.ctor === 'Nothing') {
+		var _p6 = record.taxon;
+		if (_p6.ctor === 'Nothing') {
 			return _elm_lang$core$Json_Encode$null;
 		} else {
-			return _user$project$MashTree$encodeTaxa(_p4._0);
+			return _user$project$MashTree$encodeTaxa(_p6._0);
 		}
 	}();
 	var length = function () {
-		var _p5 = record.length;
-		if (_p5.ctor === 'Nothing') {
+		var _p7 = record.length;
+		if (_p7.ctor === 'Nothing') {
 			return _elm_lang$core$Json_Encode$null;
 		} else {
-			return _elm_lang$core$Json_Encode$float(_p5._0);
+			return _elm_lang$core$Json_Encode$float(_p7._0);
 		}
 	}();
 	return _elm_lang$core$Json_Encode$object(
@@ -8930,8 +8938,8 @@ var _user$project$MashTree$encodeTree = function (record) {
 			]));
 };
 var _user$project$MashTree$encodeNodes = function (nodes) {
-	var _p6 = nodes;
-	var children = A2(_elm_lang$core$List$map, _user$project$MashTree$encodeTree, _p6._0);
+	var _p8 = nodes;
+	var children = A2(_elm_lang$core$List$map, _user$project$MashTree$encodeTree, _p8._0);
 	return _elm_lang$core$Json_Encode$list(children);
 };
 var _user$project$MashTree$lazy = function (thunk) {
@@ -8982,18 +8990,7 @@ var _user$project$MashTree$calculateTree = _elm_lang$core$Native_Platform.outgoi
 			}),
 			_elm_lang$core$Native_List.toArray(v._1).map(
 			function (v) {
-				return {
-					id: v.id,
-					name: v.name,
-					taxonomy: {
-						species: {taxid: v.taxonomy.species.taxid, name: v.taxonomy.species.name},
-						genus: {taxid: v.taxonomy.genus.taxid, name: v.taxonomy.genus.name},
-						family: {taxid: v.taxonomy.family.taxid, name: v.taxonomy.family.name},
-						order: {taxid: v.taxonomy.order.taxid, name: v.taxonomy.order.name},
-						class_: {taxid: v.taxonomy.class_.taxid, name: v.taxonomy.class_.name},
-						phylum: {taxid: v.taxonomy.phylum.taxid, name: v.taxonomy.phylum.name}
-					}
-				};
+				return v;
 			})
 		];
 	});
@@ -9002,9 +8999,9 @@ var _user$project$MashTree$drawTree = _elm_lang$core$Native_Platform.outgoingPor
 	function (v) {
 		return [v._0, v._1];
 	});
-var _user$project$MashTree$Model = F6(
-	function (a, b, c, d, e, f) {
-		return {clusterId: a, clusterDistance: b, clusterTaxa: c, tree: d, rank: e, url: f};
+var _user$project$MashTree$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {clusterId: a, clusterDistance: b, clusterTaxa: c, tree: d, rank: e, url: f, error: g};
 	});
 var _user$project$MashTree$Tree = F4(
 	function (a, b, c, d) {
@@ -9034,11 +9031,11 @@ var _user$project$MashTree$Rank = F2(
 var _user$project$MashTree$decodeRank = A3(
 	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 	'name',
-	_elm_lang$core$Json_Decode$string,
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$nullable(_elm_lang$core$Json_Decode$string),
 	A3(
 		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 		'taxid',
-		_user$project$MashTree$number,
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$nullable(_user$project$MashTree$number),
 		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$MashTree$Rank)));
 var _user$project$MashTree$Taxonomy = F6(
 	function (a, b, c, d, e, f) {
@@ -9091,7 +9088,7 @@ var _user$project$MashTree$decodeNodes = A2(
 	_user$project$MashTree$Nodes,
 	_elm_lang$core$Json_Decode$list(
 		_user$project$MashTree$lazy(
-			function (_p7) {
+			function (_p9) {
 				return _user$project$MashTree$decodeTree;
 			})));
 var _user$project$MashTree$decodeTree = A4(
@@ -9122,7 +9119,7 @@ var _user$project$MashTree$Order = {ctor: 'Order'};
 var _user$project$MashTree$Family = {ctor: 'Family'};
 var _user$project$MashTree$Genus = {ctor: 'Genus'};
 var _user$project$MashTree$Species = {ctor: 'Species'};
-var _user$project$MashTree$defaultModel = A6(
+var _user$project$MashTree$defaultModel = A7(
 	_user$project$MashTree$Model,
 	'',
 	_elm_lang$core$Native_List.fromArray(
@@ -9133,13 +9130,14 @@ var _user$project$MashTree$defaultModel = A6(
 	_elm_lang$core$Maybe$Nothing,
 	_elm_lang$core$Maybe$Nothing,
 	_user$project$MashTree$Species,
+	'',
 	'');
 var _user$project$MashTree$init = {ctor: '_Tuple2', _0: _user$project$MashTree$defaultModel, _1: _elm_lang$core$Platform_Cmd$none};
 var _user$project$MashTree$rankOptions = function (model) {
 	var rankModel = model.rank;
 	var toOption = function (rank) {
-		var _p8 = rank;
-		switch (_p8.ctor) {
+		var _p10 = rank;
+		switch (_p10.ctor) {
 			case 'Species':
 				return A2(
 					_elm_lang$html$Html$option,
@@ -9197,7 +9195,7 @@ var _user$project$MashTree$rankOptions = function (model) {
 					_elm_lang$html$Html$option,
 					_elm_lang$core$Native_List.fromArray(
 						[
-							_elm_lang$html$Html_Attributes$value('class'),
+							_elm_lang$html$Html_Attributes$value('class_'),
 							_elm_lang$html$Html_Attributes$selected(
 							_elm_lang$core$Native_Utils.eq(rankModel, rank))
 						]),
@@ -9225,8 +9223,8 @@ var _user$project$MashTree$rankOptions = function (model) {
 	return A2(_elm_lang$core$List$map, toOption, ranks);
 };
 var _user$project$MashTree$getRank = function (rankStr) {
-	var _p9 = rankStr;
-	switch (_p9) {
+	var _p11 = rankStr;
+	switch (_p11) {
 		case 'species':
 			return _user$project$MashTree$Species;
 		case 'genus':
@@ -9295,6 +9293,42 @@ var _user$project$MashTree$view = function (model) {
 								A2(_elm_lang$core$Json_Decode$map, _user$project$MashTree$ChangeRank, _elm_lang$html$Html_Events$targetValue))
 							]),
 						_user$project$MashTree$rankOptions(model))
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html_Attributes$class('row')
+					]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html_Attributes$class('sixteen wide column')
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								A2(
+								_elm_lang$html$Html$div,
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_elm_lang$html$Html_Attributes$class('ui warning message')
+									]),
+								_elm_lang$core$Native_List.fromArray(
+									[
+										A2(
+										_elm_lang$html$Html$i,
+										_elm_lang$core$Native_List.fromArray(
+											[
+												_elm_lang$html$Html_Attributes$class('close icon')
+											]),
+										_elm_lang$core$Native_List.fromArray(
+											[])),
+										_elm_lang$html$Html$text(model.error)
+									]))
+							]))
 					]))
 			]));
 };
@@ -9313,7 +9347,7 @@ var _user$project$MashTree$getTree = F2(
 				_elm_lang$core$Basics_ops['++'],
 				'/results/trees/',
 				A2(_elm_lang$core$Basics_ops['++'], id, '-tree.json')));
-		var _p10 = A2(_elm_lang$core$Debug$log, 'url', url);
+		var _p12 = A2(_elm_lang$core$Debug$log, 'url', url);
 		return A3(
 			_elm_lang$core$Task$perform,
 			_user$project$MashTree$FetchFail,
@@ -9322,12 +9356,12 @@ var _user$project$MashTree$getTree = F2(
 	});
 var _user$project$MashTree$update = F2(
 	function (msg, model) {
-		var _p11 = msg;
-		switch (_p11.ctor) {
+		var _p13 = msg;
+		switch (_p13.ctor) {
 			case 'ClusterId':
-				var _p13 = _p11._0;
-				var _p12 = A2(_elm_lang$core$Debug$log, 'Get id', _p13);
-				var cleanId = A2(_elm_lang$core$String$dropLeft, 1, _p13);
+				var _p15 = _p13._0;
+				var _p14 = A2(_elm_lang$core$Debug$log, 'Get id', _p15);
+				var cleanId = A2(_elm_lang$core$String$dropLeft, 1, _p15);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -9340,12 +9374,12 @@ var _user$project$MashTree$update = F2(
 							]))
 				};
 			case 'ReceiveUrl':
-				var _p14 = _p11._0;
-				var url = _p14._0;
-				var id = _p14._1;
+				var _p16 = _p13._0;
+				var url = _p16._0;
+				var id = _p16._1;
 				var cleanId = A2(_elm_lang$core$String$dropLeft, 1, id);
-				var _p15 = A2(_elm_lang$core$Debug$log, 'init url = ', cleanId);
-				var _p16 = A2(_elm_lang$core$Debug$log, 'init url = ', url);
+				var _p17 = A2(_elm_lang$core$Debug$log, 'init url = ', cleanId);
+				var _p18 = A2(_elm_lang$core$Debug$log, 'init url = ', url);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -9369,7 +9403,7 @@ var _user$project$MashTree$update = F2(
 							},
 							tab);
 					},
-					_p11._0);
+					_p13._0);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -9378,22 +9412,38 @@ var _user$project$MashTree$update = F2(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'FetchFail':
-				var _p17 = A2(_elm_lang$core$Debug$log, 'error : ', _p11._0);
-				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				var _p19 = _p13._0;
+				if (_p19.ctor === 'UnexpectedPayload') {
+					return A2(
+						_elm_lang$core$Debug$log,
+						_p19._0,
+						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
+				} else {
+					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				}
 			case 'FetchTaxaSucceed':
+				var taxo = A2(
+					_elm_lang$core$List$map,
+					function (n) {
+						return _user$project$MashTree$encodeTaxa(n);
+					},
+					_p13._0);
 				return {
 					ctor: '_Tuple2',
 					_0: model,
 					_1: _user$project$MashTree$calculateTree(
-						{ctor: '_Tuple2', _0: model.clusterDistance, _1: _p11._0})
+						{ctor: '_Tuple2', _0: model.clusterDistance, _1: taxo})
 				};
 			case 'FetchTreeSucceed':
-				var _p20 = _p11._0;
+				var _p20 = _p13._0;
 				var rankStr = _elm_lang$core$String$toLower(
 					_elm_lang$core$Basics$toString(model.rank));
-				var _p18 = A2(_elm_lang$core$Debug$log, 'rank Str = ', rankStr);
 				var jsonTree = _user$project$MashTree$encodeTree(_p20);
-				var _p19 = A2(_elm_lang$core$Debug$log, 'tree : ', _p20);
+				var listCommand = _elm_lang$core$Native_List.fromArray(
+					[
+						_user$project$MashTree$drawTree(
+						{ctor: '_Tuple2', _0: jsonTree, _1: rankStr})
+					]);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -9401,11 +9451,10 @@ var _user$project$MashTree$update = F2(
 						{
 							tree: _elm_lang$core$Maybe$Just(_p20)
 						}),
-					_1: _user$project$MashTree$drawTree(
-						{ctor: '_Tuple2', _0: jsonTree, _1: rankStr})
+					_1: _elm_lang$core$Platform_Cmd$batch(listCommand)
 				};
 			default:
-				var _p23 = _p11._0;
+				var _p23 = _p13._0;
 				var listCommand = function () {
 					var _p21 = model.tree;
 					if (_p21.ctor === 'Nothing') {
@@ -9421,12 +9470,13 @@ var _user$project$MashTree$update = F2(
 					}
 				}();
 				var _p22 = A2(_elm_lang$core$Debug$log, 'Rank = ', _p23);
-				var newRank = _user$project$MashTree$getRank(_p23);
+				var rankType = _user$project$MashTree$getRank(_p23);
+				var newModel = _elm_lang$core$Native_Utils.update(
+					model,
+					{rank: rankType});
 				return {
 					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{rank: newRank}),
+					_0: newModel,
 					_1: _elm_lang$core$Platform_Cmd$batch(listCommand)
 				};
 		}

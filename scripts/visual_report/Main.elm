@@ -6,7 +6,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Regex
 import Json.Decode as Json
-import MashTree
+--import MashTree
 
 
 

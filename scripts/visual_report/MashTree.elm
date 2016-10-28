@@ -11,6 +11,8 @@ import Json.Encode exposing (..)
 import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
 import String
 import Task
+--import Taxonomy as Taxo exposing (..)
+--import Taxonomy.Rank as Rank exposing (..)
 
 main : Program Never
 main =
@@ -22,22 +24,6 @@ main =
         }
 
 
--- type alias User =
---   { id : Int
---   , email : Maybe String
---   , name : String
---   , percentExcited : Float
---   }
-
-
--- userDecoder : Decoder User
--- userDecoder =
---   decode User
---     |> required "id" Json.int
---     |> required "email" (nullable Json.string) -- `null` decodes to `Nothing`
---     |> optional "name" Json.string "(fallback if name is `null` or not present)"
---     |> hardcoded 1.0
-
 
 --Model
 type alias Model =
@@ -45,8 +31,9 @@ type alias Model =
     , clusterDistance : (List (List (Maybe Float)))
     , clusterTaxa     : Maybe (List Taxa)
     , tree            : Maybe Tree
-    , rank            : Ranks
+    , rank            : Ranks -- (Maybe Rank.Rank)
     , url             : String
+    , error           : String
     }
 
 
@@ -79,12 +66,11 @@ type alias Taxa =
     { id : Int
     , name : String
     , taxonomy : Taxonomy
-    
     }
 
 type alias Rank =
-    { taxid : Int
-    , name  : String
+    { taxid : Maybe Int
+    , name  : Maybe String
     }
 
 type alias Taxonomy =
@@ -97,7 +83,7 @@ type alias Taxonomy =
     }
 
 defaultModel : Model
-defaultModel = Model "" ([[Nothing]]) Nothing Nothing Species ""
+defaultModel = Model "" ([[Nothing]]) Nothing Nothing Species "" ""
     
 init : ( Model, Cmd Msg )
 init = (defaultModel, Cmd.none)
@@ -163,58 +149,101 @@ update msg model =
                 , Cmd.none
                 )
 
-        FetchFail err ->
-            let
-                _ = Debug.log "error : " err
-             in
-            (model, Cmd.none)
+        FetchFail error ->
+            case error of
+                
+                Http.UnexpectedPayload errorMessage ->
+                    Debug.log errorMessage
+                        (model, Cmd.none)
+
+                _ ->
+                    (model, Cmd.none)
 
 
         FetchTaxaSucceed taxonomy ->
-            ( model
-            , calculateTree (model.clusterDistance, taxonomy)
-            )
+            let
+                taxo = List.map (\n -> encodeTaxa n ) taxonomy
+                       
+            in
+                ( model
+                , calculateTree (model.clusterDistance, taxo)
+                )
                 
         FetchTreeSucceed tree ->
             let
-                _ = Debug.log "tree : " tree
+                -- _ = Debug.log "tree : " tree
                 jsonTree = encodeTree tree
-                rankStr = String.toLower (toString model.rank)
-                _ = Debug.log "rank Str = " rankStr
+                rankStr = (String.toLower (toString model.rank))
+                          
+                listCommand = [drawTree (jsonTree, rankStr)]
+
+                           
+                -- listCommand =
+                --     case model.rank of
+                --         Nothing ->
+                --             [Cmd.none]
+
+                --         Just rank ->
+                --             let 
+                --                 rankStr =
+                --                     Rank.typeOfRank rank
+                --             in
+                --                 [drawTree (jsonTree, rankStr)]
             in
                 ( { model | tree = Just tree}
-                , drawTree (jsonTree, rankStr)
+                , Cmd.batch listCommand
                 )
 
 
 
         ChangeRank rank ->
-            let 
-                newRank = getRank rank
+            let
+                -- rankType = Rank.resultRankOfMaybeRankInfo rank Nothing
+                rankType = getRank rank
                 _ = Debug.log "Rank = " rank
+                                    
                 listCommand =
                     case model.tree of
                         Nothing ->
                             [Cmd.none]
-                                
+                            
                         Just tree ->
-                            let 
+                            let
                                 jsonTree = encodeTree tree
                             in
-                                [ drawTree (jsonTree, rank)
-                                ]
+                                [drawTree (jsonTree, rank)]
+
+                newModel    = {model | rank = rankType}
+                              
+                -- commandOnRank rank =
+                --     case model.tree of
+                --         Nothing ->
+                --             ({model | error = "No tree available", rank = (Just rank)}, [Cmd.none])
+                                
+                --         Just tree ->
+                --             let 
+                --                 jsonTree = encodeTree tree
+                --                 rankStr = Rank.typeOfRank rank
+                --             in
+                --                 ({model | rank = (Just rank)},[drawTree (jsonTree, rankStr)])
+                    
+                -- (newModel, listCommand) =
+                --     case rankType of
+                --         Ok rank ->
+                --             commandOnRank rank
+                                
+                --         Err error ->
+                --             ({model | error = error, rank = Nothing}, [Cmd.none])
+
             in
-               ( {model | rank = newRank }
-                , Cmd.batch
-                     listCommand
-                ) 
+               ( newModel, Cmd.batch listCommand) 
             
 
 port clusterId : (String -> msg) -> Sub msg
                  
 port url : ( (String, String) -> msg ) -> Sub msg
 
-port calculateTree : ( List (List (Maybe Float)), List Taxa) -> Cmd msg
+port calculateTree : ( List (List (Maybe Float)), List Value) -> Cmd msg
 
 port drawTree : (Value, String) -> Cmd msg
 
@@ -247,6 +276,17 @@ view model =
                 , on "change" (Json.map ChangeRank targetValue)
                 ]
                 (rankOptions model)
+          ]
+    , div
+          [class "row"]
+          [ div
+            [ class "sixteen wide column" ]
+            [ div
+              [ class "ui warning message"]
+              [ i [class "close icon"] []
+              , text model.error
+              ]
+            ]
           ]
     -- , div
     --       [class "row"]
@@ -380,8 +420,8 @@ decodeTaxa =
 decodeRank : Json.Decoder Rank
 decodeRank =
     decode Rank
-        |> Json.Decode.Pipeline.required "taxid" number
-        |> Json.Decode.Pipeline.required "name" Json.string
+        |> Json.Decode.Pipeline.required "taxid" (Json.Decode.Pipeline.nullable number)
+        |> Json.Decode.Pipeline.required "name" (Json.Decode.Pipeline.nullable Json.string)
 
 
 decodeTaxonomy : Json.Decoder Taxonomy
@@ -459,9 +499,26 @@ encodeTaxonomy record =
 
 encodeRank : Rank -> Value
 encodeRank record =
+    let
+        taxid =
+            case record.taxid of
+                Nothing ->
+                    Json.Encode.null
+                        
+                Just taxid ->
+                    Json.Encode.int taxid
+        name =
+            case record.name of 
+                Nothing ->
+                    Json.Encode.null
+
+                Just name ->
+                    Json.Encode.string name
+        
+    in
     Json.Encode.object
-        [ ("taxid", Json.Encode.int record.taxid)
-        , ("name" , Json.Encode.string record.name)
+        [ ("taxid", taxid)
+        , ("name" ,  name)
         ]
   
 
@@ -493,7 +550,8 @@ rankOptions model =
         ranks =
             [ Species, Genus, Family, Order, Class, Phylum ]
                 
-        rankModel = model.rank
+        rankModel =
+            model.rank
 
         toOption rank =
             case rank of
@@ -510,13 +568,56 @@ rankOptions model =
                     option [ value "order", selected (rankModel == rank) ] [ text "Order" ]
 
                 Class ->
-                    option [ value "class", selected (rankModel == rank) ] [ text "Class" ]
+                    option [ value "class_", selected (rankModel == rank) ] [ text "Class" ]
 
                 Phylum ->
                     option [ value "phylum", selected (rankModel == rank) ] [ text "Phylum" ]
     in
         List.map toOption ranks
 
+
+
+-- rankOptions2 : Model -> List (Html a)
+-- rankOptions2 model =
+--     let
+--         ranks =
+--             [ "species", "genus", "family", "order",  "class",  "phylum" ]
+                
+--         rankStr =
+--             case model.rank of
+--                 Nothing ->
+--                     ""
+--                 Just rank ->
+--                     Rank.typeOfRank rank
+
+--         toOption rank =
+--             case rank of
+--                 "species" ->
+--                     option [ value "species", selected (rankStr == rank) ] [ text "Species" ]
+
+--                 "genus" ->
+--                     option [ value "genus", selected (rankStr == rank)] [ text "Genus" ]
+
+--                 "family" ->
+--                     option [ value "family", selected (rankStr == rank) ] [ text "Family" ]
+
+--                 "order" ->
+--                     option [ value "order", selected (rankStr == rank) ] [ text "Order" ]
+
+--                 "class" ->
+--                     option [ value "class_", selected (rankStr == rank) ] [ text "Class" ]
+
+--                 "phylum" ->
+--                     option [ value "phylum", selected (rankStr == rank) ] [ text "Phylum" ]
+
+--                 _ ->
+--                     option [ value ""] [ text "" ]
+--     in
+--         List.map toOption ranks
+
+
+
+            
 getRank : String -> Ranks
 getRank rankStr =
     case rankStr of
