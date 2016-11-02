@@ -5817,6 +5817,87 @@ var _elm_lang$core$Json_Decode$dict = function (decoder) {
 };
 var _elm_lang$core$Json_Decode$Decoder = {ctor: 'Decoder'};
 
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$nullable = function (decoder) {
+	return _elm_lang$core$Json_Decode$oneOf(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+				A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, decoder)
+			]));
+};
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode = _elm_lang$core$Json_Decode$succeed;
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$resolveResult = function (resultDecoder) {
+	return A2(_elm_lang$core$Json_Decode$customDecoder, resultDecoder, _elm_lang$core$Basics$identity);
+};
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom = _elm_lang$core$Json_Decode$object2(
+	F2(
+		function (x, y) {
+			return y(x);
+		}));
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$hardcoded = function (_p0) {
+	return _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom(
+		_elm_lang$core$Json_Decode$succeed(_p0));
+};
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optionalDecoder = F3(
+	function (pathDecoder, valDecoder, fallback) {
+		var nullOr = function (decoder) {
+			return _elm_lang$core$Json_Decode$oneOf(
+				_elm_lang$core$Native_List.fromArray(
+					[
+						decoder,
+						_elm_lang$core$Json_Decode$null(fallback)
+					]));
+		};
+		var handleResult = function (input) {
+			var _p1 = A2(_elm_lang$core$Json_Decode$decodeValue, pathDecoder, input);
+			if (_p1.ctor === 'Ok') {
+				return A2(
+					_elm_lang$core$Json_Decode$decodeValue,
+					nullOr(valDecoder),
+					_p1._0);
+			} else {
+				return _elm_lang$core$Result$Ok(fallback);
+			}
+		};
+		return A2(_elm_lang$core$Json_Decode$customDecoder, _elm_lang$core$Json_Decode$value, handleResult);
+	});
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optionalAt = F4(
+	function (path, valDecoder, fallback, decoder) {
+		return A2(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom,
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optionalDecoder,
+				A2(_elm_lang$core$Json_Decode$at, path, _elm_lang$core$Json_Decode$value),
+				valDecoder,
+				fallback),
+			decoder);
+	});
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional = F4(
+	function (key, valDecoder, fallback, decoder) {
+		return A2(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom,
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optionalDecoder,
+				A2(_elm_lang$core$Json_Decode_ops[':='], key, _elm_lang$core$Json_Decode$value),
+				valDecoder,
+				fallback),
+			decoder);
+	});
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$requiredAt = F3(
+	function (path, valDecoder, decoder) {
+		return A2(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom,
+			A2(_elm_lang$core$Json_Decode$at, path, valDecoder),
+			decoder);
+	});
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required = F3(
+	function (key, valDecoder, decoder) {
+		return A2(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom,
+			A2(_elm_lang$core$Json_Decode_ops[':='], key, valDecoder),
+			decoder);
+	});
+
 //import Maybe, Native.List //
 
 var _elm_lang$core$Native_Regex = function() {
@@ -8032,6 +8113,343 @@ var _elm_lang$html$Html_Events$Options = F2(
 		return {stopPropagation: a, preventDefault: b};
 	});
 
+var _user$project$Taxonomy_Rank$taxid = _elm_lang$core$Json_Decode$oneOf(
+	_elm_lang$core$Native_List.fromArray(
+		[
+			_elm_lang$core$Json_Decode$maybe(_elm_lang$core$Json_Decode$int),
+			_elm_lang$core$Json_Decode$maybe(
+			A2(_elm_lang$core$Json_Decode$customDecoder, _elm_lang$core$Json_Decode$string, _elm_lang$core$String$toInt))
+		]));
+var _user$project$Taxonomy_Rank$toValidTaxid = function (taxid) {
+	var _p0 = A2(_elm_lang$core$Debug$log, 'THE TAXID = ', taxid);
+	if (_elm_lang$core$Native_Utils.eq(taxid, '')) {
+		var _p1 = A2(_elm_lang$core$Debug$log, 'Taxid empty string = ', taxid);
+		return _elm_lang$core$Json_Decode$succeed(_elm_lang$core$Maybe$Nothing);
+	} else {
+		var _p2 = _elm_lang$core$String$toInt(taxid);
+		if (_p2.ctor === 'Ok') {
+			var _p3 = A2(_elm_lang$core$Debug$log, 'Taxid to decode = ', _p2._0);
+			return _elm_lang$core$Json_Decode$maybe(_elm_lang$core$Json_Decode$int);
+		} else {
+			var _p4 = A2(_elm_lang$core$Debug$log, 'Taxid error', _p2._0);
+			return _elm_lang$core$Json_Decode$maybe(
+				_elm_lang$core$Json_Decode$fail(
+					A2(_elm_lang$core$Basics_ops['++'], taxid, ' is not a valid taxid')));
+		}
+	}
+};
+var _user$project$Taxonomy_Rank$decodeTaxid = A2(_elm_lang$core$Json_Decode$andThen, _elm_lang$core$Json_Decode$string, _user$project$Taxonomy_Rank$toValidTaxid);
+var _user$project$Taxonomy_Rank$nameOfRank = function (rank) {
+	var _p5 = rank;
+	switch (_p5.ctor) {
+		case 'Oid':
+			var _p6 = _p5._0;
+			if (_p6.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p6._0.name;
+			}
+		case 'Strain':
+			var _p7 = _p5._0;
+			if (_p7.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p7._0.name;
+			}
+		case 'Species':
+			var _p8 = _p5._0;
+			if (_p8.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p8._0.name;
+			}
+		case 'Genus':
+			var _p9 = _p5._0;
+			if (_p9.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p9._0.name;
+			}
+		case 'Family':
+			var _p10 = _p5._0;
+			if (_p10.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p10._0.name;
+			}
+		case 'Order':
+			var _p11 = _p5._0;
+			if (_p11.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p11._0.name;
+			}
+		case 'Class':
+			var _p12 = _p5._0;
+			if (_p12.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p12._0.name;
+			}
+		default:
+			var _p13 = _p5._0;
+			if (_p13.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p13._0.name;
+			}
+	}
+};
+var _user$project$Taxonomy_Rank$taxidOfRank = function (rank) {
+	var _p14 = rank;
+	switch (_p14.ctor) {
+		case 'Oid':
+			var _p15 = _p14._0;
+			if (_p15.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p15._0.taxid;
+			}
+		case 'Strain':
+			var _p16 = _p14._0;
+			if (_p16.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p16._0.taxid;
+			}
+		case 'Species':
+			var _p17 = _p14._0;
+			if (_p17.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p17._0.taxid;
+			}
+		case 'Genus':
+			var _p18 = _p14._0;
+			if (_p18.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p18._0.taxid;
+			}
+		case 'Family':
+			var _p19 = _p14._0;
+			if (_p19.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p19._0.taxid;
+			}
+		case 'Order':
+			var _p20 = _p14._0;
+			if (_p20.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p20._0.taxid;
+			}
+		case 'Class':
+			var _p21 = _p14._0;
+			if (_p21.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p21._0.taxid;
+			}
+		default:
+			var _p22 = _p14._0;
+			if (_p22.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return _p22._0.taxid;
+			}
+	}
+};
+var _user$project$Taxonomy_Rank$encodeRank = function (rank) {
+	var name = function () {
+		var _p23 = _user$project$Taxonomy_Rank$nameOfRank(rank);
+		if (_p23.ctor === 'Nothing') {
+			return _elm_lang$core$Json_Encode$null;
+		} else {
+			return _elm_lang$core$Json_Encode$string(_p23._0);
+		}
+	}();
+	var taxid = function () {
+		var _p24 = _user$project$Taxonomy_Rank$taxidOfRank(rank);
+		if (_p24.ctor === 'Nothing') {
+			return _elm_lang$core$Json_Encode$null;
+		} else {
+			return _elm_lang$core$Json_Encode$int(_p24._0);
+		}
+	}();
+	var _p25 = A2(_elm_lang$core$Debug$log, 'rank = ', rank);
+	return _elm_lang$core$Json_Encode$object(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				{ctor: '_Tuple2', _0: 'name', _1: name},
+				{ctor: '_Tuple2', _0: 'taxid', _1: taxid}
+			]));
+};
+var _user$project$Taxonomy_Rank$encodeMaybeRank = function (rank) {
+	var _p26 = rank;
+	if (_p26.ctor === 'Nothing') {
+		return _elm_lang$core$Json_Encode$null;
+	} else {
+		return _user$project$Taxonomy_Rank$encodeRank(_p26._0);
+	}
+};
+var _user$project$Taxonomy_Rank$rankToString = function (rank) {
+	var _p27 = rank;
+	if (_p27.ctor === 'Ok') {
+		return _elm_lang$core$Basics$toString(
+			_user$project$Taxonomy_Rank$encodeRank(_p27._0));
+	} else {
+		return _elm_lang$core$Basics$toString(_p27._0);
+	}
+};
+var _user$project$Taxonomy_Rank$typeOfRank = function (rank) {
+	var _p28 = rank;
+	switch (_p28.ctor) {
+		case 'Oid':
+			return 'oid';
+		case 'Strain':
+			return 'strain';
+		case 'Species':
+			return 'species';
+		case 'Genus':
+			return 'genus';
+		case 'Family':
+			return 'family';
+		case 'Order':
+			return 'order';
+		case 'Class':
+			return 'class';
+		default:
+			return 'phylum';
+	}
+};
+var _user$project$Taxonomy_Rank$getListRankString = function (ranks) {
+	return A2(
+		_elm_lang$core$List$map,
+		function (rank) {
+			return _user$project$Taxonomy_Rank$typeOfRank(rank);
+		},
+		ranks);
+};
+var _user$project$Taxonomy_Rank$RankInfo = F2(
+	function (a, b) {
+		return {name: a, taxid: b};
+	});
+var _user$project$Taxonomy_Rank$decodeRankInfo = A4(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+	'taxid',
+	_user$project$Taxonomy_Rank$taxid,
+	_elm_lang$core$Maybe$Nothing,
+	A4(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+		'name',
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$nullable(_elm_lang$core$Json_Decode$string),
+		_elm_lang$core$Maybe$Nothing,
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$Taxonomy_Rank$RankInfo)));
+var _user$project$Taxonomy_Rank$Phylum = function (a) {
+	return {ctor: 'Phylum', _0: a};
+};
+var _user$project$Taxonomy_Rank$Class = function (a) {
+	return {ctor: 'Class', _0: a};
+};
+var _user$project$Taxonomy_Rank$Order = function (a) {
+	return {ctor: 'Order', _0: a};
+};
+var _user$project$Taxonomy_Rank$Family = function (a) {
+	return {ctor: 'Family', _0: a};
+};
+var _user$project$Taxonomy_Rank$Genus = function (a) {
+	return {ctor: 'Genus', _0: a};
+};
+var _user$project$Taxonomy_Rank$Species = function (a) {
+	return {ctor: 'Species', _0: a};
+};
+var _user$project$Taxonomy_Rank$Strain = function (a) {
+	return {ctor: 'Strain', _0: a};
+};
+var _user$project$Taxonomy_Rank$Oid = function (a) {
+	return {ctor: 'Oid', _0: a};
+};
+var _user$project$Taxonomy_Rank$getAllRankString = _user$project$Taxonomy_Rank$getListRankString(
+	_elm_lang$core$Native_List.fromArray(
+		[
+			_user$project$Taxonomy_Rank$Oid(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Strain(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Species(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Genus(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Family(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Order(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Class(_elm_lang$core$Maybe$Nothing),
+			_user$project$Taxonomy_Rank$Phylum(_elm_lang$core$Maybe$Nothing)
+		]));
+var _user$project$Taxonomy_Rank$maybeRankOfString = F2(
+	function (rankStr, rankInfo) {
+		var lowerStr = _elm_lang$core$String$toLower(rankStr);
+		var _p29 = lowerStr;
+		switch (_p29) {
+			case 'oid':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Oid(rankInfo));
+			case 'strain':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Strain(rankInfo));
+			case 'species':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Species(rankInfo));
+			case 'genus':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Genus(rankInfo));
+			case 'family':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Family(rankInfo));
+			case 'order':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Order(rankInfo));
+			case 'class':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Class(rankInfo));
+			case 'class_':
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Class(rankInfo));
+			case 'phylum':
+				var _p30 = A2(_elm_lang$core$Debug$log, 'Phylum -----> ', rankInfo);
+				return _elm_lang$core$Maybe$Just(
+					_user$project$Taxonomy_Rank$Phylum(rankInfo));
+			default:
+				return _elm_lang$core$Maybe$Nothing;
+		}
+	});
+var _user$project$Taxonomy_Rank$resultRankOfMaybeRankInfo = F2(
+	function (rankStr, rankInfo) {
+		var rank = A2(_user$project$Taxonomy_Rank$maybeRankOfString, rankStr, rankInfo);
+		var _p31 = A2(_elm_lang$core$Debug$log, 'Maybe Rank = ', rank);
+		return A2(
+			_elm_lang$core$Result$fromMaybe,
+			A2(_elm_lang$core$Basics_ops['++'], rankStr, ' is not a rank'),
+			rank);
+	});
+var _user$project$Taxonomy_Rank$resultRankOfRankInfo = F2(
+	function (rankStr, rankInfo) {
+		var _p32 = A2(_elm_lang$core$Debug$log, 'Rank : ', rankStr);
+		var _p33 = A2(_elm_lang$core$Debug$log, 'Rank info : ', rankInfo);
+		return A2(
+			_user$project$Taxonomy_Rank$resultRankOfMaybeRankInfo,
+			rankStr,
+			_elm_lang$core$Maybe$Just(rankInfo));
+	});
+var _user$project$Taxonomy_Rank$decodeRank = function (rank) {
+	var lowerRank = _elm_lang$core$String$toLower(rank);
+	return A2(
+		_elm_lang$core$Json_Decode$customDecoder,
+		_user$project$Taxonomy_Rank$decodeRankInfo,
+		_user$project$Taxonomy_Rank$resultRankOfRankInfo(lowerRank));
+};
+var _user$project$Taxonomy_Rank$decodeMaybeRank = function (rankName) {
+	return _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$nullable(
+		_user$project$Taxonomy_Rank$decodeRank(rankName));
+};
+
 var _user$project$Main$getClustersByRank = F2(
 	function (rank, clustersByRank) {
 		var _p0 = clustersByRank;
@@ -8063,7 +8481,7 @@ var _user$project$Main$hasPattern = F2(
 		var clusterContain = function (d) {
 			var _p3 = d.name;
 			if (_p3.ctor === 'Nothing') {
-				return false;
+				return true;
 			} else {
 				return A2(
 					_elm_lang$core$Regex$contains,
@@ -8074,7 +8492,7 @@ var _user$project$Main$hasPattern = F2(
 		};
 		var _p4 = cluster.name;
 		if (_p4.ctor === 'Nothing') {
-			return false;
+			return true;
 		} else {
 			return A2(
 				_elm_lang$core$Regex$contains,
@@ -9366,9 +9784,10 @@ var _user$project$Main$update = F2(
 				var _p12 = _user$project$Main$getMinMaxClusterSize(clusters);
 				var min = _p12._0;
 				var max = _p12._1;
+				var _p13 = A2(_elm_lang$core$Debug$log, 'max', max);
 				var filteredClusters = function () {
-					var _p13 = clusters;
-					if (_p13.ctor === 'Nothing') {
+					var _p14 = clusters;
+					if (_p14.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
@@ -9380,7 +9799,7 @@ var _user$project$Main$update = F2(
 							A2(
 								_elm_lang$core$List$filter,
 								_user$project$Main$hasPattern(model.pattern),
-								_p13._0));
+								_p14._0));
 					}
 				}();
 				var newModel = _elm_lang$core$Native_Utils.update(
@@ -9416,12 +9835,12 @@ var _user$project$Main$update = F2(
 				};
 			case 'DistanceCluster':
 				var clusters = A2(_user$project$Main$getClustersByRank, model.rank, model.distanceClusters);
-				var _p14 = _user$project$Main$getMinMaxClusterSize(clusters);
-				var min = _p14._0;
-				var max = _p14._1;
+				var _p15 = _user$project$Main$getMinMaxClusterSize(clusters);
+				var min = _p15._0;
+				var max = _p15._1;
 				var filteredClusters = function () {
-					var _p15 = clusters;
-					if (_p15.ctor === 'Nothing') {
+					var _p16 = clusters;
+					if (_p16.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
@@ -9433,7 +9852,7 @@ var _user$project$Main$update = F2(
 							A2(
 								_elm_lang$core$List$filter,
 								_user$project$Main$hasPattern(model.pattern),
-								_p15._0));
+								_p16._0));
 					}
 				}();
 				var newModel = _elm_lang$core$Native_Utils.update(
@@ -9468,30 +9887,30 @@ var _user$project$Main$update = F2(
 							]))
 				};
 			case 'SliderChange':
-				var _p17 = _p8._0;
+				var _p18 = _p8._0;
 				var displayedClusters = A2(_user$project$Main$getClustersByRank, model.rank, model.displayedClusters);
 				var filteredClusters = function () {
-					var _p16 = displayedClusters;
-					if (_p16.ctor === 'Nothing') {
+					var _p17 = displayedClusters;
+					if (_p17.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
 						return A4(
 							_user$project$Main$preprocessCluster,
-							_p17.min,
-							_p17.max,
+							_p18.min,
+							_p18.max,
 							model.showOrphan,
 							A2(
 								_elm_lang$core$List$filter,
 								_user$project$Main$hasPattern(model.pattern),
-								_p16._0));
+								_p17._0));
 					}
 				}();
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
 					{
-						min: _p17.min,
-						max: _p17.max,
+						min: _p18.min,
+						max: _p18.max,
 						numberOfClusters: _elm_lang$core$List$length(filteredClusters),
 						histogramData: A2(
 							_elm_lang$core$List$map,
@@ -9511,11 +9930,11 @@ var _user$project$Main$update = F2(
 							]))
 				};
 			case 'FilterClusters':
-				var _p20 = _p8._0;
+				var _p21 = _p8._0;
 				var displayedClusters = A2(_user$project$Main$getClustersByRank, model.rank, model.displayedClusters);
 				var filteredClusters = function () {
-					var _p18 = displayedClusters;
-					if (_p18.ctor === 'Nothing') {
+					var _p19 = displayedClusters;
+					if (_p19.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
@@ -9526,14 +9945,14 @@ var _user$project$Main$update = F2(
 							model.showOrphan,
 							A2(
 								_elm_lang$core$List$filter,
-								_user$project$Main$hasPattern(_p20),
-								_p18._0));
+								_user$project$Main$hasPattern(_p21),
+								_p19._0));
 					}
 				}();
-				var _p19 = _user$project$Main$getMinMaxClusterSize(
+				var _p20 = _user$project$Main$getMinMaxClusterSize(
 					_elm_lang$core$Maybe$Just(filteredClusters));
-				var min = _p19._0;
-				var max = _p19._1;
+				var min = _p20._0;
+				var max = _p20._1;
 				var maxCorrected = (_elm_lang$core$Native_Utils.cmp(max, 0) < 1) ? 1 : max;
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
@@ -9546,7 +9965,7 @@ var _user$project$Main$update = F2(
 								return _elm_lang$core$List$length(n.data);
 							},
 							filteredClusters),
-						pattern: _p20
+						pattern: _p21
 					});
 				return {
 					ctor: '_Tuple2',
@@ -9564,12 +9983,12 @@ var _user$project$Main$update = F2(
 			case 'ChangeRank':
 				var rank = _user$project$Main$getRank(_p8._0);
 				var displayedClusters = A2(_user$project$Main$getClustersByRank, rank, model.displayedClusters);
-				var _p21 = _user$project$Main$getMinMaxClusterSize(displayedClusters);
-				var min = _p21._0;
-				var max = _p21._1;
+				var _p22 = _user$project$Main$getMinMaxClusterSize(displayedClusters);
+				var min = _p22._0;
+				var max = _p22._1;
 				var filteredClusters = function () {
-					var _p22 = displayedClusters;
-					if (_p22.ctor === 'Nothing') {
+					var _p23 = displayedClusters;
+					if (_p23.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
@@ -9581,7 +10000,7 @@ var _user$project$Main$update = F2(
 							A2(
 								_elm_lang$core$List$filter,
 								_user$project$Main$hasPattern(model.pattern),
-								_p22._0));
+								_p23._0));
 					}
 				}();
 				var newModel = _elm_lang$core$Native_Utils.update(
@@ -9615,12 +10034,12 @@ var _user$project$Main$update = F2(
 			default:
 				var showOrphan = _elm_lang$core$Basics$not(model.showOrphan);
 				var displayedClusters = A2(_user$project$Main$getClustersByRank, model.rank, model.displayedClusters);
-				var _p23 = _user$project$Main$getMinMaxClusterSize(displayedClusters);
-				var min = _p23._0;
-				var max = _p23._1;
+				var _p24 = _user$project$Main$getMinMaxClusterSize(displayedClusters);
+				var min = _p24._0;
+				var max = _p24._1;
 				var filteredClusters = function () {
-					var _p24 = displayedClusters;
-					if (_p24.ctor === 'Nothing') {
+					var _p25 = displayedClusters;
+					if (_p25.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
@@ -9632,7 +10051,7 @@ var _user$project$Main$update = F2(
 							A2(
 								_elm_lang$core$List$filter,
 								_user$project$Main$hasPattern(model.pattern),
-								_p24._0));
+								_p25._0));
 					}
 				}();
 				var numOfClusters = _elm_lang$core$List$length(filteredClusters);
@@ -9669,8 +10088,8 @@ var _user$project$Main$update = F2(
 var _user$project$Main$rankOptions = function (model) {
 	var rankModel = model.rank;
 	var toOption = function (rank) {
-		var _p25 = rank;
-		switch (_p25.ctor) {
+		var _p26 = rank;
+		switch (_p26.ctor) {
 			case 'Strain':
 				return A2(
 					_elm_lang$html$Html$option,

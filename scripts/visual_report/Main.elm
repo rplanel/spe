@@ -8,6 +8,7 @@ import Regex
 import Json.Decode as Json
 --import MashTree
 
+import Taxonomy.Rank as Rank exposing (..)
 
 
 main : Program Never
@@ -205,6 +206,13 @@ update msg model =
                 clusters =
                     getClustersByRank model.rank model.taxonomicClusters
 
+                ( min, max ) =
+                    getMinMaxClusterSize clusters
+
+
+                        
+                        
+                _  = Debug.log "max" max
                 filteredClusters =
                     case clusters of
                         Nothing ->
@@ -215,8 +223,6 @@ update msg model =
                                 |> List.filter (hasPattern model.pattern)
                                 |> preprocessCluster min max model.showOrphan
 
-                ( min, max ) =
-                    getMinMaxClusterSize clusters
 
                 newModel =
                     { model
@@ -572,15 +578,20 @@ getMinMaxClusterSize cluster =
 
         Just cluster ->
             let
+
+                
                 minMax cluster range =
                     let
                         currentLength =
                             List.length cluster.data
 
+
+                                
                         ( min, max ) =
                             range
                     in
                         ( Basics.min currentLength min, Basics.max currentLength max )
+                            
             in
                 List.foldr minMax ( 0, 0 ) cluster
 
@@ -591,14 +602,14 @@ hasPattern pattern cluster =
         clusterContain d =
             case d.name of
                 Nothing ->
-                    False
+                    True
 
                 Just name ->
                     Regex.contains (Regex.caseInsensitive (Regex.regex pattern)) name
     in
         case cluster.name of
             Nothing ->
-                False
+                True
 
             Just name ->
                 Regex.contains (Regex.caseInsensitive (Regex.regex pattern)) name

@@ -11,8 +11,12 @@ function piechart () {
 	    if (context.empty()){
 		context = d3.select(this).append('g').classed('piecharts',true);
 	    }
-		
+
+	    var categories = d.map(function(el){
+		return el.name;
+	    });
 	    
+	    var numOrganism;
 	    context.attr('transform','translate('+ (width+100) + ',' + height + ')');
 	    var radius = Math.min(width, height) / 2;
 	    var colors = d3.scaleOrdinal(d3.schemeCategory20b)
@@ -66,7 +70,13 @@ function piechart () {
                 .select('text.title')
                 .style('font-size','14px')
                 .style('text-decoration','underline')
-                .text(function(d){return d.name+"("+d.id+")";})
+                .text(function(d){
+		    var countTotal = d3.sum(d.data.map(function(el){
+			return el.count;
+		    }));
+		    return d.name+"("+d.id+") ["+countTotal+"]";
+
+		})
             
 	    update.attr('transform',function(d,i){
                 var column = i % numCol;

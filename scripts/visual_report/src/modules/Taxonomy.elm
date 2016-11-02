@@ -1,7 +1,7 @@
 module Taxonomy exposing (..)
 
 import Taxonomy.Rank as Rank exposing (..)
-import Html exposing (..)
+--import Html exposing (..)
 import String exposing (..)
 import Json.Decode as Json exposing (..)
 import Json.Decode.Pipeline exposing (..)
@@ -41,10 +41,10 @@ decodeTaxonomyInfo =
         |> Json.Decode.Pipeline.optional "oid" (Rank.decodeMaybeRank "oid") Nothing
         |> Json.Decode.Pipeline.optional "strain" (Rank.decodeMaybeRank "strain") Nothing
         |> Json.Decode.Pipeline.optional "species" (Rank.decodeMaybeRank "species") Nothing
-        |> Json.Decode.Pipeline.optional "genus" (Rank.decodeMaybeRank "genus") Nothing
+        |> Json.Decode.Pipeline.optional "genus" (Rank.decodeMaybeRank "genus") (Just (Rank.Genus Nothing))
         |> Json.Decode.Pipeline.optional "family" (Rank.decodeMaybeRank "family") Nothing
         |> Json.Decode.Pipeline.optional "order" (Rank.decodeMaybeRank "order") Nothing
-        |> Json.Decode.Pipeline.optional "class_" (Rank.decodeMaybeRank "class") Nothing
+        |> Json.Decode.Pipeline.optional "class_" (Rank.decodeMaybeRank "class_") Nothing
         |> Json.Decode.Pipeline.optional "phylum" (Rank.decodeMaybeRank "phylum") Nothing
 
 
@@ -58,8 +58,26 @@ extractRank rankName taxoInfo =
             "oid" ->
                 .oid taxoInfo
 
+            "strain" ->
+                .strain taxoInfo
+
             "species" ->
                 .species taxoInfo
+
+            "genus" ->
+                .genus taxoInfo
+
+            "family" ->
+                .family taxoInfo
+                    
+            "order" ->
+                .order taxoInfo
+                    
+            "class" ->
+               taxoInfo.class_
+                    
+            "phylum" ->
+                .phylum taxoInfo
 
             _ ->
                 Nothing
@@ -97,20 +115,20 @@ taxonomyToString taxonomy =
             toString error
 
 
-main : Html a
-main =
-    let
-        taxo =
-            Json.decodeString decodeTaxonomy """ { "oid" : { "name" : "oid_rank", "taxid" : "" } } """
+-- main : Html a
+-- main =
+--     let
+--         taxo =
+--             Json.decodeString decodeTaxonomy """ { "oid" : { "name" : "oid_rank", "taxid" : "" } } """
 
-        taxo2 =
-            Json.decodeString decodeTaxonomy """ { "species" : { "name" : "oid_rank", "taxid" : "" } } """
+--         taxo2 =
+--             Json.decodeString decodeTaxonomy """ { "species" : { "name" : "oid_rank", "taxid" : "" } } """
 
-        list =
-            [ div [] [ text (toString taxo) ]
-            , div [] [ text ("encode : " ++ (taxonomyToString taxo)) ]
-            , div [] [ text (toString taxo2) ]
-            , div [] [ text ("encode : " ++ (taxonomyToString taxo2)) ]
-            ]
-    in
-        div [] list
+--         list =
+--             [ div [] [ text (toString taxo) ]
+--             , div [] [ text ("encode : " ++ (taxonomyToString taxo)) ]
+--             , div [] [ text (toString taxo2) ]
+--             , div [] [ text ("encode : " ++ (taxonomyToString taxo2)) ]
+--             ]
+--     in
+--         div [] list

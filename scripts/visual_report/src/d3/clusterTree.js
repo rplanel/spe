@@ -1,8 +1,8 @@
 function clusterTree () {
     function exports(_selection, width, height, rank) {
 	_selection.each(function(data, i) {
-
-            
+            console.log(rank);
+            console.log(data);
             
             var tree = d3.tree()
                 .size([500, 500]);

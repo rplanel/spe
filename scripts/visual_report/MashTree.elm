@@ -12,7 +12,7 @@ import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
 import String
 import Task
 import Taxonomy as Taxo exposing (..)
---import Taxonomy.Rank as Rank exposing (..)
+import Taxonomy.Rank as Rank exposing (..)
 
 main : Program Never
 main =
@@ -31,9 +31,9 @@ type alias Model =
     , clusterDistance : (List (List (Maybe Float)))
     , clusterTaxa     : Maybe (List Taxa)
     , tree            : Maybe Tree
-    , rank            : Ranks -- (Maybe Rank.Rank)
+    , rank            : Rank.Rank
     , url             : String
-    , error           : String
+    , error           : Maybe String
     }
 
 
@@ -48,14 +48,6 @@ type alias Tree =
 
 type Nodes = Nodes (List Tree)
     
-type Ranks
-    = Species
-    | Genus
-    | Family
-    | Order
-    | Class
-    | Phylum
-
 
 type alias TreeHeight =
     { left : Int
@@ -68,13 +60,8 @@ type alias Taxa =
     , taxonomy : Taxo.Taxonomy
     }
 
-type alias Rank =
-    { taxid : Maybe Int
-    , name  : Maybe String
-    }
-
 defaultModel : Model
-defaultModel = Model "" ([[Nothing]]) Nothing Nothing Species "" ""
+defaultModel = Model "" ([[Nothing]]) Nothing Nothing (Species Nothing) "" Nothing
     
 init : ( Model, Cmd Msg )
 init = (defaultModel, Cmd.none)
@@ -102,9 +89,9 @@ update msg model =
             in
             ( {model | clusterId = cleanId }
             , Cmd.batch
-                [ --getTaxa model.url cleanId
+                [ getTree model.url cleanId
+                --, getTaxa model.url cleanId
                 --, getDistance model.url cleanId
-                getTree model.url cleanId
                 ]
             )
                 
@@ -127,13 +114,10 @@ update msg model =
             
         FetchSucceed distance ->
             let
-                --_ = Debug.log "distance" distance
                 distanceInt =
-                            List.map (\tab -> List.map (\d -> Result.toMaybe (String.toFloat d) ) tab ) distance
-                                
-                --_ = Debug.log "model" model
-                    
-                
+                    List.map
+                        (\tab -> List.map (\d -> Result.toMaybe (String.toFloat d) ) tab )
+                        distance
                     
             in
                 ( {model | clusterDistance = distanceInt }
@@ -164,22 +148,10 @@ update msg model =
             let
                 -- _ = Debug.log "tree : " tree
                 jsonTree = encodeTree tree
-                rankStr = (String.toLower (toString model.rank))
+                rankStr = (Rank.typeOfRank model.rank)
                           
                 listCommand = [drawTree (jsonTree, rankStr)]
 
-                           
-                -- listCommand =
-                --     case model.rank of
-                --         Nothing ->
-                --             [Cmd.none]
-
-                --         Just rank ->
-                --             let 
-                --                 rankStr =
-                --                     Rank.typeOfRank rank
-                --             in
-                --                 [drawTree (jsonTree, rankStr)]
             in
                 ( { model | tree = Just tree}
                 , Cmd.batch listCommand
@@ -189,42 +161,26 @@ update msg model =
 
         ChangeRank rank ->
             let
-                -- rankType = Rank.resultRankOfMaybeRankInfo rank Nothing
-                rankType = getRank rank
-                _ = Debug.log "Rank = " rank
-                                    
-                listCommand =
+                resRankType = Rank.resultRankOfMaybeRankInfo rank Nothing
+                commandOnRank rank =
                     case model.tree of
                         Nothing ->
-                            [Cmd.none]
-                            
+                            ({model | error = Just "No tree available", rank = rank}, [Cmd.none])
+                                
                         Just tree ->
-                            let
+                            let 
                                 jsonTree = encodeTree tree
+                                rankStr = Rank.typeOfRank rank
                             in
-                                [drawTree (jsonTree, rank)]
-
-                newModel    = {model | rank = rankType}
-                              
-                -- commandOnRank rank =
-                --     case model.tree of
-                --         Nothing ->
-                --             ({model | error = "No tree available", rank = (Just rank)}, [Cmd.none])
-                                
-                --         Just tree ->
-                --             let 
-                --                 jsonTree = encodeTree tree
-                --                 rankStr = Rank.typeOfRank rank
-                --             in
-                --                 ({model | rank = (Just rank)},[drawTree (jsonTree, rankStr)])
+                                ({model | error = Nothing, rank = rank},[drawTree (jsonTree, rankStr)])
                     
-                -- (newModel, listCommand) =
-                --     case rankType of
-                --         Ok rank ->
-                --             commandOnRank rank
+                (newModel, listCommand) =
+                    case resRankType of
+                        Ok rank ->
+                            commandOnRank rank
                                 
-                --         Err error ->
-                --             ({model | error = error, rank = Nothing}, [Cmd.none])
+                        Err error ->
+                            ({model | error = Just error, rank = (Species Nothing)}, [Cmd.none])
 
             in
                ( newModel, Cmd.batch listCommand) 
@@ -268,17 +224,7 @@ view model =
                 ]
                 (rankOptions model)
           ]
-    , div
-          [class "row"]
-          [ div
-            [ class "sixteen wide column" ]
-            [ div
-              [ class "ui warning message"]
-              [ i [class "close icon"] []
-              , text model.error
-              ]
-            ]
-          ]
+    , (displayErrorMsg model)
     -- , div
     --       [class "row"]
     --       [ div
@@ -287,7 +233,24 @@ view model =
     --       ]
     ]
 
-
+displayErrorMsg : Model -> Html b
+displayErrorMsg model =
+    case model.error of
+        Nothing ->
+            div [] []
+        Just error ->
+            div
+            [class "row"]
+            [ div
+              [ class "sixteen wide column" ]
+              [ div
+                [ class "ui warning message"]
+                [ i [class "close icon"] []
+                , text error
+                ]
+              ]
+            ]
+            
 
 -- depthFirstTraversal tree =
 --     case tree.children of
@@ -408,11 +371,11 @@ decodeTaxa =
         |> Json.Decode.Pipeline.required "taxonomy" Taxo.decodeTaxonomy
 
            
-decodeRank : Json.Decoder Rank
-decodeRank =
-    decode Rank
-        |> Json.Decode.Pipeline.required "taxid" (Json.Decode.Pipeline.nullable number)
-        |> Json.Decode.Pipeline.required "name" (Json.Decode.Pipeline.nullable Json.string)
+-- decodeRank : Json.Decoder Rank
+-- decodeRank =
+--     decode Rank
+--         |> Json.Decode.Pipeline.required "taxid" (Json.Decode.Pipeline.nullable number)
+--         |> Json.Decode.Pipeline.required "name" (Json.Decode.Pipeline.nullable Json.string)
 
 
 encodeTree : Tree -> Value
@@ -465,31 +428,6 @@ encodeTaxa record =
 
   
 
-encodeRank : Rank -> Value
-encodeRank record =
-    let
-        taxid =
-            case record.taxid of
-                Nothing ->
-                    Json.Encode.null
-                        
-                Just taxid ->
-                    Json.Encode.int taxid
-        name =
-            case record.name of 
-                Nothing ->
-                    Json.Encode.null
-
-                Just name ->
-                    Json.Encode.string name
-        
-    in
-    Json.Encode.object
-        [ ("taxid", taxid)
-        , ("name" ,  name)
-        ]
-  
-
 distanceMatrixTable : List (List (Maybe a)) -> Html b
 distanceMatrixTable matrix =
     let
@@ -512,100 +450,45 @@ distanceMatrixTable matrix =
         table [class "ui celled table"] (List.map distanceRow matrix)
 
 
+
 rankOptions : Model -> List (Html a)
 rankOptions model =
     let
-        ranks =
-            [ Species, Genus, Family, Order, Class, Phylum ]
+        ranks = Rank.getAllRankString
                 
-        rankModel =
-            model.rank
+        rankStr =
+            Rank.typeOfRank model.rank
 
         toOption rank =
             case rank of
-                Species ->
-                    option [ value "species", selected (rankModel == rank) ] [ text "Species" ]
+                "oid" ->
+                    option [ value "oid", selected (rankStr == rank) ] [ text "Oid" ]
 
-                Genus ->
-                    option [ value "genus", selected (rankModel == rank)] [ text "Genus" ]
+                "strain" ->
+                    option [ value "strain", selected (rankStr == rank) ] [ text "Strain" ]
 
-                Family ->
-                    option [ value "family", selected (rankModel == rank) ] [ text "Family" ]
+                
+                "species" ->
+                    option [ value "species", selected (rankStr == rank) ] [ text "Species" ]
 
-                Order ->
-                    option [ value "order", selected (rankModel == rank) ] [ text "Order" ]
+                "genus" ->
+                    option [ value "genus", selected (rankStr == rank)] [ text "Genus" ]
 
-                Class ->
-                    option [ value "class_", selected (rankModel == rank) ] [ text "Class" ]
+                "family" ->
+                    option [ value "family", selected (rankStr == rank) ] [ text "Family" ]
 
-                Phylum ->
-                    option [ value "phylum", selected (rankModel == rank) ] [ text "Phylum" ]
+                "order" ->
+                    option [ value "order", selected (rankStr == rank) ] [ text "Order" ]
+
+                "class" ->
+                    option [ value "class_", selected (rankStr == rank) ] [ text "Class" ]
+
+                "phylum" ->
+                    option [ value "phylum", selected (rankStr == rank) ] [ text "Phylum" ]
+
+                _ ->
+                    option [ value ""] [ text "" ]
     in
         List.map toOption ranks
 
 
-
--- rankOptions2 : Model -> List (Html a)
--- rankOptions2 model =
---     let
---         ranks =
---             [ "species", "genus", "family", "order",  "class",  "phylum" ]
-                
---         rankStr =
---             case model.rank of
---                 Nothing ->
---                     ""
---                 Just rank ->
---                     Rank.typeOfRank rank
-
---         toOption rank =
---             case rank of
---                 "species" ->
---                     option [ value "species", selected (rankStr == rank) ] [ text "Species" ]
-
---                 "genus" ->
---                     option [ value "genus", selected (rankStr == rank)] [ text "Genus" ]
-
---                 "family" ->
---                     option [ value "family", selected (rankStr == rank) ] [ text "Family" ]
-
---                 "order" ->
---                     option [ value "order", selected (rankStr == rank) ] [ text "Order" ]
-
---                 "class" ->
---                     option [ value "class_", selected (rankStr == rank) ] [ text "Class" ]
-
---                 "phylum" ->
---                     option [ value "phylum", selected (rankStr == rank) ] [ text "Phylum" ]
-
---                 _ ->
---                     option [ value ""] [ text "" ]
---     in
---         List.map toOption ranks
-
-
-
-            
-getRank : String -> Ranks
-getRank rankStr =
-    case rankStr of
-        "species" ->
-            Species
-
-        "genus" ->
-            Genus
-
-        "family" ->
-            Family
-
-        "order" ->
-            Order
-
-        "class" ->
-            Class
-
-        "phylum" ->
-            Phylum
-
-        _ ->
-            Genus
