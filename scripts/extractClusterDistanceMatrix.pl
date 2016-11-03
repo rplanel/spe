@@ -8,7 +8,7 @@ my $cluster  = $ARGV[0];
 my $distance = $ARGV[1];
 
 my $oid2Cluster = {};
-my $ranks = ['oid', 'species', 'genus', 'family', 'order', 'class_', 'phylum'];
+my $ranks = ['species', 'genus', 'family', 'order', 'class_', 'phylum'];
 my $currentColumnId;
 my $column;
 my $matrix = [];
