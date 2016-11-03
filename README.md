@@ -37,8 +37,8 @@ nextflow run mash-nextflow.nf -resume \
 |Rank   |Number of ranks| Orphan|
 |-------|:-------------:|:-----:|
 |Strain |5407           |5407   |
-|Species|2052           |1556   |
-|Genus  |703            |348    |
+|Species|1297           |944    |
+|Genus  |359            |143    |
 |Family |312/311        |108    |
 |Order  |164/163        |44     |
 |Class  |71/70          |16     |

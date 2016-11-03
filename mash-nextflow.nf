@@ -126,7 +126,10 @@ process getGenomes {
     """
     mysql --max_allowed-packet=1G -ABNqr pkgdb_dev -e \
     \"SELECT strtofastaudf(CONCAT_WS(' ',O_id, O_name, name_txt),S_string) \
-    FROM Organism LEFT JOIN O_Taxonomy USING(O_id) INNER JOIN Replicon USING(O_id) INNER JOIN Sequence USING(R_id) \
+    FROM Organism 
+    LEFT JOIN O_Taxonomy USING(O_id) 
+    INNER JOIN Replicon USING(O_id) 
+    INNER JOIN Sequence USING(R_id) \
     INNER JOIN Sequence_String USING(S_id) \
     WHERE rank = 'order' AND S_status = 'inProduction'\" >  ${filenameOut}
     """
@@ -703,6 +706,7 @@ workflow.onComplete {
   println "Completed at: ${workflow.complete}"
   println "Duration    : ${workflow.duration}"
   println "workDir     : ${workflow.workDir}"
+  println "session id  : ${workflow.sessionId}"
   println "exit status : ${workflow.exitStatus}"
   println "Error report: ${workflow.errorReport ?: '-'}"
   println "Success     : ${workflow.success}"

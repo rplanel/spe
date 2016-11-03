@@ -5,14 +5,14 @@ dir="./out"
 mkdir -p $dir
 
 
-# kmer=21
-# sketchSize=1000
+kmer=21
+sketchSize=1000
 
-# outDir="$dir/${kmer}-${sketchSize}"
-# mkdir -p $outDir
+outDir="$dir/${kmer}-${sketchSize}"
+mkdir -p $outDir
 
 
-# ## 0.01
+## 0.01
 # nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1     --distance 0.01 > $outDir/1-0.01.out
 # sleep 5
 
@@ -80,25 +80,23 @@ mkdir -p $dir
 # sleep 5
 
 
+
+
+
 # ## 0.3
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1     --distance 0.3 > $outDir/1-0.3.out
-# sleep 5
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1E-15 --distance 0.3 > $outDir/1e-15-0.3.out
-# sleep 5
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1E-30 --distance 0.3 > $outDir/1e-30-0.3.out
-# sleep 5
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1E-50 --distance 0.3 > $outDir/1e-50-0.3.out
-# sleep 5
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1E-80 --distance 0.3 > $outDir/1e-80-0.3.out
-# sleep 5
+
+# d=0.3
+# p=1e-200
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+
 
 # ## 0.5
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1     --distance 0.5 > $outDir/1-0.5.out
-# sleep 5
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1E-15 --distance 0.5 > $outDir/1e-15-0.5.out
-# sleep 5
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1E-30 --distance 0.5 > $outDir/1e-30-0.5.out
-# sleep 5
+# d=0.5
+# p=1e-100
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+
 
 # ## 1
 # nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1 --distance 1 > $outDir/1-1.out
@@ -117,8 +115,90 @@ mkdir -p $outDir
 
 
 
-nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1 --distance 0.03 > $outDir/1-0.03.out
+# d=0.05
+# p=1e-10
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+# d=0.06
+# p=1e-10
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+
+# d=0.07
+# p=1e-10
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+d=0.08
+p=1e-10
+nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+echo "$sketchSize - $kmer - $d - $p"
 sleep 5
+
+
+
+# d=0.1
+# p=1e-10
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+# d=0.12
+# p=1e-10
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+# d=0.13
+# p=1e-10
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+# d=0.14
+# p=1e-10
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+
+# d=0.15
+# p=1e-10
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+
+# d=0.1
+# p=1e-100
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+
+# d=0.15
+# p=1e-100
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+
+
+
+# d=0.2
+# p=1e-100
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1 --distance 0.03 > $outDir/1-0.03.out
+# sleep 5
 
 # nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1 --distance 0.07 > $outDir/1-0.07.out
 # sleep 5
@@ -130,67 +210,94 @@ sleep 5
 # sleep 5
 
 
-#####################################################
+#######################################################################
 # kmer=16
 # sketchSize=5000
 # outDir="$dir/${kmer}-${sketchSize}"
 # mkdir -p $outDir
 
 
+# d=0.2
+# p=1e-100
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
 
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1 --distance 0.03 > $outDir/1-0.03.out
+
+# d=0.08
+# p=1e-10
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
 # sleep 5
 
 
 #############################################################
-# ## s=5000 k=21
-# kmer=21
-# sketchSize=5000
-# outDir="$dir/${kmer}-${sketchSize}"
-# mkdir -p $outDir
+## s=5000 k=21
+kmer=21
+sketchSize=5000
+outDir="$dir/${kmer}-${sketchSize}"
+mkdir -p $outDir
 
-
-
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1     --distance 0.3 > $outDir/1-0.3.out
-# sleep 5
-
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1e-50 --distance 0.3 > $outDir/1e-50-0.3.out
-# sleep 5
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1     --distance 0.2 > $outDir/1-0.2.out
+# d=0.08
+# p=1e-10
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
 # sleep 5
 
 
-##################################################################
+
+# d=0.2
+# p=1e-100
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
+# sleep 5
+
+
+# ##################################################################
 # ## s=5000 k=27
 # kmer=27
 # sketchSize=5000
 # outDir="$dir/${kmer}-${sketchSize}"
 # mkdir -p $outDir
 
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1     --distance 0.2 > $outDir/1-0.2.out
+
+# d=0.3
+# p=1e-100
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
 # sleep 5
 
 
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1     --distance 0.3 > $outDir/1-0.3.out
+# d=0.2
+# p=1e-100
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
 # sleep 5
 
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1e-50 --distance 0.3 > $outDir/1e-50-0.3.out
-# sleep 5
 
-
-#####################################################################
+# #####################################################################
 # kmer=21
 # sketchSize=10000
 # outDir="$dir/${kmer}-${sketchSize}"
 # mkdir -p $outDir
 
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1     --distance 0.2 > $outDir/1-0.2.out
+
+# d=0.1
+# p=1e-100
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
 # sleep 5
 
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1     --distance 0.3 > $outDir/1-0.3.out
-# sleep 5
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1     --distance 0.4 > $outDir/1-0.4.out
+
+# d=0.2
+# p=1e-100
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
 # sleep 5
 
-# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue 1e-50 --distance 0.3 > $outDir/1e-50-0.3.out
+# d=0.3
+# p=1e-100
+# nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace -with-dag workflow.pdf --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+# echo "$sketchSize - $kmer - $d - $p"
 # sleep 5
+
