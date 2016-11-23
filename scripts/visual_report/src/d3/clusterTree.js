@@ -5,7 +5,7 @@ function clusterTree () {
             console.log(data);
             
             var tree = d3.tree()
-                .size([500, 500]);
+                .size([width, height]);
             var lineHeight = 25;
             var colors = d3.scaleOrdinal(d3.schemeCategory10); //schemeCategory20b
             var root = d3.hierarchy(data);
@@ -13,6 +13,7 @@ function clusterTree () {
             var leaves = root.leaves();
             d3
                 .select('svg')
+	        .attr('width', width+200)
                 .attr('height', leaves.length * lineHeight + 50);
             
             /**
