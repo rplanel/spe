@@ -1,11 +1,13 @@
 function piechart () {
-    
+    var limit = 20;
     var getAngle = function (d) {
 	return (180 / Math.PI * (d.startAngle + d.endAngle) / 2 - 90);
     };
     function exports(_selection, width, height, numCol, url) {
 	_selection.each(function(d, i) {
-	    
+
+            console.log(d);
+            
 	    var context = d3.select(this).select('g.piecharts');
 	    
 	    if (context.empty()){
@@ -82,7 +84,7 @@ function piechart () {
                 var column = i % numCol;
                 var line   = parseInt(i / numCol);
                 
-	        return 'translate(' + (column * 250 ) + ', ' + ((height+180) * line) + ')';
+	        return 'translate(' + (column * 250 ) + ', ' + ((height+200) * line) + ')';
 	    });
 	    
 	    var pies = update
@@ -123,6 +125,9 @@ function piechart () {
 		.enter()
 		.append('g')
 		.classed('arc',true);
+
+	    arcEnter
+	    	.append('title');
 	    
 	    arcEnter
 		.append('path')
@@ -130,6 +135,7 @@ function piechart () {
 	    
 	    arcEnter
 	    	.append('text');
+
 	    
 	    
 	    // Update
@@ -151,17 +157,25 @@ function piechart () {
 			"rotate(" + getAngle(d) + ")";
 			
 		    if (angle > 90 && d.data.name) {
-			xcenter = (parseInt(d.data.name.length) * 6)/2;
+			xcenter = (parseInt(substringName(d.data.name).length) * 6)/2;
 			transform += 'rotate(180, '+xcenter+',0)';
 		    }
 		    return transform;
 		})
 		.text(function(d){
-		    return d.data.name + '(' + d.data.count + ')';
+		    return substringName(d.data.name || '') + '(' + d.data.count + ')';
 		});
 
+
+	    arcUpdate
+		.select('title')
+		.text(function(d){return d.data.name + " ("+d.data.id+")";});
 	    
 	    
+	    function substringName (name) {
+		var length = name.length;
+		return (length > limit) ? name.substring(0,limit) : name;
+	    }
 	    arcSelection.exit().remove();
 
 	    //Add the labels (Put it after to be on top of arcs)
