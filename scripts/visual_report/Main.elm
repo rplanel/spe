@@ -6,9 +6,12 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Regex
 import Json.Decode as Json
+
+
 --import MashTree
 
 import Taxonomy.Rank as Rank exposing (..)
+import Cluster as Clu exposing (..)
 
 
 main : Program Never
@@ -26,9 +29,9 @@ main =
 
 
 type alias Model =
-    { distanceClusters : Maybe ClustersByRank
-    , taxonomicClusters : Maybe ClustersByRank
-    , displayedClusters : Maybe ClustersByRank
+    { distanceClusters : Maybe Clu.ClustersByRank
+    , taxonomicClusters : Maybe Clu.ClustersByRank
+    , displayedClusters : Maybe Clu.ClustersByRank
     , parameters : List Parameters
     , title : String
     , min : Int
@@ -36,7 +39,7 @@ type alias Model =
     , numberOfClusters : Int
     , histogramData : List Int
     , pattern : String
-    , rank : Rank
+    , rank : Rank.Rank
     , distance : Bool
     , taxonomy : Bool
     , showOrphan : Bool
@@ -44,17 +47,9 @@ type alias Model =
 
 
 type alias ModelPort =
-    { distanceClusters : ClustersByRank
-    , taxonomicClusters : ClustersByRank
-    , parameters :
-        List Parameters
-        --    , title             : String
-        --    , min               : Int
-        --    , max               : Int
-        --    , numberOfClusters  : Int
-        --    , histogramData     : List Int
-        --    , pattern           : String
-        --    , rank              :
+    { distanceClusters : Clu.ClustersByRank
+    , taxonomicClusters : Clu.ClustersByRank
+    , parameters : List Parameters
     }
 
 
@@ -72,42 +67,9 @@ type alias Parameters =
     }
 
 
-type alias ClustersByRank =
-    { strain : Clusters
-    , species : Clusters
-    , genus : Clusters
-    , family : Clusters
-    , order : Clusters
-    , class : Clusters
-    , phylum : Clusters
-    }
-
-
-type Rank
-    = Strain
-    | Species
-    | Genus
-    | Family
-    | Order
-    | Class
-    | Phylum
-
-
-type alias Clusters =
-    List Cluster
-
-
-type alias Cluster =
-    { id : String, data : List ClusterObject, name : Maybe String }
-
-
-type alias ClusterObject =
-    { name : Maybe String, id : String, count : Int }
-
-
 init : ( Model, Cmd Msg )
 init =
-    ( Model Nothing Nothing Nothing [] "" 0 1 0 [ 0 ] "" Genus True False False, Cmd.none )
+    ( Model Nothing Nothing Nothing [] "" 0 1 0 [ 0 ] "" (Rank.Species Nothing) True False True, Cmd.none )
 
 
 
@@ -130,11 +92,12 @@ update msg model =
         DataClusters m ->
             let
                 rank =
-                    Genus
-                        
+                    Rank.Species Nothing
+
                 distanceClusters =
                     Just
-                        (ClustersByRank
+                        (Clu.ClustersByRank
+                            --m.distanceClusters.oid
                             m.distanceClusters.strain
                             m.distanceClusters.species
                             m.distanceClusters.genus
@@ -145,11 +108,12 @@ update msg model =
                         )
 
                 rankedDistanceClusters =
-                    getClustersByRank rank distanceClusters
+                    Clu.getClustersByRank rank distanceClusters
 
                 taxonomicClusters =
                     Just
-                        (ClustersByRank
+                        (Clu.ClustersByRank
+                            --m.taxonomicClusters.oid
                             m.taxonomicClusters.strain
                             m.taxonomicClusters.species
                             m.taxonomicClusters.genus
@@ -169,50 +133,48 @@ update msg model =
 
                         Just clusters ->
                             clusters
-                                |> List.filter (hasPattern "")
-                                |> preprocessCluster min max model.showOrphan
+                                |> List.filter (hasPattern pattern)
+                                |> preprocessCluster min max showOrphan
 
                 numOfClusters =
                     (List.length filteredClusters)
+
+                showOrphan =
+                    True
+
+                pattern =
+                    "escherichia coli"
 
                 histogramData =
                     (List.map (\n -> List.length n.data) filteredClusters)
             in
                 ( Model
-                      distanceClusters
-                      taxonomicClusters
-                      distanceClusters
-                      m.parameters
-                      "Distance Clusters"
-                      min
-                      max
-                      numOfClusters
-                      histogramData
-                      ""
-                      rank
-                      True
-                      False
-                      False
-                , Cmd.batch
-                    [ sliderRange [ min, max ]
-                    , sliderValue [ min, max ]
-                    , draw ( filteredClusters, histogramData )
-                    ]
+                    distanceClusters
+                    taxonomicClusters
+                    distanceClusters
+                    m.parameters
+                    "Distance Clusters"
+                    min
+                    max
+                    numOfClusters
+                    histogramData
+                    pattern
+                    rank
+                    True
+                    False
+                    showOrphan
+                , defaultCommands min max filteredClusters histogramData
                 )
 
         -- TAXONOMIC
         TaxonomicCluster ->
             let
                 clusters =
-                    getClustersByRank model.rank model.taxonomicClusters
+                    Clu.getClustersByRank model.rank model.taxonomicClusters
 
                 ( min, max ) =
                     getMinMaxClusterSize clusters
 
-
-                        
-                        
-                _  = Debug.log "max" max
                 filteredClusters =
                     case clusters of
                         Nothing ->
@@ -223,7 +185,6 @@ update msg model =
                                 |> List.filter (hasPattern model.pattern)
                                 |> preprocessCluster min max model.showOrphan
 
-
                 newModel =
                     { model
                         | title = "Taxonomic clusters"
@@ -232,22 +193,17 @@ update msg model =
                         , histogramData = List.map (\n -> List.length n.data) filteredClusters
                         , taxonomy = True
                         , distance = False
-
                     }
             in
                 ( newModel
-                , Cmd.batch
-                    [ sliderRange [ min, max ]
-                    , sliderValue [ min, max ]
-                    , draw ( filteredClusters, newModel.histogramData )
-                    ]
+                , defaultCommands min max filteredClusters newModel.histogramData
                 )
 
         -- DISTANCE
         DistanceCluster ->
             let
                 clusters =
-                    getClustersByRank model.rank model.distanceClusters
+                    Clu.getClustersByRank model.rank model.distanceClusters
 
                 filteredClusters =
                     case clusters of
@@ -270,21 +226,16 @@ update msg model =
                         , histogramData = List.map (\n -> List.length n.data) filteredClusters
                         , taxonomy = False
                         , distance = True
-
                     }
             in
                 ( newModel
-                , Cmd.batch
-                    [ sliderRange [ min, max ]
-                    , sliderValue [ min, max ]
-                    , draw ( filteredClusters, newModel.histogramData )
-                    ]
+                , defaultCommands min max filteredClusters newModel.histogramData
                 )
 
         SliderChange range ->
             let
                 displayedClusters =
-                    getClustersByRank model.rank model.displayedClusters
+                    Clu.getClustersByRank model.rank model.displayedClusters
 
                 filteredClusters =
                     case displayedClusters of
@@ -310,10 +261,12 @@ update msg model =
                     ]
                 )
 
+            
+        -- FILTER CLUSTERS ON PATTERN
         FilterClusters pattern ->
             let
                 displayedClusters =
-                    getClustersByRank model.rank model.displayedClusters
+                    Clu.getClustersByRank model.rank model.displayedClusters
 
                 filteredClusters =
                     case displayedClusters of
@@ -349,14 +302,20 @@ update msg model =
                     ]
                 )
 
+
+        -- CHANGE RANK
         ChangeRank val ->
             let
                 rank =
-                    getRank val
+                    case (Rank.maybeRankOfString val Nothing) of
+                        Nothing ->
+                            Rank.Genus Nothing
 
-                    
+                        Just rank ->
+                            rank
+
                 displayedClusters =
-                    getClustersByRank rank model.displayedClusters
+                    Clu.getClustersByRank rank model.displayedClusters
 
                 ( min, max ) =
                     getMinMaxClusterSize displayedClusters
@@ -379,21 +338,17 @@ update msg model =
                     }
             in
                 ( newModel
-                , Cmd.batch
-                    [ sliderRange [ min, max ]
-                    , sliderValue [ min, max ]
-                    , draw ( filteredClusters, newModel.histogramData )
-                    ]
+                , defaultCommands min max filteredClusters newModel.histogramData
                 )
 
         ShowOrphan ->
             let
                 displayedClusters =
-                    getClustersByRank model.rank model.displayedClusters
-       
-                showOrphan = not model.showOrphan
+                    Clu.getClustersByRank model.rank model.displayedClusters
 
-                           
+                showOrphan =
+                    not model.showOrphan
+
                 ( min, max ) =
                     getMinMaxClusterSize displayedClusters
 
@@ -416,20 +371,16 @@ update msg model =
                         , histogramData = List.map (\n -> List.length n.data) filteredClusters
                         , numberOfClusters = numOfClusters
                     }
-                
             in
-              ( newModel
-                , Cmd.batch
-                    [ sliderRange [ min, max ]
-                    , sliderValue [ min, max ]
-                    , draw ( filteredClusters, newModel.histogramData )
-                    ]
-                )   
+                ( newModel
+                , defaultCommands min max filteredClusters newModel.histogramData
+                )
+
+
 
 -- SUBSCRIPTIONS
-
-
 -- send through port
+
 
 port draw : ( Clusters, List Int ) -> Cmd msg
 
@@ -443,8 +394,10 @@ port sliderRange : List Int -> Cmd msg
 port sliderValue : List Int -> Cmd msg
 
 
+
 -- Get from port
-                   
+
+
 port dataClusters : (ModelPort -> msg) -> Sub msg
 
 
@@ -473,52 +426,59 @@ view model =
         ]
         [ parameters model.parameters
         , div
-              [class "inline fields"]
-              [ div
+            [ class "inline fields" ]
+            [ div
                 [ class "field" ]
                 [ select
-                      [ class "ui dropdown"
-                      , on "change" (Json.map ChangeRank targetValue)
-                      ]
-                  (rankOptions model)
-            ]
-        , div
-              [ class "field" ]
-              [ input [ placeholder "Filter clusters", onInput FilterClusters ] []
-              ]
-        , div
-              [ class "field" ]
-              [ div
-                [ class "ui checkbox"]
-                [ input [type' "checkbox", onClick ShowOrphan ] [text "orphan"]
-                , label [checked model.showOrphan] [text "Show Orphan" ]    
+                    [ class "ui dropdown"
+                    , on "change" (Json.map ChangeRank targetValue)
+                    ]
+                    (rankOptions model)
                 ]
-              ]
-
-        , div
-              [class "field"]
-              [ div
-                [ class "ui basic buttons"]
+            , div
+                [ class "field" ]
+                [ input
+                    [ placeholder "Filter clusters"
+                    , value model.pattern
+                    , onInput FilterClusters
+                    ]
+                    []
+                ]
+            , div
+                [ class "field" ]
                 [ div
-                  [ classList
-                        [ ("ui", True)
-                        , ("button", True)
-                        , ("active", model.distance)
-                        ]
-                  , onClick (DistanceCluster)
-                  ] [ text "Distance Clusters" ]
-                , div [ classList
-                            [ ("ui", True)
-                            , ("button", True)
-                            , ("active", model.taxonomy)
-                            ]
-                      , onClick (TaxonomicCluster)
-                      ] [ text "Taxonomic Clusters" ]
+                    [ class "ui checkbox" ]
+                    [ input [ type' "checkbox", onClick ShowOrphan, checked model.showOrphan ] [ text "orphan" ]
+                    , label [ checked model.showOrphan ] [ text "Show Orphan" ]
+                    ]
                 ]
-              , a [ class "ui grey circular label"]
-                  [ text (toString model.numberOfClusters)]
-              ]
-        ]
+            , div
+                [ class "field" ]
+                [ div
+                    [ class "ui basic buttons" ]
+                    [ div
+                        [ classList
+                            [ ( "ui", True )
+                            , ( "button", True )
+                            , ( "active", model.distance )
+                            ]
+                        , onClick (DistanceCluster)
+                        ]
+                        [ text "Distance Clusters" ]
+                    , div
+                        [ classList
+                            [ ( "ui", True )
+                            , ( "button", True )
+                            , ( "active", model.taxonomy )
+                            ]
+                        , onClick (TaxonomicCluster)
+                        ]
+                        [ text "Taxonomic Clusters" ]
+                    ]
+                , a [ class "ui grey circular label" ]
+                    [ text (toString model.numberOfClusters) ]
+                ]
+            ]
         ]
 
 
@@ -554,20 +514,23 @@ preprocessCluster : Int -> Int -> Bool -> Clusters -> Clusters
 preprocessCluster min max showOrphan clusters =
     let
         betweenRange min max cluster =
-                List.length cluster.data >= min && List.length cluster.data <= max
-            
-            
+            List.length cluster.data >= min && List.length cluster.data <= max
+
         isOrphan showOrphan cluster =
             let
-                count = List.foldr (\n c-> n.count+c ) 0 cluster.data
+                count =
+                    List.foldr (\n c -> n.count + c) 0 cluster.data
             in
-                if (not showOrphan && count == 1) then False else True
+                if (not showOrphan && count == 1) then
+                    False
+                else
+                    True
     in
-                clusters
-                    |> List.filter (isOrphan showOrphan)
-                    |> List.filter (betweenRange min max)
-                    |> List.sortBy (\n -> List.length n.data)
-                    |> List.reverse
+        clusters
+            |> List.filter (isOrphan showOrphan)
+            |> List.filter (betweenRange min max)
+            |> List.sortBy (\n -> List.length n.data)
+            |> List.reverse
 
 
 getMinMaxClusterSize : Maybe Clusters -> ( Int, Int )
@@ -578,20 +541,15 @@ getMinMaxClusterSize cluster =
 
         Just cluster ->
             let
-
-                
                 minMax cluster range =
                     let
                         currentLength =
                             List.length cluster.data
 
-
-                                
                         ( min, max ) =
                             range
                     in
                         ( Basics.min currentLength min, Basics.max currentLength max )
-                            
             in
                 List.foldr minMax ( 0, 0 ) cluster
 
@@ -602,107 +560,65 @@ hasPattern pattern cluster =
         clusterContain d =
             case d.name of
                 Nothing ->
-                    True
+                    False
 
                 Just name ->
                     Regex.contains (Regex.caseInsensitive (Regex.regex pattern)) name
     in
         case cluster.name of
             Nothing ->
-                True
+                False
 
             Just name ->
                 Regex.contains (Regex.caseInsensitive (Regex.regex pattern)) name
                     || List.any clusterContain cluster.data
 
 
-getClustersByRank : Rank -> Maybe ClustersByRank -> Maybe Clusters
-getClustersByRank rank clustersByRank =
-    case clustersByRank of
-        Nothing ->
-            Nothing
-
-        Just clusters ->
-            case rank of
-                Strain ->
-                    Just clusters.strain
-                        
-                Species ->
-                    Just clusters.species
-
-                Genus ->
-                    Just clusters.genus
-
-                Family ->
-                    Just clusters.family
-
-                Order ->
-                    Just clusters.order
-
-                Class ->
-                    Just clusters.class
-
-                Phylum ->
-                    Just clusters.phylum
-
-
-getRank : String -> Rank
-getRank rankStr =
-    case rankStr of
-        "strain" ->
-            Strain
-
-        "species" ->
-            Species
-
-        "genus" ->
-            Genus
-
-        "family" ->
-            Family
-
-        "order" ->
-            Order
-
-        "class" ->
-            Class
-
-        "phylum" ->
-            Phylum
-
-        _ ->
-            Genus
-
-
 rankOptions : Model -> List (Html a)
 rankOptions model =
     let
         ranks =
-            [ Strain, Species, Genus, Family, Order, Class, Phylum ]
-                
-        rankModel = model.rank
+            Rank.getAllRank
+
+        rankModel =
+            model.rank
 
         toOption rank =
             case rank of
-                Strain ->
+                Rank.Oid rankInfo ->
+                    option [ value "oid", selected (rankModel == rank) ] [ text "Oid" ]
+
+                Rank.Strain rankInfo ->
                     option [ value "strain", selected (rankModel == rank) ] [ text "Strain" ]
 
-                Species ->
+                Rank.Species rankInfo ->
                     option [ value "species", selected (rankModel == rank) ] [ text "Species" ]
 
-                Genus ->
-                    option [ value "genus", selected (rankModel == rank)] [ text "Genus" ]
+                Rank.Genus rankInfo ->
+                    option [ value "genus", selected (rankModel == rank) ] [ text "Genus" ]
 
-                Family ->
+                Rank.Family rankInfo ->
                     option [ value "family", selected (rankModel == rank) ] [ text "Family" ]
 
-                Order ->
+                Rank.Order rankInfo ->
                     option [ value "order", selected (rankModel == rank) ] [ text "Order" ]
 
-                Class ->
+                Rank.Class rankInfo ->
                     option [ value "class", selected (rankModel == rank) ] [ text "Class" ]
 
-                Phylum ->
+                Rank.Phylum rankInfo ->
                     option [ value "phylum", selected (rankModel == rank) ] [ text "Phylum" ]
     in
         List.map toOption ranks
+
+            
+defaultCommands : Int -> Int -> Clusters -> List Int -> Cmd a
+defaultCommands min max clusters histogram =
+    Cmd.batch
+        [ sliderRange [ min, max ]
+        , sliderValue [ min, max ]
+        , draw ( clusters, histogram )
+        ]
+
+    
+    

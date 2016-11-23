@@ -8116,9 +8116,9 @@ var _elm_lang$html$Html_Events$Options = F2(
 var _user$project$Taxonomy_Rank$taxid = _elm_lang$core$Json_Decode$oneOf(
 	_elm_lang$core$Native_List.fromArray(
 		[
-			_elm_lang$core$Json_Decode$maybe(_elm_lang$core$Json_Decode$int),
 			_elm_lang$core$Json_Decode$maybe(
-			A2(_elm_lang$core$Json_Decode$customDecoder, _elm_lang$core$Json_Decode$string, _elm_lang$core$String$toInt))
+			A2(_elm_lang$core$Json_Decode$customDecoder, _elm_lang$core$Json_Decode$string, _elm_lang$core$String$toInt)),
+			_elm_lang$core$Json_Decode$maybe(_elm_lang$core$Json_Decode$int)
 		]));
 var _user$project$Taxonomy_Rank$toValidTaxid = function (taxid) {
 	var _p0 = A2(_elm_lang$core$Debug$log, 'THE TAXID = ', taxid);
@@ -8371,18 +8371,18 @@ var _user$project$Taxonomy_Rank$Strain = function (a) {
 var _user$project$Taxonomy_Rank$Oid = function (a) {
 	return {ctor: 'Oid', _0: a};
 };
-var _user$project$Taxonomy_Rank$getAllRankString = _user$project$Taxonomy_Rank$getListRankString(
-	_elm_lang$core$Native_List.fromArray(
-		[
-			_user$project$Taxonomy_Rank$Oid(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Strain(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Species(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Genus(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Family(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Order(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Class(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Phylum(_elm_lang$core$Maybe$Nothing)
-		]));
+var _user$project$Taxonomy_Rank$getAllRank = _elm_lang$core$Native_List.fromArray(
+	[
+		_user$project$Taxonomy_Rank$Oid(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Strain(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Species(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Genus(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Family(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Order(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Class(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Phylum(_elm_lang$core$Maybe$Nothing)
+	]);
+var _user$project$Taxonomy_Rank$getAllRankString = _user$project$Taxonomy_Rank$getListRankString(_user$project$Taxonomy_Rank$getAllRank);
 var _user$project$Taxonomy_Rank$maybeRankOfString = F2(
 	function (rankStr, rankInfo) {
 		var lowerStr = _elm_lang$core$String$toLower(rankStr);
@@ -8450,7 +8450,7 @@ var _user$project$Taxonomy_Rank$decodeMaybeRank = function (rankName) {
 		_user$project$Taxonomy_Rank$decodeRank(rankName));
 };
 
-var _user$project$Main$getClustersByRank = F2(
+var _user$project$Cluster$getClustersByRank = F2(
 	function (rank, clustersByRank) {
 		var _p0 = clustersByRank;
 		if (_p0.ctor === 'Nothing') {
@@ -8459,6 +8459,8 @@ var _user$project$Main$getClustersByRank = F2(
 			var _p2 = _p0._0;
 			var _p1 = rank;
 			switch (_p1.ctor) {
+				case 'Oid':
+					return _elm_lang$core$Maybe$Just(_p2.strain);
 				case 'Strain':
 					return _elm_lang$core$Maybe$Just(_p2.strain);
 				case 'Species':
@@ -8476,41 +8478,168 @@ var _user$project$Main$getClustersByRank = F2(
 			}
 		}
 	});
+var _user$project$Cluster$ClustersByRank = F7(
+	function (a, b, c, d, e, f, g) {
+		return {strain: a, species: b, genus: c, family: d, order: e, $class: f, phylum: g};
+	});
+var _user$project$Cluster$Cluster = F3(
+	function (a, b, c) {
+		return {id: a, data: b, name: c};
+	});
+var _user$project$Cluster$ClusterObject = F3(
+	function (a, b, c) {
+		return {name: a, id: b, count: c};
+	});
+
+var _user$project$Main$rankOptions = function (model) {
+	var rankModel = model.rank;
+	var toOption = function (rank) {
+		var _p0 = rank;
+		switch (_p0.ctor) {
+			case 'Oid':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('oid'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Oid')
+						]));
+			case 'Strain':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('strain'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Strain')
+						]));
+			case 'Species':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('species'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Species')
+						]));
+			case 'Genus':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('genus'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Genus')
+						]));
+			case 'Family':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('family'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Family')
+						]));
+			case 'Order':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('order'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Order')
+						]));
+			case 'Class':
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('class'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Class')
+						]));
+			default:
+				return A2(
+					_elm_lang$html$Html$option,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$value('phylum'),
+							_elm_lang$html$Html_Attributes$selected(
+							_elm_lang$core$Native_Utils.eq(rankModel, rank))
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('Phylum')
+						]));
+		}
+	};
+	var ranks = _user$project$Taxonomy_Rank$getAllRank;
+	return A2(_elm_lang$core$List$map, toOption, ranks);
+};
 var _user$project$Main$hasPattern = F2(
 	function (pattern, cluster) {
 		var clusterContain = function (d) {
-			var _p3 = d.name;
-			if (_p3.ctor === 'Nothing') {
-				return true;
+			var _p1 = d.name;
+			if (_p1.ctor === 'Nothing') {
+				return false;
 			} else {
 				return A2(
 					_elm_lang$core$Regex$contains,
 					_elm_lang$core$Regex$caseInsensitive(
 						_elm_lang$core$Regex$regex(pattern)),
-					_p3._0);
+					_p1._0);
 			}
 		};
-		var _p4 = cluster.name;
-		if (_p4.ctor === 'Nothing') {
-			return true;
+		var _p2 = cluster.name;
+		if (_p2.ctor === 'Nothing') {
+			return false;
 		} else {
 			return A2(
 				_elm_lang$core$Regex$contains,
 				_elm_lang$core$Regex$caseInsensitive(
 					_elm_lang$core$Regex$regex(pattern)),
-				_p4._0) || A2(_elm_lang$core$List$any, clusterContain, cluster.data);
+				_p2._0) || A2(_elm_lang$core$List$any, clusterContain, cluster.data);
 		}
 	});
 var _user$project$Main$getMinMaxClusterSize = function (cluster) {
-	var _p5 = cluster;
-	if (_p5.ctor === 'Nothing') {
+	var _p3 = cluster;
+	if (_p3.ctor === 'Nothing') {
 		return {ctor: '_Tuple2', _0: 0, _1: 0};
 	} else {
 		var minMax = F2(
 			function (cluster, range) {
-				var _p6 = range;
-				var min = _p6._0;
-				var max = _p6._1;
+				var _p4 = range;
+				var min = _p4._0;
+				var max = _p4._1;
 				var currentLength = _elm_lang$core$List$length(cluster.data);
 				return {
 					ctor: '_Tuple2',
@@ -8522,7 +8651,7 @@ var _user$project$Main$getMinMaxClusterSize = function (cluster) {
 			_elm_lang$core$List$foldr,
 			minMax,
 			{ctor: '_Tuple2', _0: 0, _1: 0},
-			_p5._0);
+			_p3._0);
 	}
 };
 var _user$project$Main$preprocessCluster = F4(
@@ -8713,6 +8842,21 @@ var _user$project$Main$sliderValue = _elm_lang$core$Native_Platform.outgoingPort
 			function (v) {
 				return v;
 			});
+	});
+var _user$project$Main$defaultCommands = F4(
+	function (min, max, clusters, histogram) {
+		return _elm_lang$core$Platform_Cmd$batch(
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_user$project$Main$sliderRange(
+					_elm_lang$core$Native_List.fromArray(
+						[min, max])),
+					_user$project$Main$sliderValue(
+					_elm_lang$core$Native_List.fromArray(
+						[min, max])),
+					_user$project$Main$draw(
+					{ctor: '_Tuple2', _0: clusters, _1: histogram})
+				]));
 	});
 var _user$project$Main$dataClusters = _elm_lang$core$Native_Platform.incomingPort(
 	'dataClusters',
@@ -9663,85 +9807,36 @@ var _user$project$Main$Model = function (a) {
 		};
 	};
 };
-var _user$project$Main$ModelPort = F3(
-	function (a, b, c) {
-		return {distanceClusters: a, taxonomicClusters: b, parameters: c};
-	});
-var _user$project$Main$Range = F2(
-	function (a, b) {
-		return {min: a, max: b};
-	});
-var _user$project$Main$Parameters = F4(
-	function (a, b, c, d) {
-		return {pvalue: a, distance: b, kmer: c, sketch: d};
-	});
-var _user$project$Main$ClustersByRank = F7(
-	function (a, b, c, d, e, f, g) {
-		return {strain: a, species: b, genus: c, family: d, order: e, $class: f, phylum: g};
-	});
-var _user$project$Main$Cluster = F3(
-	function (a, b, c) {
-		return {id: a, data: b, name: c};
-	});
-var _user$project$Main$ClusterObject = F3(
-	function (a, b, c) {
-		return {name: a, id: b, count: c};
-	});
-var _user$project$Main$Phylum = {ctor: 'Phylum'};
-var _user$project$Main$Class = {ctor: 'Class'};
-var _user$project$Main$Order = {ctor: 'Order'};
-var _user$project$Main$Family = {ctor: 'Family'};
-var _user$project$Main$Genus = {ctor: 'Genus'};
 var _user$project$Main$init = {
 	ctor: '_Tuple2',
 	_0: _user$project$Main$Model(_elm_lang$core$Maybe$Nothing)(_elm_lang$core$Maybe$Nothing)(_elm_lang$core$Maybe$Nothing)(
 		_elm_lang$core$Native_List.fromArray(
 			[]))('')(0)(1)(0)(
 		_elm_lang$core$Native_List.fromArray(
-			[0]))('')(_user$project$Main$Genus)(true)(false)(false),
+			[0]))('')(
+		_user$project$Taxonomy_Rank$Species(_elm_lang$core$Maybe$Nothing))(true)(false)(true),
 	_1: _elm_lang$core$Platform_Cmd$none
-};
-var _user$project$Main$Species = {ctor: 'Species'};
-var _user$project$Main$Strain = {ctor: 'Strain'};
-var _user$project$Main$getRank = function (rankStr) {
-	var _p7 = rankStr;
-	switch (_p7) {
-		case 'strain':
-			return _user$project$Main$Strain;
-		case 'species':
-			return _user$project$Main$Species;
-		case 'genus':
-			return _user$project$Main$Genus;
-		case 'family':
-			return _user$project$Main$Family;
-		case 'order':
-			return _user$project$Main$Order;
-		case 'class':
-			return _user$project$Main$Class;
-		case 'phylum':
-			return _user$project$Main$Phylum;
-		default:
-			return _user$project$Main$Genus;
-	}
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p8 = msg;
-		switch (_p8.ctor) {
+		var _p5 = msg;
+		switch (_p5.ctor) {
 			case 'DataClusters':
-				var _p11 = _p8._0;
+				var _p8 = _p5._0;
+				var pattern = 'escherichia coli';
+				var showOrphan = true;
 				var taxonomicClusters = _elm_lang$core$Maybe$Just(
-					A7(_user$project$Main$ClustersByRank, _p11.taxonomicClusters.strain, _p11.taxonomicClusters.species, _p11.taxonomicClusters.genus, _p11.taxonomicClusters.family, _p11.taxonomicClusters.order, _p11.taxonomicClusters.$class, _p11.taxonomicClusters.phylum));
+					A7(_user$project$Cluster$ClustersByRank, _p8.taxonomicClusters.strain, _p8.taxonomicClusters.species, _p8.taxonomicClusters.genus, _p8.taxonomicClusters.family, _p8.taxonomicClusters.order, _p8.taxonomicClusters.$class, _p8.taxonomicClusters.phylum));
 				var distanceClusters = _elm_lang$core$Maybe$Just(
-					A7(_user$project$Main$ClustersByRank, _p11.distanceClusters.strain, _p11.distanceClusters.species, _p11.distanceClusters.genus, _p11.distanceClusters.family, _p11.distanceClusters.order, _p11.distanceClusters.$class, _p11.distanceClusters.phylum));
-				var rank = _user$project$Main$Genus;
-				var rankedDistanceClusters = A2(_user$project$Main$getClustersByRank, rank, distanceClusters);
-				var _p9 = _user$project$Main$getMinMaxClusterSize(rankedDistanceClusters);
-				var min = _p9._0;
-				var max = _p9._1;
+					A7(_user$project$Cluster$ClustersByRank, _p8.distanceClusters.strain, _p8.distanceClusters.species, _p8.distanceClusters.genus, _p8.distanceClusters.family, _p8.distanceClusters.order, _p8.distanceClusters.$class, _p8.distanceClusters.phylum));
+				var rank = _user$project$Taxonomy_Rank$Species(_elm_lang$core$Maybe$Nothing);
+				var rankedDistanceClusters = A2(_user$project$Cluster$getClustersByRank, rank, distanceClusters);
+				var _p6 = _user$project$Main$getMinMaxClusterSize(rankedDistanceClusters);
+				var min = _p6._0;
+				var max = _p6._1;
 				var filteredClusters = function () {
-					var _p10 = rankedDistanceClusters;
-					if (_p10.ctor === 'Nothing') {
+					var _p7 = rankedDistanceClusters;
+					if (_p7.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
@@ -9749,11 +9844,11 @@ var _user$project$Main$update = F2(
 							_user$project$Main$preprocessCluster,
 							min,
 							max,
-							model.showOrphan,
+							showOrphan,
 							A2(
 								_elm_lang$core$List$filter,
-								_user$project$Main$hasPattern(''),
-								_p10._0));
+								_user$project$Main$hasPattern(pattern),
+								_p7._0));
 					}
 				}();
 				var numOfClusters = _elm_lang$core$List$length(filteredClusters);
@@ -9765,29 +9860,17 @@ var _user$project$Main$update = F2(
 					filteredClusters);
 				return {
 					ctor: '_Tuple2',
-					_0: _user$project$Main$Model(distanceClusters)(taxonomicClusters)(distanceClusters)(_p11.parameters)('Distance Clusters')(min)(max)(numOfClusters)(histogramData)('')(rank)(true)(false)(false),
-					_1: _elm_lang$core$Platform_Cmd$batch(
-						_elm_lang$core$Native_List.fromArray(
-							[
-								_user$project$Main$sliderRange(
-								_elm_lang$core$Native_List.fromArray(
-									[min, max])),
-								_user$project$Main$sliderValue(
-								_elm_lang$core$Native_List.fromArray(
-									[min, max])),
-								_user$project$Main$draw(
-								{ctor: '_Tuple2', _0: filteredClusters, _1: histogramData})
-							]))
+					_0: _user$project$Main$Model(distanceClusters)(taxonomicClusters)(distanceClusters)(_p8.parameters)('Distance Clusters')(min)(max)(numOfClusters)(histogramData)(pattern)(rank)(true)(false)(showOrphan),
+					_1: A4(_user$project$Main$defaultCommands, min, max, filteredClusters, histogramData)
 				};
 			case 'TaxonomicCluster':
-				var clusters = A2(_user$project$Main$getClustersByRank, model.rank, model.taxonomicClusters);
-				var _p12 = _user$project$Main$getMinMaxClusterSize(clusters);
-				var min = _p12._0;
-				var max = _p12._1;
-				var _p13 = A2(_elm_lang$core$Debug$log, 'max', max);
+				var clusters = A2(_user$project$Cluster$getClustersByRank, model.rank, model.taxonomicClusters);
+				var _p9 = _user$project$Main$getMinMaxClusterSize(clusters);
+				var min = _p9._0;
+				var max = _p9._1;
 				var filteredClusters = function () {
-					var _p14 = clusters;
-					if (_p14.ctor === 'Nothing') {
+					var _p10 = clusters;
+					if (_p10.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
@@ -9799,7 +9882,7 @@ var _user$project$Main$update = F2(
 							A2(
 								_elm_lang$core$List$filter,
 								_user$project$Main$hasPattern(model.pattern),
-								_p14._0));
+								_p10._0));
 					}
 				}();
 				var newModel = _elm_lang$core$Native_Utils.update(
@@ -9820,27 +9903,16 @@ var _user$project$Main$update = F2(
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
-					_1: _elm_lang$core$Platform_Cmd$batch(
-						_elm_lang$core$Native_List.fromArray(
-							[
-								_user$project$Main$sliderRange(
-								_elm_lang$core$Native_List.fromArray(
-									[min, max])),
-								_user$project$Main$sliderValue(
-								_elm_lang$core$Native_List.fromArray(
-									[min, max])),
-								_user$project$Main$draw(
-								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
-							]))
+					_1: A4(_user$project$Main$defaultCommands, min, max, filteredClusters, newModel.histogramData)
 				};
 			case 'DistanceCluster':
-				var clusters = A2(_user$project$Main$getClustersByRank, model.rank, model.distanceClusters);
-				var _p15 = _user$project$Main$getMinMaxClusterSize(clusters);
-				var min = _p15._0;
-				var max = _p15._1;
+				var clusters = A2(_user$project$Cluster$getClustersByRank, model.rank, model.distanceClusters);
+				var _p11 = _user$project$Main$getMinMaxClusterSize(clusters);
+				var min = _p11._0;
+				var max = _p11._1;
 				var filteredClusters = function () {
-					var _p16 = clusters;
-					if (_p16.ctor === 'Nothing') {
+					var _p12 = clusters;
+					if (_p12.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
@@ -9852,7 +9924,7 @@ var _user$project$Main$update = F2(
 							A2(
 								_elm_lang$core$List$filter,
 								_user$project$Main$hasPattern(model.pattern),
-								_p16._0));
+								_p12._0));
 					}
 				}();
 				var newModel = _elm_lang$core$Native_Utils.update(
@@ -9873,44 +9945,33 @@ var _user$project$Main$update = F2(
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
-					_1: _elm_lang$core$Platform_Cmd$batch(
-						_elm_lang$core$Native_List.fromArray(
-							[
-								_user$project$Main$sliderRange(
-								_elm_lang$core$Native_List.fromArray(
-									[min, max])),
-								_user$project$Main$sliderValue(
-								_elm_lang$core$Native_List.fromArray(
-									[min, max])),
-								_user$project$Main$draw(
-								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
-							]))
+					_1: A4(_user$project$Main$defaultCommands, min, max, filteredClusters, newModel.histogramData)
 				};
 			case 'SliderChange':
-				var _p18 = _p8._0;
-				var displayedClusters = A2(_user$project$Main$getClustersByRank, model.rank, model.displayedClusters);
+				var _p14 = _p5._0;
+				var displayedClusters = A2(_user$project$Cluster$getClustersByRank, model.rank, model.displayedClusters);
 				var filteredClusters = function () {
-					var _p17 = displayedClusters;
-					if (_p17.ctor === 'Nothing') {
+					var _p13 = displayedClusters;
+					if (_p13.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
 						return A4(
 							_user$project$Main$preprocessCluster,
-							_p18.min,
-							_p18.max,
+							_p14.min,
+							_p14.max,
 							model.showOrphan,
 							A2(
 								_elm_lang$core$List$filter,
 								_user$project$Main$hasPattern(model.pattern),
-								_p17._0));
+								_p13._0));
 					}
 				}();
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
 					{
-						min: _p18.min,
-						max: _p18.max,
+						min: _p14.min,
+						max: _p14.max,
 						numberOfClusters: _elm_lang$core$List$length(filteredClusters),
 						histogramData: A2(
 							_elm_lang$core$List$map,
@@ -9930,11 +9991,11 @@ var _user$project$Main$update = F2(
 							]))
 				};
 			case 'FilterClusters':
-				var _p21 = _p8._0;
-				var displayedClusters = A2(_user$project$Main$getClustersByRank, model.rank, model.displayedClusters);
+				var _p17 = _p5._0;
+				var displayedClusters = A2(_user$project$Cluster$getClustersByRank, model.rank, model.displayedClusters);
 				var filteredClusters = function () {
-					var _p19 = displayedClusters;
-					if (_p19.ctor === 'Nothing') {
+					var _p15 = displayedClusters;
+					if (_p15.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
@@ -9945,14 +10006,14 @@ var _user$project$Main$update = F2(
 							model.showOrphan,
 							A2(
 								_elm_lang$core$List$filter,
-								_user$project$Main$hasPattern(_p21),
-								_p19._0));
+								_user$project$Main$hasPattern(_p17),
+								_p15._0));
 					}
 				}();
-				var _p20 = _user$project$Main$getMinMaxClusterSize(
+				var _p16 = _user$project$Main$getMinMaxClusterSize(
 					_elm_lang$core$Maybe$Just(filteredClusters));
-				var min = _p20._0;
-				var max = _p20._1;
+				var min = _p16._0;
+				var max = _p16._1;
 				var maxCorrected = (_elm_lang$core$Native_Utils.cmp(max, 0) < 1) ? 1 : max;
 				var newModel = _elm_lang$core$Native_Utils.update(
 					model,
@@ -9965,7 +10026,7 @@ var _user$project$Main$update = F2(
 								return _elm_lang$core$List$length(n.data);
 							},
 							filteredClusters),
-						pattern: _p21
+						pattern: _p17
 					});
 				return {
 					ctor: '_Tuple2',
@@ -9981,14 +10042,21 @@ var _user$project$Main$update = F2(
 							]))
 				};
 			case 'ChangeRank':
-				var rank = _user$project$Main$getRank(_p8._0);
-				var displayedClusters = A2(_user$project$Main$getClustersByRank, rank, model.displayedClusters);
-				var _p22 = _user$project$Main$getMinMaxClusterSize(displayedClusters);
-				var min = _p22._0;
-				var max = _p22._1;
+				var rank = function () {
+					var _p18 = A2(_user$project$Taxonomy_Rank$maybeRankOfString, _p5._0, _elm_lang$core$Maybe$Nothing);
+					if (_p18.ctor === 'Nothing') {
+						return _user$project$Taxonomy_Rank$Genus(_elm_lang$core$Maybe$Nothing);
+					} else {
+						return _p18._0;
+					}
+				}();
+				var displayedClusters = A2(_user$project$Cluster$getClustersByRank, rank, model.displayedClusters);
+				var _p19 = _user$project$Main$getMinMaxClusterSize(displayedClusters);
+				var min = _p19._0;
+				var max = _p19._1;
 				var filteredClusters = function () {
-					var _p23 = displayedClusters;
-					if (_p23.ctor === 'Nothing') {
+					var _p20 = displayedClusters;
+					if (_p20.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
@@ -10000,7 +10068,7 @@ var _user$project$Main$update = F2(
 							A2(
 								_elm_lang$core$List$filter,
 								_user$project$Main$hasPattern(model.pattern),
-								_p23._0));
+								_p20._0));
 					}
 				}();
 				var newModel = _elm_lang$core$Native_Utils.update(
@@ -10018,28 +10086,17 @@ var _user$project$Main$update = F2(
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
-					_1: _elm_lang$core$Platform_Cmd$batch(
-						_elm_lang$core$Native_List.fromArray(
-							[
-								_user$project$Main$sliderRange(
-								_elm_lang$core$Native_List.fromArray(
-									[min, max])),
-								_user$project$Main$sliderValue(
-								_elm_lang$core$Native_List.fromArray(
-									[min, max])),
-								_user$project$Main$draw(
-								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
-							]))
+					_1: A4(_user$project$Main$defaultCommands, min, max, filteredClusters, newModel.histogramData)
 				};
 			default:
 				var showOrphan = _elm_lang$core$Basics$not(model.showOrphan);
-				var displayedClusters = A2(_user$project$Main$getClustersByRank, model.rank, model.displayedClusters);
-				var _p24 = _user$project$Main$getMinMaxClusterSize(displayedClusters);
-				var min = _p24._0;
-				var max = _p24._1;
+				var displayedClusters = A2(_user$project$Cluster$getClustersByRank, model.rank, model.displayedClusters);
+				var _p21 = _user$project$Main$getMinMaxClusterSize(displayedClusters);
+				var min = _p21._0;
+				var max = _p21._1;
 				var filteredClusters = function () {
-					var _p25 = displayedClusters;
-					if (_p25.ctor === 'Nothing') {
+					var _p22 = displayedClusters;
+					if (_p22.ctor === 'Nothing') {
 						return _elm_lang$core$Native_List.fromArray(
 							[]);
 					} else {
@@ -10051,7 +10108,7 @@ var _user$project$Main$update = F2(
 							A2(
 								_elm_lang$core$List$filter,
 								_user$project$Main$hasPattern(model.pattern),
-								_p25._0));
+								_p22._0));
 					}
 				}();
 				var numOfClusters = _elm_lang$core$List$length(filteredClusters);
@@ -10070,123 +10127,22 @@ var _user$project$Main$update = F2(
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
-					_1: _elm_lang$core$Platform_Cmd$batch(
-						_elm_lang$core$Native_List.fromArray(
-							[
-								_user$project$Main$sliderRange(
-								_elm_lang$core$Native_List.fromArray(
-									[min, max])),
-								_user$project$Main$sliderValue(
-								_elm_lang$core$Native_List.fromArray(
-									[min, max])),
-								_user$project$Main$draw(
-								{ctor: '_Tuple2', _0: filteredClusters, _1: newModel.histogramData})
-							]))
+					_1: A4(_user$project$Main$defaultCommands, min, max, filteredClusters, newModel.histogramData)
 				};
 		}
 	});
-var _user$project$Main$rankOptions = function (model) {
-	var rankModel = model.rank;
-	var toOption = function (rank) {
-		var _p26 = rank;
-		switch (_p26.ctor) {
-			case 'Strain':
-				return A2(
-					_elm_lang$html$Html$option,
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html_Attributes$value('strain'),
-							_elm_lang$html$Html_Attributes$selected(
-							_elm_lang$core$Native_Utils.eq(rankModel, rank))
-						]),
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html$text('Strain')
-						]));
-			case 'Species':
-				return A2(
-					_elm_lang$html$Html$option,
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html_Attributes$value('species'),
-							_elm_lang$html$Html_Attributes$selected(
-							_elm_lang$core$Native_Utils.eq(rankModel, rank))
-						]),
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html$text('Species')
-						]));
-			case 'Genus':
-				return A2(
-					_elm_lang$html$Html$option,
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html_Attributes$value('genus'),
-							_elm_lang$html$Html_Attributes$selected(
-							_elm_lang$core$Native_Utils.eq(rankModel, rank))
-						]),
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html$text('Genus')
-						]));
-			case 'Family':
-				return A2(
-					_elm_lang$html$Html$option,
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html_Attributes$value('family'),
-							_elm_lang$html$Html_Attributes$selected(
-							_elm_lang$core$Native_Utils.eq(rankModel, rank))
-						]),
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html$text('Family')
-						]));
-			case 'Order':
-				return A2(
-					_elm_lang$html$Html$option,
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html_Attributes$value('order'),
-							_elm_lang$html$Html_Attributes$selected(
-							_elm_lang$core$Native_Utils.eq(rankModel, rank))
-						]),
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html$text('Order')
-						]));
-			case 'Class':
-				return A2(
-					_elm_lang$html$Html$option,
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html_Attributes$value('class'),
-							_elm_lang$html$Html_Attributes$selected(
-							_elm_lang$core$Native_Utils.eq(rankModel, rank))
-						]),
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html$text('Class')
-						]));
-			default:
-				return A2(
-					_elm_lang$html$Html$option,
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html_Attributes$value('phylum'),
-							_elm_lang$html$Html_Attributes$selected(
-							_elm_lang$core$Native_Utils.eq(rankModel, rank))
-						]),
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$html$Html$text('Phylum')
-						]));
-		}
-	};
-	var ranks = _elm_lang$core$Native_List.fromArray(
-		[_user$project$Main$Strain, _user$project$Main$Species, _user$project$Main$Genus, _user$project$Main$Family, _user$project$Main$Order, _user$project$Main$Class, _user$project$Main$Phylum]);
-	return A2(_elm_lang$core$List$map, toOption, ranks);
-};
+var _user$project$Main$ModelPort = F3(
+	function (a, b, c) {
+		return {distanceClusters: a, taxonomicClusters: b, parameters: c};
+	});
+var _user$project$Main$Range = F2(
+	function (a, b) {
+		return {min: a, max: b};
+	});
+var _user$project$Main$Parameters = F4(
+	function (a, b, c, d) {
+		return {pvalue: a, distance: b, kmer: c, sketch: d};
+	});
 var _user$project$Main$ShowOrphan = {ctor: 'ShowOrphan'};
 var _user$project$Main$ChangeRank = function (a) {
 	return {ctor: 'ChangeRank', _0: a};
@@ -10266,6 +10222,7 @@ var _user$project$Main$view = function (model) {
 								_elm_lang$core$Native_List.fromArray(
 									[
 										_elm_lang$html$Html_Attributes$placeholder('Filter clusters'),
+										_elm_lang$html$Html_Attributes$value(model.pattern),
 										_elm_lang$html$Html_Events$onInput(_user$project$Main$FilterClusters)
 									]),
 								_elm_lang$core$Native_List.fromArray(
@@ -10292,7 +10249,8 @@ var _user$project$Main$view = function (model) {
 										_elm_lang$core$Native_List.fromArray(
 											[
 												_elm_lang$html$Html_Attributes$type$('checkbox'),
-												_elm_lang$html$Html_Events$onClick(_user$project$Main$ShowOrphan)
+												_elm_lang$html$Html_Events$onClick(_user$project$Main$ShowOrphan),
+												_elm_lang$html$Html_Attributes$checked(model.showOrphan)
 											]),
 										_elm_lang$core$Native_List.fromArray(
 											[
