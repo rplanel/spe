@@ -33,9 +33,9 @@ type alias RankInfo =
     }
 
 
-getAllRankString : List String
-getAllRankString =
-    getListRankString
+
+getAllRank : List Rank
+getAllRank =
         [ Oid Nothing
         , Strain Nothing
         , Species Nothing
@@ -45,6 +45,11 @@ getAllRankString =
         , Class Nothing
         , Phylum Nothing
         ]
+    
+    
+getAllRankString : List String
+getAllRankString =
+    getListRankString getAllRank
 
 
 getListRankString : List Rank -> List String
