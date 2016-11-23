@@ -82,9 +82,10 @@ To check that we can look at:
 * mash dist ne support pas une p-value inférieur à 1e-30 pour le filtre. 
 
 
-
+```bash
 loadFileToMySQLDB.sh cluster.DB GO_SPE MASH_cluster '\t' '\n' no yes
 
+```
 
 
 
