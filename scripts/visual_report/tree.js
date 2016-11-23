@@ -24,6 +24,6 @@ app.ports.drawTree.subscribe(function(params){
     
     d3.select('g.tree')
         .datum(tree)
-        .call(clusterTree, 500, 500, rank);
+        .call(clusterTree, 1500, 500, rank);
     
 });

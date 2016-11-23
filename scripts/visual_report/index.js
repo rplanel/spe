@@ -22,7 +22,17 @@ console.log(url);
 // Get the data
 
 var dataCluster = rawClusterData;
+
 var taxoCluster = rawRankData;
+
+
+console.log(dataCluster);
+
+// var taxoClusterNull = taxoCluster.species.filter(function(d) {
+//     return (d.name === null || d.name === "");
+// });
+// console.log(taxoClusterNull);
+
 
 // Create the slider
 var slider = document.getElementById('slider-degre');
