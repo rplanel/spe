@@ -5901,9 +5901,9 @@ var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required = F3(
 var _user$project$Taxonomy_Rank$taxid = _elm_lang$core$Json_Decode$oneOf(
 	_elm_lang$core$Native_List.fromArray(
 		[
-			_elm_lang$core$Json_Decode$maybe(_elm_lang$core$Json_Decode$int),
 			_elm_lang$core$Json_Decode$maybe(
-			A2(_elm_lang$core$Json_Decode$customDecoder, _elm_lang$core$Json_Decode$string, _elm_lang$core$String$toInt))
+			A2(_elm_lang$core$Json_Decode$customDecoder, _elm_lang$core$Json_Decode$string, _elm_lang$core$String$toInt)),
+			_elm_lang$core$Json_Decode$maybe(_elm_lang$core$Json_Decode$int)
 		]));
 var _user$project$Taxonomy_Rank$toValidTaxid = function (taxid) {
 	var _p0 = A2(_elm_lang$core$Debug$log, 'THE TAXID = ', taxid);
@@ -6156,18 +6156,18 @@ var _user$project$Taxonomy_Rank$Strain = function (a) {
 var _user$project$Taxonomy_Rank$Oid = function (a) {
 	return {ctor: 'Oid', _0: a};
 };
-var _user$project$Taxonomy_Rank$getAllRankString = _user$project$Taxonomy_Rank$getListRankString(
-	_elm_lang$core$Native_List.fromArray(
-		[
-			_user$project$Taxonomy_Rank$Oid(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Strain(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Species(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Genus(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Family(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Order(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Class(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Phylum(_elm_lang$core$Maybe$Nothing)
-		]));
+var _user$project$Taxonomy_Rank$getAllRank = _elm_lang$core$Native_List.fromArray(
+	[
+		_user$project$Taxonomy_Rank$Oid(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Strain(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Species(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Genus(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Family(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Order(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Class(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Phylum(_elm_lang$core$Maybe$Nothing)
+	]);
+var _user$project$Taxonomy_Rank$getAllRankString = _user$project$Taxonomy_Rank$getListRankString(_user$project$Taxonomy_Rank$getAllRank);
 var _user$project$Taxonomy_Rank$maybeRankOfString = F2(
 	function (rankStr, rankInfo) {
 		var lowerStr = _elm_lang$core$String$toLower(rankStr);
@@ -6245,7 +6245,7 @@ var _user$project$Cluster$getClustersByRank = F2(
 			var _p1 = rank;
 			switch (_p1.ctor) {
 				case 'Oid':
-					return _elm_lang$core$Maybe$Just(_p2.oid);
+					return _elm_lang$core$Maybe$Just(_p2.strain);
 				case 'Strain':
 					return _elm_lang$core$Maybe$Just(_p2.strain);
 				case 'Species':
@@ -6263,9 +6263,9 @@ var _user$project$Cluster$getClustersByRank = F2(
 			}
 		}
 	});
-var _user$project$Cluster$ClustersByRank = F8(
-	function (a, b, c, d, e, f, g, h) {
-		return {oid: a, strain: b, species: c, genus: d, family: e, order: f, $class: g, phylum: h};
+var _user$project$Cluster$ClustersByRank = F7(
+	function (a, b, c, d, e, f, g) {
+		return {strain: a, species: b, genus: c, family: d, order: e, $class: f, phylum: g};
 	});
 var _user$project$Cluster$Cluster = F3(
 	function (a, b, c) {

@@ -2,10 +2,10 @@ module Cluster exposing (..)
 
 import Taxonomy.Rank as Rank exposing (..)
 
+
 type alias ClustersByRank =
-    
-    { oid    : Clusters
-    , strain : Clusters
+    { --oid : Clusters
+     strain : Clusters
     , species : Clusters
     , genus : Clusters
     , family : Clusters
@@ -18,14 +18,13 @@ type alias ClustersByRank =
 type alias Clusters =
     List Cluster
 
+
 type alias Cluster =
     { id : String, data : List ClusterObject, name : Maybe String }
 
 
 type alias ClusterObject =
     { name : Maybe String, id : String, count : Int }
-
-
 
 
 getClustersByRank : Rank -> Maybe ClustersByRank -> Maybe Clusters
@@ -37,11 +36,11 @@ getClustersByRank rank clustersByRank =
         Just clusters ->
             case rank of
                 Oid rankInfo ->
-                    Just clusters.oid
-                    
+                    Just clusters.strain
+
                 Strain rankInfo ->
                     Just clusters.strain
-                        
+
                 Species rankInfo ->
                     Just clusters.species
 
@@ -59,4 +58,3 @@ getClustersByRank rank clustersByRank =
 
                 Phylum rankInfo ->
                     Just clusters.phylum
-
