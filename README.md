@@ -36,13 +36,15 @@ nextflow run mash-nextflow.nf -resume \
 
 |Rank   |Number of ranks| Orphan|
 |-------|:-------------:|:-----:|
-|Strain |5407           |5407   |
-|Species|1297           |944    |
-|Genus  |359            |143    |
-|Family |312/311        |108    |
-|Order  |164/163        |44     |
-|Class  |71/70          |16     |
-|Phylum |29/28          |5      |
+|Species|1993           |1539   |
+
+
+<!-- |Strain |5407           |5407   | -->
+<!-- |Genus  |359            |143    | -->
+<!-- |Family |312/311        |108    | -->
+<!-- |Order  |164/163        |44     | -->
+<!-- |Class  |71/70          |16     | -->
+<!-- |Phylum |29/28          |5      | -->
 
 
 ### P-Value threshold ###
@@ -51,7 +53,44 @@ It seems that the p-value has no effect when distance threshold less than 0.2
 
 ### Sketches and kmers effect ###
 
-Need to more analysis
+Need more analysis
+
+### Parameters ###
+
+Lorsque la taille des kmers diminue, la sensibilité augmente au détriment de la spécificité. Des kmers trop petits vont aussi augmenter la chance de collision de kmers. Par contre, une taille de kmer trop grand va réduire la sensibilité. Il faut donc choisir la plus petite taille de kmer qui évite la collision de kmer.
+
+Les auteurs de Mash ont choisi les paramètres : kmer = 16 et sketch = 400 pour partitionner les génomes au niveau de l'espèce. La raison principale est la compression des données. Nous commencerons donc par ces paramètres.
+
+Cependant, ils estiment que les paramètres k = 21 et s = 1000 sont précis dans la pluspart des cas.
+
+Pour essayer d'avoir une idée de la qualité du partionnement, je vais regarder le cas de l'espèce : Escherichia Coli.
+
+|kmer  |sketch   |distance    |pvalue      |E.coli| nb sp in clus| fergu | albertii | Nb Cluster Total |Sp Max/C|
+|------|---------|------------|------------|------|-----------|-------|----------|--------------|---------|
+|16    |400      |0.05        |1e-10       |37    | 8         |No     |No        | 2660         |10       |
+|16    |400      |0.06        |1e-10       |29    | 8         |No     |No        | 2584         |10       |
+|16    |400      |0.07        |1e-10       |26    | 9         |Yes    |No        | 2496         |10       |
+|16    |400      |0.08        |1e-10       |23    | 10        |Yes    |No        | 2397         |10       |
+|16    |400      |0.09        |1e-10       |21    | 11        |Yes    |Yes       | 2297         |24       |
+|16    |400      |0.1         |1e-10       |16    | 11        |Yes    |Yes       | 2172         |73       |
+|16    |400      |0.11        |1e-10       |14    | 11        |Yes    |Yes       | 2065         |111      |
+|16    |400      |0.12        |1e-10       |8     | 11        |Yes    |Yes       | 1945         |184      |
+|16    |400      |0.13        |1e-10       |6     | 11        |Yes    |Yes       | 1809         |375      |
+|16    |5000     |0.08        |1e-10       |23    | 10        |Yes    |No        | 2421         |10       |
+|16    |5000     |0.10        |1e-10       |18    | 11        |Yes    |Yes       | 2224         |20       |
+|16    |5000     |0.12        |1e-10       |9     | 11        |Yes    |Yes       | 2016         |113      |
+|21    |1000     |0.05        |1e-10       |29    | 8         |No     |No        | 2640         |10       |
+|21    |1000     |0.06        |1e-10       |25    | 9         |Yes    |No        | 2570         |10       |
+|21    |1000     |0.07        |1e-10       |21    | 10        |Yes    |No        | 2473         |10       |
+|21    |1000     |0.08        |1e-10       |16    | 11        |Yes    |Yes       | 2377         |11       |
+|21    |1000     |0.09        |1e-10       |10    | 11        |Yes    |Yes       | 2290         |11       |
+|21    |1000     |0.1         |1e-10       |6     | 11        |Yes    |Yes       | 2203         |12       |
+|21    |1000     |0.11        |1e-10       |4     | 11        |Yes    |Yes       | 2126         |17       |
+|21    |1000     |0.12        |1e-10       |2     | 18        |Yes    |Yes       | 2037         |18       |
+
+
+
+
 
 ### Best parameters per rank ###
 
