@@ -13,31 +13,22 @@ println "scripts  : $params.scripts"
 * nextflow run mash-nextflow.nf --query /path/to/file --chunksize 10
 */
 //params.query
-params.sketches
 //params.genomes
-params.numOfGenomes
-params.oid
-params.cpus
 params.pvalue
 params.distance
 params.sketchSize
 params.kmerSize
+params.seqType
+params.dataDir
+params.seqDir
 // params.scripts
-params.data
-params.work
-
-
-println params.scripts
 
 sketchesOutName = "sketches-db"
 
 
-/*
- * SCRIPTS
- */
-extractOrgSeq        = Channel.value(file("${params.scripts}/extractOrgSeq.sh"))
-mergeFastaScript     = Channel.value(file("${params.scripts}/mergeGenomes.pl"))
-splitFastaScript     = Channel.value(file("${params.scripts}/splitFasta.pl"))
+/***********
+ * SCRIPTS *
+ ***********/
 filterGraphScript    = Channel.value(file("${params.scripts}/filterGraph.pl"))
 addAnnotationScript  = Channel.value(file("${params.scripts}/addAnnotation.pl"))
 extractClusterScript = Channel.value(file("${params.scripts}/extractCluster.pl"))
@@ -46,182 +37,41 @@ calculateClusterIntraStatScript = Channel.value(file("${params.scripts}/calculat
 nj = Channel.value(file("${params.scripts}/calculate-nj-tree.js"))
 existsRecord          = Channel.value(file("${params.scripts}/existsRecord.sh"))
 
-indexHtml  = Channel.value(file("${params.scripts}/visual_report/index.html"))
-indexJs    = Channel.value(file("${params.scripts}/visual_report/index.js"))
-piechart   = Channel.value(file("${params.scripts}/visual_report/piechart.js"))
-histogram  = Channel.value(file("${params.scripts}/visual_report/histogram.js"))
-parameters = Channel.value(file("${params.scripts}/visual_report/parameters.js"))
-
-
-/*
- * Values parameters
- */
+/*********************
+ * Values parameters *
+ *********************/
 pvalueThreshold   = Channel.value(params.pvalue)
 distanceThreshold = Channel.value(params.distance)
 sketchSize        = Channel.value(params.sketchSize)
 kmerSize          = Channel.value(params.kmerSize)
+seqType           = Channel.value(params.seqType)
+dataDir           = Channel.value(params.dataDir)
+
+Sequences = Channel.empty()
 
 
-//genomes = Channel.fromPath(params.genomes+'/*.fasta')
+println params.seqDir
 
-/*
-if (params.oid != null && params.numOfGenomes != null) {
-  error "ERROR parameters\nThe --oid and --numOfGenomes are incompatible."
-  
+if (params.seqType == 'na') {
+  Sequences = Channel.fromPath("${params.seqDir}/*.fna")
 }
-*/
 
-numOfGenomes = Channel.empty()
-oid = Channel.empty()
-//query = Channel.empty()
-
-if (params.oid != null) {
-  oid = Channel.value(params.oid)
+if (params.seqType == 'aa') {
+  Sequences = Channel.fromPath("${params.seqDir}/*.faa")
 }
 
 
-if (params.numOfGenomes != null) {
-  numOfGenomes = Channel.value(params.numOfGenomes)
-}
-else if (params.oid == null) {
-  numOfGenomes = Channel.value('all')
-}
-else {
-numOfGenomes = Channel.empty()
-}
+Sequences
+.tap {SeqToCount}
+.set {SequencesInput}
 
 
-// if (params.query != null) {
-//   query = Channel.fromPath(params.query)
-// }
-
-process getGenome {
-  tag { oid }
-  storeDir 'data/genomes'
-  
-  input:
-  val oid
-
-  output:
-  file "${filenameOut}" into genome
-  
-  script:
-  filenameOut = "${oid}.fasta"
-  """
-  mysql --max_allowed-packet=1G -ABNqr pkgdb_dev -e \
-    \"SELECT strtofastaudf(CONCAT_WS(' ',O_id, O_name, name_txt),S_string) \
-    FROM Organism LEFT JOIN O_Taxonomy USING(O_id) INNER JOIN Replicon USING(O_id) INNER JOIN Sequence USING(R_id) \
-    INNER JOIN Sequence_String USING(S_id) \
-    WHERE rank = 'order' AND S_status = 'inProduction' AND O_id=${oid}\" >  ${filenameOut}
-  """
-}
-
-process getGenomes {
-  tag { numOfGenomes }
-  storeDir 'data/genomes'
-
-  input:
-  val numOfGenomes
-  file script from extractOrgSeq
-
-  output:
-  file "*.fna" into genomes
-
-  // strtofastaudf(O_id,IF(C_id IS NULL,S_string,gotonucudf(S_string, C_begin, C_end, '+1'))) \
-  
-  script:
-  if (numOfGenomes == 'all')
-    """
-    bash ${script}
-    """
-  else
-    """
-    mysql  --max_allowed-packet=1G -ABNqr pkgdb_dev -e \
-    \"SELECT strtofastaudf(O_id,IF(C_id IS NULL,S_string,gotonucudf(S_string, C_begin, C_end, '+1'))) \
-     FROM Organism 
-     INNER JOIN Replicon USING(O_id)
-     INNER JOIN Sequence USING(R_id) 
-     INNER JOIN Sequence_String USING(S_id)
-     LEFT JOIN Contig USING(S_id) 
-     WHERE S_status = 'inProduction' LIMIT ${numOfGenomes};\" \
-     | awk '/^>/{ Oid=\$1; sub(\">\",\"\",Oid); fileout=Oid\".fna\"} {print \$0 > fileout}'
-    """
-}
-
-
-
-
-
-
-genomesInputs = Channel.empty()
-//genomesInput = Channel.create()
-genomesInputs.mix(genome,genomes)
-//.toList()
-.flatten()
-.tap { countFasta }
-//.subscribe { println it }
-.set { genomesInput}
-
-//genomesInput = Channel.empty()
-
-/*
-
-process merge_same_organism {
-  tag { g }
-  storeDir 'data/genomes'
-  
-
-  input:
-  each g from genomesInput 
-  file mergeFastaScript
-  file script from splitFastaScript
-  
-  output:
-  file "${outdir}/*.fasta" into countFasta, fastaGenomes mode flatten
-
-  script:
-  baseName = g.getBaseName()
-  out      = "${baseName}.merged.fasta"
-  outdir = "per_oid"
-  f = file("$outdir")
-  f.mkdir()
-  """
-  perl ${mergeFastaScript} ${g} ${out}
-  perl ${script} ${out} ${outdir}
-  rm -rf ${out}
-  """
-}
-*/
-
-
-/*
-process splitFasta {
-  tag { mergedGenomes }
-  storeDir 'data/genomes/fasta'
- 
-  input:
-  file mergedGenomes
-  file script from splitFastaScript
-  
-  output:
-  file "${outdir}/*.fasta" into countFasta, fastaGenomes mode flatten
-  
-  script:
-  outdir = "per_oid"
-  f = file("$outdir")
-  f.mkdir()
-  """
-  perl ${script} ${mergedGenomes} ${outdir}
-  """
-}
-
-*/
-
-/*  Calculate the sketches */
+countSeq = SeqToCount.count()
 
 
 process sketch {
-  tag { genomes }
+  
+  tag { seqs }
   storeDir { storeDir }
   errorStrategy 'retry'
   queue 'normal'
@@ -230,25 +80,31 @@ process sketch {
   // maxForks params.cpus
   
   input:
-  file genomes from genomesInput
+  file seqs from SequencesInput
+  val dataDir
   val sketchSize
-  val kmerSize  
+  val kmerSize
+  val seqType
+  
   
   
   output:
   file "${out}.msh" into querySketch
 
   script:
-  storeDir = "data/sketch/${kmerSize}/${sketchSize}"
-  baseName = genomes.getBaseName()
+  storeDir = "${dataDir}/sketch/${seqType}/${kmerSize}/${sketchSize}"
+  baseName = seqs.getBaseName()
   out = "${baseName}"
+  if (seqType == "aa")
   """
-  mash sketch -s ${sketchSize} -k ${kmerSize} ${genomes} -o $out
+  mash sketch -a -s ${sketchSize} -k ${kmerSize} ${seqs} -o $out
+  """
+  else
+  """
+  mash sketch -s ${sketchSize} -k ${kmerSize} ${seqs} -o $out
   """
   
 }
-
-
 
 querySketch
 .collectFile() {file ->
@@ -257,28 +113,29 @@ querySketch
 .into { sketchesFilenameToPaste;  sketchesFilenameToDist; sketchesFilenameToDistUpdate }
 
 
-
-
 process paste_query_sketches_together {
   tag { filesList }
   // Do not store dir because will not redo this file if use a subset.
-  storeDir 'data/sketch/paste' 
+  storeDir { storeDir }
   queue 'normal'
   
   input:
   file filesList from sketchesFilenameToPaste
   val sketchSize
   val kmerSize
-  val numOfGenomes
+  val dataDir
+  val seqType
   
   output:
   file "${out}.msh" into genomeSketches
   
   script:
-  out = "genome-sketches-${kmerSize}-${sketchSize}-${numOfGenomes}"
+  storeDir = "${dataDir}/sketch/${seqType}/paste"
+  out = "genome-sketches-${kmerSize}-${sketchSize}"
   "mash paste ${out} -l ${filesList}"
 
 }
+
 
 
 allVsAllQuery    = Channel.create()
@@ -304,34 +161,36 @@ if (params.sketches != null) {
 incrementalQuery.into {queryToSketch; queryToDist}
 
 
-
 // Calculate the distances
 process all_vs_all_distance {
   tag { "${query} distance=${sketchSize} pvalue=${kmerSize} $sketchesDb" } 
   
   //scratch true
-  storeDir "data/distance"
+  storeDir { storeDir }
   
   input:
   file sketchesDb from allVsAllQuery
   file query from sketchesFilenameToDist
   val sketchSize
   val kmerSize  
-
+  val dataDir
+  val seqType
   
   output:
-  file out into allVsAllDistances, allVsAllDistances2
+  file out into distanceMatrix, distanceMatrix2
 
   script:
+  storeDir = "${dataDir}/distance/${seqType}"
   baseName = sketchesDb.getBaseName()
   out = "${baseName}-distance.tab"
 
   // mash dist -v $pvalueThreshold -d $distanceThreshold ${sketchesDb} -l ${query} > $out
   """
-  mash dist ${sketchesDb} -l ${query} | perl -pe 's/\\.fna//g' > $out
+  mash dist ${sketchesDb} -l ${query} | perl -pe 's/\\.faa//g' > $out
   """
 
 }
+
 
 
 process paste_sketch_to_db {
@@ -351,8 +210,6 @@ process paste_sketch_to_db {
   """
   
 }
-
-
 
 
 
@@ -381,8 +238,6 @@ process incremental_distance {
   
 }
 
-
-
 process filterEdges {
 
   tag { "distance = ${distanceThreshold} - pvalue = ${pvalueThreshold}" }
@@ -391,19 +246,21 @@ process filterEdges {
 
 
   input:
-  file dist from allVsAllDistances
+  file dist from distanceMatrix
   file script from filterGraphScript
   val pvalueThreshold
   val distanceThreshold
   val sketchSize
-  val kmerSize  
+  val kmerSize
+  val seqType
+  val dataDir
 
 
   output:
   file "${out}" into filteredDistance, filteredEdges
 
   script:
-  resultDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
+  resultDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results"
   baseName = dist.getBaseName()
   out = "${baseName}-filtered.tab"
   """
@@ -413,11 +270,12 @@ process filterEdges {
 }
 
 process extractAnnotation {
-  storeDir "data/annotations"
+  storeDir "${dataDir}/annotations"
   
   input:
   file dist from filteredDistance
-
+  val dataDir
+  
   output:
   file "$out" into annotations
 
@@ -457,10 +315,6 @@ process prepareSilixInput {
 
 }
 
-/*
-* Get the num of fasta
-*/
-numOfFasta = countFasta.count()
 
 //numOfFasta.subscribe {println it}
 
@@ -474,18 +328,20 @@ process silixx {
   
   input:
   file edges from edgesFile
-  val num from numOfFasta
+  val num from countSeq
   val pvalueThreshold
   val distanceThreshold
   val sketchSize
-  val kmerSize  
+  val kmerSize
+  val seqType
+  val dataDir
 
 
   output:
   file "$out" into silixClusterFile, silixClusterFile2
 
   script:
-  resDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
+  resDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results"
   baseName = edges.getBaseName()
   out = "${baseName}.silix"
   """
@@ -507,13 +363,15 @@ process addAnnotation {
   val pvalueThreshold
   val distanceThreshold
   val sketchSize
-  val kmerSize  
+  val kmerSize
+  val seqType
+  val dataDir
 
   output:
   file "$out" into annotatedSilixClusterFile, annotatedSilixCluster
 
   script:
-  resDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
+  resDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results"
   base = silixRes.getBaseName()
   out = "${base}-annotated.silix"
   """
@@ -531,12 +389,14 @@ process extractGraph {
   
   input:
   file dico from annotatedSilixClusterFile
-  file edges from allVsAllDistances2
+  file edges from distanceMatrix2
   file script from extractClusterScript
   val pvalueThreshold
   val distanceThreshold
   val sketchSize
   val kmerSize  
+  val seqType
+  val dataDir
 
 
   output:
@@ -544,7 +404,7 @@ process extractGraph {
   file "CL*-edges.tab" into edges mode flatten
   
   script:
-  resDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results/graph"
+  resDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results/graph"
   """
   perl $script $dico $edges
   """
@@ -573,21 +433,24 @@ process extractClusterDistanceMatrix {
   val distanceThreshold
   val sketchSize
   val kmerSize  
+  val seqType
+  val dataDir
 
 
   output:
-  file "CL*-distance-matrix.json" into distanceMatrix
+  file "CL*-distance-matrix.json" into ClusterDistanceMatrix
   file "CL*-taxa.json" into taxa
 
   script:
-  resDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results/distance-matrices"
+  resDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results/distance-matrices"
+
   """
   perl $script $nodes $edges
   """
 
 }
 
-distanceMatrix
+ClusterDistanceMatrix
 .phase(taxa) { file ->
   (m) = (file.baseName =~ /(CL\d+)/)[0]
   return m
@@ -608,6 +471,8 @@ process calculateNJTree {
   val distanceThreshold
   val sketchSize
   val kmerSize
+  val seqType
+  val dataDir
 
 
   output:
@@ -615,7 +480,7 @@ process calculateNJTree {
   
   
   script:
-  resDir =  "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results/trees"
+  resDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results/trees"
   (clusterId) = (distance =~ /(CL\d+)/ )[0]
   out = "${clusterId}-tree.json"
   
@@ -635,7 +500,10 @@ process calculateClusterIntraStat {
   val pvalueThreshold
   val distanceThreshold
   val sketchSize
-  val kmerSize  
+  val kmerSize
+  val seqType
+  val dataDir
+
 
 
   output:
@@ -644,7 +512,7 @@ process calculateClusterIntraStat {
   file "$cluster" into clu
   
   script:
-  resultDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}/results"
+  resultDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results"
   base = cluster.getBaseName()
   out = "${base}-stat"
   """
@@ -664,6 +532,8 @@ process createJsonData {
   val distanceThreshold
   val sketchSize       
   val kmerSize
+  val seqType
+  val dataDir
   
   
 
@@ -672,7 +542,7 @@ process createJsonData {
   
 
   script:
-  resultDir = "report/${kmerSize}-${sketchSize}-${pvalueThreshold}-${distanceThreshold}"
+  resultDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}"
   baseName = "data.js"
   """
   echo 'var rawClusterData = ' | cat - $clusterStats > clusterData
@@ -698,14 +568,15 @@ process addAnalysisParamstoDb {
   val kmerSize
   file script from existsRecord
   file data
-
+  val seqType
+  
   output:
   stdout mash_param_id
   
   script:
   """
 
-  mysql GO_SPE -ABNre \"INSERT INTO MASH_param (distance, pvalue, kmer_size, sketch_size, filtered_orphan_plasmid) VALUES ($distanceThreshold, $pvalueThreshold, $kmerSize, $sketchSize, TRUE);\"
+  mysql GO_SPE -ABNre \"INSERT INTO MASH_param (distance, pvalue, kmer_size, sketch_size, filtered_orphan_plasmid, seq_type) VALUES ($distanceThreshold, $pvalueThreshold, $kmerSize, $sketchSize, TRUE, \'${seqType}\');\"
 
   val=`mysql GO_SPE -ABNre \"
   SELECT MASH_param_id 
@@ -719,7 +590,9 @@ process addAnalysisParamstoDb {
   AND 
   sketch_size = $sketchSize
   AND
-  filtered_orphan_plasmid = TRUE;\"`
+  filtered_orphan_plasmid = TRUE
+  AND 
+  seq_type = \'${seqType}\';\"`
 
   echo \$val
 

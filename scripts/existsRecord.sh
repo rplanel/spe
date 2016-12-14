@@ -5,7 +5,7 @@ distance=$1
 pvalue=$2
 kmerSize=$3
 sketchSize=$4
-
+seqType=$5
 
 hasParams=`mysql GO_SPE -ABNre "SELECT EXISTS(SELECT MASH_param_id FROM MASH_param WHERE distance = $distance AND pvalue = $pvalue AND kmer_size = $kmerSize AND sketch_size = $sketchSize);"`
 

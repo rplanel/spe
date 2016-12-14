@@ -82,7 +82,8 @@ mkdir -p $outDir
 
 d=0.075
 p=1e-10
-nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+#nohup nextflow run mash-nextflow.nf -bg -profile cluster -w data/work -with-timeline -with-trace --sketchSize $sketchSize --kmerSize=$kmer --cpus 1 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
+jobify -c 8 nextflow run mash-nextflow.nf -w data/work -with-timeline -with-trace --sketchSize $sketchSize --kmerSize=$kmer --cpus 8 --pvalue $p --distance $d > "$outDir/${p}-${d}.out"
 echo "$sketchSize - $kmer - $d - $p"
 sleep 5
 
