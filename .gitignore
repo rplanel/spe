@@ -16,3 +16,4 @@ workflow.pdf*
 .nfs*
 .RData
 .Rhistory
+launchProgenome.sh
