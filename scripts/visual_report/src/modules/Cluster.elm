@@ -5,7 +5,7 @@ import Taxonomy.Rank as Rank exposing (..)
 
 type alias ClustersByRank =
     { --oid : Clusters
-     strain : Clusters
+      strain : Clusters
     , species : Clusters
     , genus : Clusters
     , family : Clusters

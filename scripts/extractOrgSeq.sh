@@ -1,27 +1,23 @@
 #!/bin/bash
 
-
-mysql  --max_allowed-packet=1G -ABNqr pkgdb_dev -e \
-       "SELECT strtofastaudf(O_id,IF(C_id IS NULL,S_string,gotonucudf(S_string, C_begin, C_end, '+1'))) 
-       FROM Organism 
-       INNER JOIN Replicon USING(O_id) 
-       INNER JOIN Sequence USING(R_id) 
-       INNER JOIN Sequence_String USING(S_id) 
-       LEFT JOIN Contig USING(S_id) 
-       WHERE S_status = 'inProduction' 
-       AND S_id NOT IN (3142) 
-       AND O_id 
-       IN 
-       (SELECT O_id 
-       FROM Organism  
-       INNER JOIN Replicon USING(O_id) 
-       INNER JOIN Sequence USING(R_id) 
-       WHERE R_type IN ('chromosome','WGS') 
-       AND S_status = 'inProduction' GROUP BY O_id) ;"  | \
-
-    awk '$0=="NULL"{print "Error: bad sequence extraction " > "/dev/stderr"; exit 1} /^>/{ Oid=$1; sub(">","",Oid); fileout=Oid".fna";} {print $0 > fileout}'
+oidsFile=$1
 
 
+for line in $(cat $oidsFile)  
+do 
+    mysql  --max_allowed-packet=1G -ABNqr pkgdb_dev -e \
+	   "SELECT strtofastaudf(O_id,IF(C_id IS NULL,S_string,gotonucudf(S_string, C_begin, C_end, '+1'))) 
+            FROM       Organism 
+            INNER JOIN Replicon USING(O_id) 
+            INNER JOIN Sequence USING(R_id) 
+            INNER JOIN Sequence_String USING(S_id) 
+            LEFT  JOIN Contig USING(S_id) 
+            WHERE O_id = $line
+            AND S_status = 'inProduction';"  | \
+
+    awk '$0=="NULL"{print "Error: bad sequence extraction " > "/dev/stderr"; exit 1} /^>/{ Oid=$1; sub(">","",Oid); fileout=Oid".fna.gz";} {print $0 | "gzip -c > "fileout }'
+
+done
 
 
 

@@ -261,7 +261,6 @@ update msg model =
                     ]
                 )
 
-            
         -- FILTER CLUSTERS ON PATTERN
         FilterClusters pattern ->
             let
@@ -301,7 +300,6 @@ update msg model =
                     , draw ( filteredClusters, model.histogramData )
                     ]
                 )
-
 
         -- CHANGE RANK
         ChangeRank val ->
@@ -448,7 +446,7 @@ view model =
                 [ class "field" ]
                 [ div
                     [ class "ui checkbox" ]
-                    [ input [ type' "checkbox", onClick ShowOrphan, checked model.showOrphan ] [ text "orphan" ]
+                    [ input [ type_ "checkbox", onClick ShowOrphan, checked model.showOrphan ] [ text "orphan" ]
                     , label [ checked model.showOrphan ] [ text "Show Orphan" ]
                     ]
                 ]
@@ -611,7 +609,7 @@ rankOptions model =
     in
         List.map toOption ranks
 
-            
+
 defaultCommands : Int -> Int -> Clusters -> List Int -> Cmd a
 defaultCommands min max clusters histogram =
     Cmd.batch
@@ -619,6 +617,3 @@ defaultCommands min max clusters histogram =
         , sliderValue [ min, max ]
         , draw ( clusters, histogram )
         ]
-
-    
-    

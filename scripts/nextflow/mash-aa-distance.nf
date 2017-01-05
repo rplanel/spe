@@ -6,6 +6,7 @@ println "Cmd line : $workflow.commandLine"
 println "Work dir : $workflow.workDir"
 println "Profile  : $workflow.profile"
 println "scripts  : $params.scripts"
+println "DataDir  : $params.dataDir"
 
 
 /*
@@ -14,18 +15,18 @@ println "scripts  : $params.scripts"
 * nextflow run mash-nextflow.nf --query /path/to/file --chunksize 10
 */
 //params.query
-params.sketches
+params.sketches = null
 //params.genomes
-params.oid
+params.oid = null
 params.cpus
 params.pvalue
 params.distance
 params.sketchSize
 params.kmerSize
 params.seqType
-params.progenome
+params.progenome = null
 params.seqSrc
-// params.scripts
+params.scripts
 
 
 /***********
@@ -46,7 +47,7 @@ splitProgenomes     = Channel.value(file("${params.scripts}/splitProgenomes.pl")
 /********
  * Files
  ********/
-scripts        = Channel.value(file(params.scripts))
+//scripts        = Channel.value(file(params.scripts))
 nextflowConfig = Channel.value(file("${params.scripts}/nextflow/nextflow-aa-na.config"))
 progenomesRepresentative =  Channel.value(file("${params.progenome}"))
 
@@ -346,10 +347,11 @@ process all_vs_all_distance {
   storeDir = "${dataDir}/distance/${seqSrc}/${seqType}"
   baseName = sketchesDb.getBaseName()
   out = "${baseName}-distance.tab"
+  suffix = "f${seqType}"
 
   // mash dist -v $pvalueThreshold -d $distanceThreshold ${sketchesDb} -l ${query} > $out
   """
-  mash dist ${sketchesDb} -l ${query} | perl -pe 's/\\.faa//g' > $out
+  mash dist ${sketchesDb} -l ${query} | perl -pe 's/\\.${suffix}//g' > $out
   """
 
 }
@@ -487,7 +489,7 @@ process silixx {
   
   validExitStatus 0,1
   
-  module 'silixx'
+  // module 'silixx'
   
   input:
   file edges from edgesFile
@@ -561,8 +563,8 @@ process extractGraph {
 
 
   output:
-  file "CL*-nodes.tab" into nodes mode flatten
-  file "CL*-edges.tab" into edges mode flatten
+  file "*-nodes.tab" into nodes mode flatten
+  file "*-edges.tab" into edges mode flatten
   
   script:
   resDir = "results/graph"
@@ -576,7 +578,7 @@ process extractGraph {
 
 nodes
 .phase(edges) {file ->
-  (m) = (file.baseName =~ /(CL\d+)/)[0]
+  (m) = (file.baseName =~ /(\d+)/)[0]
   return m
  }
 .set { tupleGraph }
@@ -599,8 +601,8 @@ process extractClusterDistanceMatrix {
 
 
   output:
-  file "CL*-distance-matrix.json" into ClusterDistanceMatrix
-  file "CL*-taxa.json" into taxa
+  file "*-distance-matrix.json" into ClusterDistanceMatrix
+  file "*-taxa.json" into taxa
 
   script:
   resDir = "results/distance-matrices"
@@ -613,10 +615,12 @@ process extractClusterDistanceMatrix {
 
 ClusterDistanceMatrix
 .phase(taxa) { file ->
-  (m) = (file.baseName =~ /(CL\d+)/)[0]
+  (m) = (file.baseName =~ /(\d+)/)[0]
   return m
  }
-.set { tupleDistance }
+.tap {tupleDistance}
+.subscribe { println it }
+//.set { tupleDistance }
 
 
 process calculateNJTree {
@@ -637,12 +641,12 @@ process calculateNJTree {
 
 
   output:
-  file "CL*-tree.json" into trees
+  file "*-tree.json" into trees
   
   
   script:
   resDir = "results/trees"
-  (clusterId) = (distance =~ /(CL\d+)/ )[0]
+  (clusterId) = (distance =~ /(\d+)/ )[0]
   out = "${clusterId}-tree.json"
   
   """
@@ -730,6 +734,9 @@ process addAnalysisParamstoDb {
   file script from existsRecord
   file data
   val seqType
+
+  when:
+  seqSrc == 'microscope'
   
   output:
   stdout mash_param_id

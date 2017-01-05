@@ -1,34 +1,42 @@
 #!/usr/bin/env nextflow
 
 
-
 println "Project  : $workflow.projectDir"
 println "Cmd line : $workflow.commandLine"
 println "Work dir : $workflow.workDir"
 println "Profile  : $workflow.profile"
 println "scripts  : $params.scripts"
+println "DataDir  : $params.dataDir"
+
+
 /*
 * WORKFLOW PARAMETERS
 * These default parameters will be overwrite by user input:
 * nextflow run mash-nextflow.nf --query /path/to/file --chunksize 10
 */
 //params.query
+params.sketches = null
 //params.genomes
+params.oid = null
+params.cpus
 params.pvalue
 params.distance
 params.sketchSize
 params.kmerSize
 params.seqType
-params.dataDir
-params.seqDir
-// params.scripts
-
-sketchesOutName = "sketches-db"
+params.progenome = null
+params.progenomeClusters = null
+params.seqSrc
+params.scripts
 
 
 /***********
  * SCRIPTS *
  ***********/
+extractOrgSeq    = Channel.value(file("${params.scripts}/extractOrgSeq.sh"))
+extractProteome  = Channel.value(file("${params.scripts}/extractProteome.sh"))
+GetOids          = Channel.value(file("${params.scripts}/getOids.sh"))
+GetNaOids          = Channel.value(file("${params.scripts}/getOidsNa.sh"))
 filterGraphScript    = Channel.value(file("${params.scripts}/filterGraph.pl"))
 addAnnotationScript  = Channel.value(file("${params.scripts}/addAnnotation.pl"))
 extractClusterScript = Channel.value(file("${params.scripts}/extractCluster.pl"))
@@ -36,63 +44,260 @@ extractDistance      = Channel.value(file("${params.scripts}/extractClusterDista
 calculateClusterIntraStatScript = Channel.value(file("${params.scripts}/calculateClusterIntraStat.pl"))
 nj = Channel.value(file("${params.scripts}/calculate-nj-tree.js"))
 existsRecord          = Channel.value(file("${params.scripts}/existsRecord.sh"))
+splitProgenomes     = Channel.value(file("${params.scripts}/splitProgenomes.pl"))
+ExtractRankIndexVectors     = Channel.value(file("${params.scripts}/extractClusters4RandIndex.pl"))
+GetRandIndexPro = Channel.value(file("${params.scripts}/getRandIndexProgenome.R"))
+GetRandIndexMicro = Channel.value(file("${params.scripts}/getRandIndexMicroscope.R"))
 
-/*********************
- * Values parameters *
- *********************/
+
+/*******
+ * Visual report files
+ *******/
+VisualReport = Channel.value(file("${params.scripts}/visual_report"))
+// // semantic dir
+// Semantic = Channel.value(file("${visual_report_dir}/semantic"))
+// // node_modules
+// NodeModules = Channel.value(file("${visual_report_dir}/"))
+// // src dir
+// JsSrc= Channel.value(file("${visual_report_dir}/"))
+// // elm.js
+// ElmJs = Channel.value(file("${visual_report_dir}/"))
+// // index.js
+// Index.js = Channel.value(file("${visual_report_dir}/"))
+// // mashTree.js
+// MashTree.js = Channel.value(file("${visual_report_dir}/"))
+// // tree.js
+// Tree.js = Channel.value(file("${visual_report_dir}/"))
+
+/********
+ * Files
+ ********/
+//scripts        = Channel.value(file(params.scripts))
+nextflowConfig = Channel.value(file("${params.scripts}/nextflow/nextflow-aa-na.config"))
+progenomesRepresentative = Channel.value(file("${params.progenome}"))
+ProgenomeClusterRef      = Channel.value(file("${params.progenomeClusters}"))
+
+/******
+ * StoreDir
+ */
+dataDir        = Channel.value("${params.dataDir}")
+proteomeDir    = Channel.value("${params.dataDir}/proteome")
+genomeDir      = Channel.value("${params.dataDir}/genome")
+progenomeDir   = Channel.value("${params.dataDir}/progenome/genome-split")
+
+
+/*
+ * Values parameters
+ */
 pvalueThreshold   = Channel.value(params.pvalue)
 distanceThreshold = Channel.value(params.distance)
 sketchSize        = Channel.value(params.sketchSize)
 kmerSize          = Channel.value(params.kmerSize)
 seqType           = Channel.value(params.seqType)
-dataDir           = Channel.value(params.dataDir)
+seqSrc            = Channel.value(params.seqSrc)
+//storeDir          = Channel.value("${params.dataDir}/sketch/${params.seqSrc}/${params.seqType}/${params.kmerSize}/${params.sketchSize}")
 
-Sequences = Channel.empty()
+oid = Channel.empty()
+//query = Channel.empty()
 
-
-println params.seqDir
-
-if (params.seqType == 'na') {
-  Sequences = Channel.fromPath("${params.seqDir}/*.fna")
+if (params.oid != null) {
+  oid = Channel.value(params.oid)
 }
 
-if (params.seqType == 'aa') {
-  Sequences = Channel.fromPath("${params.seqDir}/*.faa")
+// process getGenome {
+//   tag { oid }
+  
+//   storeDir { genomeDir }
+  
+//   input:
+//   val oid
+//   val dataDir
+//   val seqType
+//   val seqSrc
+//   val genomeDir
+  
+
+//   when:
+//   seqType == 'na' && seqSrc == 'microscope'
+  
+//   output:
+//   file "${filenameOut}" into genome
+  
+//   script:
+//   filenameOut = "${oid}.fasta"
+//   """
+//   """
+// }
+
+process getNaOids {
+
+  input:
+  file script from GetNaOids
+  val seqType
+  val seqSrc
+
+  when:
+  seqType == 'na' && seqSrc == 'microscope'
+
+
+  output:
+  file "na-oids.txt" into NaOids
+
+  script:
+  """
+  bash $script > na-oids.txt
+  """
 }
 
 
-Sequences
-.tap {SeqToCount}
-.set {SequencesInput}
+process getGenomes {
+  storeDir { genomeDir }
+
+  
+  input:
+  file script from extractOrgSeq
+  file oids from NaOids
+  val dataDir
+  val seqType
+  val seqSrc
+  
+  val genomeDir
+
+  when:
+  seqType == 'na' && seqSrc == 'microscope'
+
+  output:
+  file "*.fna.gz" into genomes
+  
+  script:
+  """
+  bash ${script} ${oids}
+  """
+}
+
+// genomesInputs = Channel.empty()
+// genomesInputs.mix(genome,genomes)
+// //.flatten()
+// .set { genomesInput}
 
 
-countSeq = SeqToCount.count()
+process getOid {
+
+  input:
+  file script from GetOids
+  val seqType
+  val seqSrc
+
+  when:
+  seqType == 'aa' && seqSrc == 'microscope'
+
+
+  output:
+  file "oids.txt" into Oids
+
+  script:
+  """
+  bash $script > oids.txt
+  """
+}
+
+
+process getProteomes {
+  storeDir { proteomeDir }
+  
+  input:
+  file script from extractProteome
+  file oids from Oids
+  val proteomeDir
+  val seqType
+  val seqSrc
+
+  when:
+  seqType == 'aa' && seqSrc == 'microscope'
+  
+  output:
+  file "*.faa" into Proteomes
+  
+  script:
+  """
+  bash ${script} ${oids}
+  """
+}
+/*
+Proteomes
+.toList()
+.set {ListProteomes}
+
+*/
+
+
+process splitProgenomes {
+
+  publishDir "${progenomeDir}", mode: 'link', overwrite: true
+  
+  input:
+  file progenomesRepresentative
+  file script from splitProgenomes
+  val seqType
+  val seqSrc
+  val progenomeDir
+  
+
+  when:
+  seqType == 'na' && seqSrc == 'progenome'
+  
+  output:
+  file "progenomes/*.fna.gz" into Progenomes
+  
+  script:
+  """
+  perl $script $progenomesRepresentative progenomes
+  """
+  
+  
+}
+
+SequencesInput = Channel.empty()
+SequencesInput.mix(genomes, Proteomes, Progenomes)
+.flatten()
+.tap { countFasta }
+.set { SequencesInputs}
+
+countSeq = countFasta.count()
+
+
+
+
+
+/*******************
+ * START PROCESSES *
+ *******************/
 
 
 process sketch {
   
   tag { seqs }
-  storeDir { storeDir }
+  publishDir "${storeDir}", mode: 'link', overwrite: true  
   errorStrategy 'retry'
   queue 'normal'
-  //maxRetries 5
+  // maxRetries 5
   // cpus params.cpus
   // maxForks params.cpus
   
   input:
-  file seqs from SequencesInput
+  file seqs from SequencesInputs
   val dataDir
   val sketchSize
   val kmerSize
   val seqType
-  
-  
-  
+  val seqSrc
+    
   output:
   file "${out}.msh" into querySketch
 
   script:
-  storeDir = "${dataDir}/sketch/${seqType}/${kmerSize}/${sketchSize}"
+
+  storeDir = "${dataDir}/sketch/${seqSrc}/${seqType}/${kmerSize}/${sketchSize}"
   baseName = seqs.getBaseName()
   out = "${baseName}"
   if (seqType == "aa")
@@ -106,6 +311,8 @@ process sketch {
   
 }
 
+
+
 querySketch
 .collectFile() {file ->
   [ 'sketches-filenames.txt', file.toString() + '\n' ]
@@ -116,7 +323,7 @@ querySketch
 process paste_query_sketches_together {
   tag { filesList }
   // Do not store dir because will not redo this file if use a subset.
-  storeDir { storeDir }
+  publishDir "${storeDir}", mode: 'link', overwrite: true
   queue 'normal'
   
   input:
@@ -125,12 +332,13 @@ process paste_query_sketches_together {
   val kmerSize
   val dataDir
   val seqType
+  val seqSrc
   
   output:
   file "${out}.msh" into genomeSketches
   
   script:
-  storeDir = "${dataDir}/sketch/${seqType}/paste"
+  storeDir = "${dataDir}/sketch/${seqSrc}/${seqType}/paste"
   out = "genome-sketches-${kmerSize}-${sketchSize}"
   "mash paste ${out} -l ${filesList}"
 
@@ -166,7 +374,7 @@ process all_vs_all_distance {
   tag { "${query} distance=${sketchSize} pvalue=${kmerSize} $sketchesDb" } 
   
   //scratch true
-  storeDir { storeDir }
+  publishDir "${storeDir}", mode: 'link', overwrite: true
   
   input:
   file sketchesDb from allVsAllQuery
@@ -175,18 +383,20 @@ process all_vs_all_distance {
   val kmerSize  
   val dataDir
   val seqType
+  val seqSrc
   
   output:
   file out into distanceMatrix, distanceMatrix2
 
   script:
-  storeDir = "${dataDir}/distance/${seqType}"
+  storeDir = "${dataDir}/distance/${seqSrc}/${seqType}"
   baseName = sketchesDb.getBaseName()
   out = "${baseName}-distance.tab"
+  suffix = "f${seqType}"
 
   // mash dist -v $pvalueThreshold -d $distanceThreshold ${sketchesDb} -l ${query} > $out
   """
-  mash dist ${sketchesDb} -l ${query} | perl -pe 's/\\.faa//g' > $out
+  mash dist ${sketchesDb} -l ${query} | perl -pe 's/\\.${suffix}//g' > $out
   """
 
 }
@@ -214,7 +424,7 @@ process paste_sketch_to_db {
 
 
 process incremental_distance {
-  publishDir { resultDir }
+  publishDir "${resultDir}", mode: 'link', overwrite: true
   
   input:
   file querySketch from sketchesFilenameToDistUpdate
@@ -242,7 +452,7 @@ process filterEdges {
 
   tag { "distance = ${distanceThreshold} - pvalue = ${pvalueThreshold}" }
   
-  publishDir { resultDir }
+  publishDir "${resultDir}", mode: 'link', overwrite: true
 
 
   input:
@@ -260,7 +470,7 @@ process filterEdges {
   file "${out}" into filteredDistance, filteredEdges
 
   script:
-  resultDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results"
+  resultDir = "results"
   baseName = dist.getBaseName()
   out = "${baseName}-filtered.tab"
   """
@@ -320,11 +530,11 @@ process prepareSilixInput {
 
 
 process silixx {
-  publishDir { resDir }
+  publishDir "${resultDir}", mode: 'link', overwrite: true
   
   validExitStatus 0,1
   
-  module 'silixx'
+  // module 'silixx'
   
   input:
   file edges from edgesFile
@@ -338,10 +548,10 @@ process silixx {
 
 
   output:
-  file "$out" into silixClusterFile, silixClusterFile2
+  file "$out" into silixClusterFile, silixClusterFile2, SilixClusterFilesPro
 
   script:
-  resDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results"
+  resultDir = "results"
   baseName = edges.getBaseName()
   out = "${baseName}.silix"
   """
@@ -351,8 +561,44 @@ process silixx {
 
 }
 
+
+process extractRandIndexVectorProgenome {
+
+  publishDir "${resultDir}", mode: 'link', overwrite: true
+  
+  input:
+  file SilixClusterFilesPro
+  file ProgenomeClusterRef
+  val seqSrc
+  
+  
+  when:
+  seqSrc == 'progenome'
+    
+  output:
+  file "pro-mash-taxids-intersections.txt" into InterTaxids
+  file "mash-clusters-sort.txt" into MashClusters
+  file "pro-clusters-sort.txt" into ProClusters
+  file "pro-clusters-sort-intersection.txt" into ProClustersInter
+  file "vector-rand-index.csv" into RandIndexVectorPro
+
+  script:
+  resultDir = "results/rand-index-vectors"
+  """
+  cat $ProgenomeClusterRef  | tail -n +2 | sort -k 1,1 > pro-clusters-sort.txt
+  cat pro-clusters-sort.txt | cut -f1 > pro-taxids-sort.txt
+  cat $SilixClusterFilesPro | sort -k 2,2 | tail -n +2  > mash-clusters-sort.txt
+  cat mash-clusters-sort.txt | cut -f2 > mash-taxids-sort.txt
+  comm -12 --check-order pro-taxids-sort.txt mash-taxids-sort.txt > pro-mash-taxids-intersections.txt
+  grep -wf pro-mash-taxids-intersections.txt pro-clusters-sort.txt | sort -u > pro-clusters-sort-intersection.txt
+  join -1 2 -2 1 mash-clusters-sort.txt pro-clusters-sort-intersection.txt | cut -d \" \" -f2,3 | perl -pe 's/specI_v2_Cluster//g' > vector-rand-index.csv
+  """
+}
+
+
 process addAnnotation {
-  publishDir { resDir }
+
+  publishDir "${resultDir}", mode: 'link', overwrite: true	
 
   queue 'normal'
   
@@ -366,24 +612,58 @@ process addAnnotation {
   val kmerSize
   val seqType
   val dataDir
-
+  val seqSrc
+  
   output:
-  file "$out" into annotatedSilixClusterFile, annotatedSilixCluster
+  file "$out" into annotatedSilixClusterFile, annotatedSilixCluster, AnnotatedSilixCluster4Rand 
 
   script:
-  resDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results"
+  resultDir = "results"
   base = silixRes.getBaseName()
   out = "${base}-annotated.silix"
+  
+  if( seqSrc == 'progenome')
+  """
+  perl -pe \'s/-.*\$//\' $silixRes > tmp
+  perl $script $anno tmp > $out
+  """
+  else 
   """
   perl $script $anno $silixRes > $out
   """
+}
 
+
+process extractRandIndexVector {
+
+  publishDir "${resultDir}", mode: 'link', overwrite: true
+  
+  input:
+  file AnnotatedSilixCluster4Rand
+  file script from ExtractRankIndexVectors
+  val seqSrc
+  
+  when:
+  seqSrc == 'microscope'
+  
+  output:
+  file "vector-rand-index-*.csv" into RandIndexesVectors
+  
+  script:
+  resultDir = "results/rand-index-vectors"
+  """
+  perl $script $AnnotatedSilixCluster4Rand
+  """
 
 }
 
+
+
+
+
 process extractGraph {
   
-  publishDir { resDir }
+  publishDir "${resultDir}", mode: 'link', overwrite: true
   
   
   
@@ -400,11 +680,11 @@ process extractGraph {
 
 
   output:
-  file "CL*-nodes.tab" into nodes mode flatten
-  file "CL*-edges.tab" into edges mode flatten
+  file "*-nodes.tab" into nodes mode flatten
+  file "*-edges.tab" into edges mode flatten
   
   script:
-  resDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results/graph"
+  resultDir = "results/graph"
   """
   perl $script $dico $edges
   """
@@ -415,7 +695,7 @@ process extractGraph {
 
 nodes
 .phase(edges) {file ->
-  (m) = (file.baseName =~ /(CL\d+)/)[0]
+  (m) = (file.baseName =~ /(\d+)/)[0]
   return m
  }
 .set { tupleGraph }
@@ -424,7 +704,7 @@ nodes
 process extractClusterDistanceMatrix {
   tag { "${nodes} - ${edges}" }
   queue 'normal'
-  publishDir { resDir }
+  publishDir "${resultDir}", mode: 'link', overwrite: true
   
   input:
   file script from extractDistance
@@ -438,11 +718,11 @@ process extractClusterDistanceMatrix {
 
 
   output:
-  file "CL*-distance-matrix.json" into ClusterDistanceMatrix
-  file "CL*-taxa.json" into taxa
+  file "*-distance-matrix.json" into ClusterDistanceMatrix
+  file "*-taxa.json" into taxa
 
   script:
-  resDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results/distance-matrices"
+  resultDir = "results/distance-matrices"
 
   """
   perl $script $nodes $edges
@@ -452,14 +732,16 @@ process extractClusterDistanceMatrix {
 
 ClusterDistanceMatrix
 .phase(taxa) { file ->
-  (m) = (file.baseName =~ /(CL\d+)/)[0]
+  (m) = (file.baseName =~ /(\d+)/)[0]
   return m
  }
+// .tap {tupleDistance}
+// .subscribe { println it }
 .set { tupleDistance }
 
 
 process calculateNJTree {
-   publishDir { resDir }
+   publishDir "${resultDir}", mode: 'link', overwrite: true
 
    tag { "${distance} - ${taxa}" }
    queue 'normal'
@@ -476,12 +758,12 @@ process calculateNJTree {
 
 
   output:
-  file "CL*-tree.json" into trees
+  file "*-tree.json" into trees
   
   
   script:
-  resDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results/trees"
-  (clusterId) = (distance =~ /(CL\d+)/ )[0]
+  resultDir = "results/trees"
+  (clusterId) = (distance =~ /(\d+)/ )[0]
   out = "${clusterId}-tree.json"
   
   """
@@ -492,7 +774,7 @@ process calculateNJTree {
 
 
 process calculateClusterIntraStat {
-  publishDir { resultDir }
+  publishDir "${resultDir}", mode: 'link', overwrite: true
   
   input:
   file cluster from annotatedSilixCluster
@@ -512,7 +794,7 @@ process calculateClusterIntraStat {
   file "$cluster" into clu
   
   script:
-  resultDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}/results"
+  resultDir = "results"
   base = cluster.getBaseName()
   out = "${base}-stat"
   """
@@ -523,7 +805,7 @@ process calculateClusterIntraStat {
 
 process createJsonData {
   
-  publishDir { resultDir }
+  publishDir "${resultDir}", mode: 'link', overwrite: true
   
   input:
   file rankStats
@@ -534,15 +816,14 @@ process createJsonData {
   val kmerSize
   val seqType
   val dataDir
-  
-  
+    
 
   output:
-  file "$baseName" into data
+  file "$baseName" into data,dataVisual
   
 
   script:
-  resultDir = "${dataDir}/runs/${seqType}/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}"
+  resultDir = "./"
   baseName = "data.js"
   """
   echo 'var rawClusterData = ' | cat - $clusterStats > clusterData
@@ -555,6 +836,24 @@ process createJsonData {
 
 }
 
+
+process setUpVisualReport {
+  
+  publishDir './'
+
+  input:
+  file VisualReport
+
+
+  output:
+  file "visual_report" into VisualReportOut
+
+  script:
+  """
+  echo \"Ok\"
+  """
+  
+}
 
 
 process addAnalysisParamstoDb {
@@ -569,6 +868,10 @@ process addAnalysisParamstoDb {
   file script from existsRecord
   file data
   val seqType
+  val seqSrc
+  
+  when:
+  seqSrc == 'microscope'
   
   output:
   stdout mash_param_id
@@ -644,6 +947,67 @@ process loadClusterFileToDB {
 }
 
 
+
+process calculateRandIndexProgenome {
+
+  publishDir "${resultDir}", mode: 'link', overwrite: true
+  
+  input:
+  file RandIndexVectorPro
+  file script from GetRandIndexPro
+  val seqSrc
+  val distanceThreshold
+  
+  when:
+  seqSrc == 'progenome'
+
+
+  output:
+  file "rand-index.csv" into RandIndexPro
+
+  script:
+  resultDir = "results/rand-index-vectors"
+  
+  """
+  Rscript $script $RandIndexVectorPro $distanceThreshold
+  """
+}
+
+
+
+/*
+process clusterGenomes {
+
+  publishDir { runDir }
+  cache false
+  
+  input:
+  file script from clusterGenomes
+  file scripts
+  file config from nextflowConfig
+  file ListProteomes
+  val pvalueThreshold
+  val distanceThreshold
+  val sketchSize
+  val kmerSize
+  val dataDir
+  val SeqDir from proteomeDir
+  
+
+  output:
+  file ".command.out" into ClusterGenomesOut
+  file "*trace*" into Trace
+  file "*timeline*" into Timeline
+  
+  script:
+  runDir = "${dataDir}/runs/aa/${kmerSize}-${sketchSize}/${pvalueThreshold}-${distanceThreshold}"
+  """
+  nextflow run ${script} -resume -w ${runDir}/work --sketchSize $sketchSize --kmerSize $kmerSize --pvalue $pvalueThreshold --distance $distanceThreshold --seqType aa --scripts ${scripts} --dataDir ${dataDir} -with-timeline -with-trace -c $config --cpus ${params.cpus} --seqDir $SeqDir
+  """
+  
+}
+
+*/
 workflow.onComplete {
   println "Pipeline execution summary"
   println "---------------------------"

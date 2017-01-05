@@ -13,7 +13,6 @@ open (my $OUT, '>', $clustersFile.'-randIndex.csv') or die ("Cannot open the fil
 my($filename, $dir, $suffix) = fileparse($clustersFile);
 
 
-print STDERR $clustersFile,"\n";
 my $outputs = [
 	       {index => 3 ,name => 'species'},
 	       {index => 5 ,name => 'genus'},
@@ -27,7 +26,7 @@ my $outputs = [
 ## open output filehandler
 
 foreach my $out (@$outputs) {
-  open($out->{fh}, '>', $dir.'rand-index-'.$out->{name}.'.csv') or die ("Cannot open the file\nERROR:$!");
+  open($out->{fh}, '>', $dir.'vector-rand-index-'.$out->{name}.'.csv') or die ("Cannot open the file\nERROR:$!");
 }
 
 

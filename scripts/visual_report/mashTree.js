@@ -9043,18 +9043,18 @@ var _user$project$Taxonomy_Rank$Strain = function (a) {
 var _user$project$Taxonomy_Rank$Oid = function (a) {
 	return {ctor: 'Oid', _0: a};
 };
-var _user$project$Taxonomy_Rank$getAllRankString = _user$project$Taxonomy_Rank$getListRankString(
-	_elm_lang$core$Native_List.fromArray(
-		[
-			_user$project$Taxonomy_Rank$Oid(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Strain(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Species(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Genus(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Family(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Order(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Class(_elm_lang$core$Maybe$Nothing),
-			_user$project$Taxonomy_Rank$Phylum(_elm_lang$core$Maybe$Nothing)
-		]));
+var _user$project$Taxonomy_Rank$getAllRank = _elm_lang$core$Native_List.fromArray(
+	[
+		_user$project$Taxonomy_Rank$Oid(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Strain(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Species(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Genus(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Family(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Order(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Class(_elm_lang$core$Maybe$Nothing),
+		_user$project$Taxonomy_Rank$Phylum(_elm_lang$core$Maybe$Nothing)
+	]);
+var _user$project$Taxonomy_Rank$getAllRankString = _user$project$Taxonomy_Rank$getListRankString(_user$project$Taxonomy_Rank$getAllRank);
 var _user$project$Taxonomy_Rank$maybeRankOfString = F2(
 	function (rankStr, rankInfo) {
 		var lowerStr = _elm_lang$core$String$toLower(rankStr);
@@ -9728,7 +9728,7 @@ var _user$project$MashTree$getTree = F2(
 			baseUrl,
 			A2(
 				_elm_lang$core$Basics_ops['++'],
-				'/results/trees/',
+				'/../results/trees/',
 				A2(_elm_lang$core$Basics_ops['++'], id, '-tree.json')));
 		var _p10 = A2(_elm_lang$core$Debug$log, 'url', url);
 		return A3(
@@ -9904,7 +9904,7 @@ var _user$project$MashTree$getTaxa = F2(
 			baseUrl,
 			A2(
 				_elm_lang$core$Basics_ops['++'],
-				'/results/distance-matrices/',
+				'/../results/distance-matrices/',
 				A2(_elm_lang$core$Basics_ops['++'], id, '-taxa.json')));
 		var _p22 = A2(_elm_lang$core$Debug$log, 'url', url);
 		return A3(
@@ -9923,7 +9923,7 @@ var _user$project$MashTree$getDistance = F2(
 			baseUrl,
 			A2(
 				_elm_lang$core$Basics_ops['++'],
-				'/results/distance-matrices/',
+				'/../results/distance-matrices/',
 				A2(_elm_lang$core$Basics_ops['++'], id, '-distance-matrix.json')));
 		return A3(
 			_elm_lang$core$Task$perform,

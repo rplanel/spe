@@ -1,4 +1,4 @@
-var node = document.getElementById('elm-container')
+var node = document.getElementById('elm-container');
 var app = Elm.MashTree.embed(node);
 clusterTree = clusterTree();
 console.log(window.location);

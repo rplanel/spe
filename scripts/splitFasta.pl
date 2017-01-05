@@ -16,8 +16,6 @@ my $OUT;
 while (my $l = <$GENOMES>) {
     chomp $l;
     if ($l =~ /^>/) {
-
-	
 	close $OUT if defined $OUT;
 	my $id = getId($l);
 	open ($OUT, '>',  $outdir.'/'.$id.'.fasta') or die ("Cannot open the file \nERROR:$!");

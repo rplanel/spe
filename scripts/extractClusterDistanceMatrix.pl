@@ -33,6 +33,8 @@ while (my $l = <$CLUS>) {
 				}
 			    },
 			   };
+
+    
     
     my $taxoObj = $oid2Cluster->{$oid}->{taxonomy};
     my @taxo = split(/\t/,$taxo);
@@ -48,6 +50,8 @@ while (my $l = <$CLUS>) {
 }
 
 
+
+
 while (my $l = <$DIS>) {
   chomp $l;
   my ($oid1, $oid2, $distance) = split(/\t/,$l);
@@ -56,8 +60,8 @@ while (my $l = <$DIS>) {
     $column = startColumn($taxo,$oid2Cluster,$currentColumnId);
   }
   else {
-    # new column
-    if ($currentColumnId != $oid2) {
+      # new column
+    if ($currentColumnId ne $oid2) {
       writeColumn($matrix,$column);
       $currentColumnId = $oid2;
       $column = startColumn($taxo,$oid2Cluster,$currentColumnId);
@@ -77,6 +81,8 @@ sub writeColumn {
   my ($matrix,$column) = @_;
   push(@$matrix, $column);
 }
+
+
 
 ## print la matrix.
 my $matrixOut = $clusterId.'-distance-matrix.json';
