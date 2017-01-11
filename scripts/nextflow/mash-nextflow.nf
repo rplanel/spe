@@ -233,7 +233,7 @@ Proteomes
 
 process splitProgenomes {
 
-  publishDir "${progenomeDir}", mode: 'link', overwrite: true
+  storeDir { progenomeDir }
   
   input:
   file progenomesRepresentative
@@ -277,10 +277,14 @@ countSeq = countFasta.count()
 process sketch {
   
   tag { seqs }
-  publishDir "${storeDir}", mode: 'link', overwrite: true  
-  errorStrategy 'retry'
+  storeDir { storeDir }
+  time { 30.second * task.attempt }
+  memory { 200.MB * task.attempt }
+  errorStrategy { task.exitStatus == 140 ? 'retry' : 'terminate' }
   queue 'normal'
-  // maxRetries 5
+  
+  // module 'Mash/1.1.1'
+  maxRetries 4
   // cpus params.cpus
   // maxForks params.cpus
   
@@ -323,7 +327,7 @@ querySketch
 process paste_query_sketches_together {
   tag { filesList }
   // Do not store dir because will not redo this file if use a subset.
-  publishDir "${storeDir}", mode: 'link', overwrite: true
+  storeDir { storeDir }
   queue 'normal'
   
   input:
@@ -374,7 +378,7 @@ process all_vs_all_distance {
   tag { "${query} distance=${sketchSize} pvalue=${kmerSize} $sketchesDb" } 
   
   //scratch true
-  publishDir "${storeDir}", mode: 'link', overwrite: true
+  storeDir { storeDir }
   
   input:
   file sketchesDb from allVsAllQuery
@@ -392,7 +396,7 @@ process all_vs_all_distance {
   storeDir = "${dataDir}/distance/${seqSrc}/${seqType}"
   baseName = sketchesDb.getBaseName()
   out = "${baseName}-distance.tab"
-  suffix = "f${seqType}"
+  suffix = "f${seqType}.gz"
 
   // mash dist -v $pvalueThreshold -d $distanceThreshold ${sketchesDb} -l ${query} > $out
   """
@@ -508,6 +512,8 @@ process prepareSilixInput {
   
   //  publishDir 'result'
   queue 'normal'
+  time '5m'
+
   
   input:
   file edgeFile from filteredEdges
@@ -520,7 +526,7 @@ process prepareSilixInput {
   base = edgeFile.getBaseName()
   out = "${base}-edges.tab"
   """
-  tail -n +2 ${edgeFile} | cut -d\$'\t' -f1,2 > ${out}
+  tail -n +2 ${edgeFile} | cut -d\$'\t' -f1,2 | perl -pe 's/(\\d+\\.\\w+)\\.gz/\$1/g' > ${out}
   """
 
 }
@@ -533,8 +539,8 @@ process silixx {
   publishDir "${resultDir}", mode: 'link', overwrite: true
   
   validExitStatus 0,1
-  
-  // module 'silixx'
+  time '5m'
+  module 'silixx'
   
   input:
   file edges from edgesFile
@@ -555,7 +561,7 @@ process silixx {
   baseName = edges.getBaseName()
   out = "${baseName}.silix"
   """
-  silixx $num $edges > $out
+  silixx $num $edges | perl -pe 's/^CL//g' > $out
   """
   
 
@@ -839,7 +845,7 @@ process createJsonData {
 
 process setUpVisualReport {
   
-  publishDir './'
+  publishDir "./", mode: 'link', overwrite: true
 
   input:
   file VisualReport
@@ -951,12 +957,15 @@ process loadClusterFileToDB {
 process calculateRandIndexProgenome {
 
   publishDir "${resultDir}", mode: 'link', overwrite: true
+
+  module 'r/3.3.1'
   
   input:
   file RandIndexVectorPro
   file script from GetRandIndexPro
   val seqSrc
   val distanceThreshold
+  
   
   when:
   seqSrc == 'progenome'
