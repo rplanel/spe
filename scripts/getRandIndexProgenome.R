@@ -5,6 +5,7 @@ params = commandArgs(trailingOnly=TRUE)
 args <- strsplit(params, " ")
 file <- args[[1]]
 distance <- args[[2]]
+fileout <- args[[3]]
 print(file)
 print(distance)
 
@@ -13,4 +14,4 @@ res <- adjustedRand(as.vector(clusters[[1]]),as.vector(clusters[[2]]))
 resString <- paste(res, collapse=" ")
 line <- paste(distance, resString,  sep=" ")
 print(line)
-write(line, "./rand-index.csv", sep = "\n")
+write(line, fileout, sep = "\n")
