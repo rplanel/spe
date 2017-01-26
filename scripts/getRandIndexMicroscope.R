@@ -2,26 +2,18 @@ require(clues)
 
 params = commandArgs(trailingOnly=TRUE)
 args <- strsplit(params, " ")
-dir <- args[[1]]
+fileRandIndex <- args[[1]]
 distance <- args[[2]]
+taxa <- args[[3]]
 
-for ( taxa in c("species","genus","family","order","class","phylum") ) {
-    file <- paste(
-        dir,
-        "/vector-rand-index-",
-        taxa,
-        ".csv",
-        sep=""
-    )
-    print(file)
-    clusters <- read.csv(file,sep = "\t")
-    res <- adjustedRand(as.vector(clusters[[1]]),as.vector(clusters[[2]]))
-    resString <- paste(res, collapse=" ")
-    line <- paste(distance, resString,  sep=" ")
-    fileOut <- paste("./rand-index-", taxa,".csv", sep="")
-    print(line)
-    write(line, fileOut, sep = "\n")
-}
+clusters <- read.csv(fileRandIndex,sep = "\t")
+res <- adjustedRand(as.vector(clusters[[1]]),as.vector(clusters[[2]]))
+resString <- paste(res, collapse=" ")
+line <- paste(distance, resString,  sep=" ")
+fileOut <- paste("./rand-index-", taxa,".csv", sep="")
+print(line)
+write(line, fileOut, sep = "\n")
+
 
 
 
