@@ -97,6 +97,13 @@ seqType           = Channel.value(params.seqType)
 seqSrc            = Channel.value(params.seqSrc)
 //storeDir          = Channel.value("${params.dataDir}/sketch/${params.seqSrc}/${params.seqType}/${params.kmerSize}/${params.sketchSize}")
 
+
+
+
+distanceThresholds = Channel.from(0.01, 0.02, 0.03, 0.04)
+
+
+
 oid = Channel.empty()
 //query = Channel.empty()
 
@@ -397,8 +404,7 @@ process all_vs_all_distance {
   baseName = sketchesDb.getBaseName()
   out = "${baseName}-distance.tab"
   suffix = "f${seqType}.gz"
-
-  // mash dist -v $pvalueThreshold -d $distanceThreshold ${sketchesDb} -l ${query} > $out
+    // mash dist -v $pvalueThreshold -d $distanceThreshold ${sketchesDb} -l ${query} > $out
   """
   mash dist ${sketchesDb} -l ${query} | perl -pe 's/\\.${suffix}//g' > $out
   """
@@ -540,7 +546,7 @@ process silixx {
   
   validExitStatus 0,1
   time '5m'
-  module 'silixx'
+  module 'silix/1.2.9'
   
   input:
   file edges from edgesFile
@@ -583,11 +589,12 @@ process extractRandIndexVectorProgenome {
     
   output:
   file "pro-mash-taxids-intersections.txt" into InterTaxids
-  file "mash-clusters-sort.txt" into MashClusters
+  file "mash-clusters-sort.txt" into MashClustersSort
   file "pro-clusters-sort.txt" into ProClusters
-  file "pro-clusters-sort-intersection.txt" into ProClustersInter
+  file "pro-clusters-sort-intersection.csv" into ProClustersInter
   file "vector-rand-index.csv" into RandIndexVectorPro
-
+  file "mash-taxids-sort.txt" into MashTaxidsSort
+  
   script:
   resultDir = "results/rand-index-vectors"
   """
@@ -596,9 +603,46 @@ process extractRandIndexVectorProgenome {
   cat $SilixClusterFilesPro | sort -k 2,2 | tail -n +2  > mash-clusters-sort.txt
   cat mash-clusters-sort.txt | cut -f2 > mash-taxids-sort.txt
   comm -12 --check-order pro-taxids-sort.txt mash-taxids-sort.txt > pro-mash-taxids-intersections.txt
-  grep -wf pro-mash-taxids-intersections.txt pro-clusters-sort.txt | sort -u > pro-clusters-sort-intersection.txt
-  join -1 2 -2 1 mash-clusters-sort.txt pro-clusters-sort-intersection.txt | cut -d \" \" -f2,3 | perl -pe 's/specI_v2_Cluster//g' > vector-rand-index.csv
+
+  join --check-order -j 1 pro-mash-taxids-intersections.txt pro-clusters-sort.txt | sort -k1,1 > pro-clusters-sort-intersection.csv
+  join --check-order -1 1 -2 2 pro-mash-taxids-intersections.txt mash-clusters-sort.txt  | sort -k1,1 > mash-clusters-sort-intersection.csv
+  join --check-order -j 1 mash-clusters-sort-intersection.csv pro-clusters-sort-intersection.csv | cut -d \" \" -f2,3 | perl -pe 's/specI_v2_Cluster//g' > vector-rand-index.csv
   """
+}
+
+
+process extractRandIndexVectorNoSingletonProgenome {
+  publishDir "${resultDir}", mode: 'link', overwrite: true
+  
+  input:
+  file MashClustersSort
+  file ProClusters
+  file ProgenomeClusterRef
+  file MashTaxidsSort
+  val seqSrc
+  
+  
+  when:
+  seqSrc == 'progenome'
+
+  output:
+  file "pro-mash-taxids-intersections-no-singleton.tsv" into ProMashTaxidsIntersectionNS
+  file "vector-rand-index-no-singleton.csv" into RandIndexVectorProNS
+  file "list-no-singleton-progenome-clusters.tsv" into No_singleton_progenome_clusters
+  
+  script:
+  resultDir = "results/rand-index-vectors"
+  """
+  tail -n +2 $ProgenomeClusterRef | cut -f2 | sort | uniq -d > list-no-singleton-progenome-clusters.tsv
+  grep -wf list-no-singleton-progenome-clusters.tsv $ProgenomeClusterRef | sort -k1,1 > pro-org-clusters-sort-no-singleton.tsv
+  cut -f1 pro-org-clusters-sort-no-singleton.tsv | sort > pro-taxids-sort-no-singleton.tsv
+  comm -12 --check-order pro-taxids-sort-no-singleton.tsv $MashTaxidsSort > pro-mash-taxids-intersections-no-singleton.tsv
+  join --check-order -j 1 pro-mash-taxids-intersections-no-singleton.tsv pro-clusters-sort.txt| sort -k1,1 > pro-clusters-sort-intersection-no-singleton.tsv
+  join --check-order -1 1 -2 2 pro-mash-taxids-intersections-no-singleton.tsv $MashClustersSort | sort -k1,1 > mash-clusters-sort-intersection-no-singleton.tsv
+  join --check-order -j 1 pro-clusters-sort-intersection-no-singleton.tsv mash-clusters-sort-intersection-no-singleton.tsv | cut -d \" \" -f2,3 | perl -pe 's/specI_v2_Cluster//g' > vector-rand-index-no-singleton.csv
+  """
+
+  
 }
 
 
@@ -653,7 +697,7 @@ process extractRandIndexVector {
   seqSrc == 'microscope'
   
   output:
-  file "vector-rand-index-*.csv" into RandIndexesVectors
+  file "vector-rand-index-*.csv" into RandIndexesVectors mode flatten
   
   script:
   resultDir = "results/rand-index-vectors"
@@ -701,8 +745,11 @@ process extractGraph {
 
 nodes
 .phase(edges) {file ->
-  (m) = (file.baseName =~ /(\d+)/)[0]
-  return m
+
+  def split_name = file.baseName.split('-')
+  return split_name[0].toInteger()
+  // (m) = (file.baseName =~ /(\d+)/)[0]
+  // return m
  }
 .set { tupleGraph }
 
@@ -711,6 +758,10 @@ process extractClusterDistanceMatrix {
   tag { "${nodes} - ${edges}" }
   queue 'normal'
   publishDir "${resultDir}", mode: 'link', overwrite: true
+  time { 30.minute * task.attempt }
+  memory { 4.GB * task.attempt }
+  errorStrategy { (task.exitStatus == 140 || task.exitStatus == 143) ? 'retry' : 'terminate' }
+  maxRetries 3
   
   input:
   file script from extractDistance
@@ -738,8 +789,9 @@ process extractClusterDistanceMatrix {
 
 ClusterDistanceMatrix
 .phase(taxa) { file ->
-  (m) = (file.baseName =~ /(\d+)/)[0]
-  return m
+  // 005879-distance-matrix.json
+  def split_name = file.baseName.split('-')
+  return split_name[0].toInteger()
  }
 // .tap {tupleDistance}
 // .subscribe { println it }
@@ -751,6 +803,15 @@ process calculateNJTree {
 
    tag { "${distance} - ${taxa}" }
    queue 'normal'
+   time { 2.hour * task.attempt }
+   memory { 3.GB * task.attempt }
+   errorStrategy { task.exitStatus == 140 ? 'retry' : 'terminate' }
+   queue 'normal'
+   
+  // module 'Mash/1.1.1'
+  maxRetries 4
+
+
    
   input:
   file script from nj
@@ -773,7 +834,7 @@ process calculateNJTree {
   out = "${clusterId}-tree.json"
   
   """
-  node $script $distance $taxa $out
+  node --max_old_space_size=3072 $script $distance $taxa $out
   """
   
 }
@@ -952,16 +1013,49 @@ process loadClusterFileToDB {
   
 }
 
+process calculateRandIndexMicroscope {
+  tag { RandIndexesVectors }
+  publishDir "${resultDir}", mode: 'link', overwrite: true
+  module 'r/3.3.1'
+  
+  input:
+  file script from GetRandIndexMicro
+  file RandIndexesVectors
+  val distanceThreshold
+  val seqSrc
+  
+  when:
+  seqSrc == 'microscope'
+
+  output:
+  file "rand-index-*.csv" into RandIndexMicro
+
+  script:
+  resultDir = "results/rand-index-vectors"
+  baseName = RandIndexesVectors.getBaseName().split("-")
+  taxa = baseName[3]
+  """
+  Rscript $script $RandIndexesVectors $distanceThreshold $taxa
+  """
+  
+}
+
+
+RandIndexVectorPro
+.mix(RandIndexVectorProNS)
+.into {RandIndexVectorsPro}
+
 
 
 process calculateRandIndexProgenome {
 
+  tag {RandIndexVectorsPro}
   publishDir "${resultDir}", mode: 'link', overwrite: true
 
   module 'r/3.3.1'
   
   input:
-  file RandIndexVectorPro
+  file RandIndexVectorsPro
   file script from GetRandIndexPro
   val seqSrc
   val distanceThreshold
@@ -972,13 +1066,15 @@ process calculateRandIndexProgenome {
 
 
   output:
-  file "rand-index.csv" into RandIndexPro
+  file "$out" into RandIndexPro
 
   script:
   resultDir = "results/rand-index-vectors"
-  
+  inputFile = RandIndexVectorsPro.getName()
+  baseName = RandIndexVectorsPro.getBaseName().split("-")
+  out = baseName[1..-1].join('-') + ".csv"
   """
-  Rscript $script $RandIndexVectorPro $distanceThreshold
+  Rscript $script $inputFile $distanceThreshold $out
   """
 }
 
