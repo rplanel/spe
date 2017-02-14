@@ -26,8 +26,8 @@ open (my $SILIX, '<', $silix) or die ("Cannot open the file $silix\nERROR:$!");
 
 while (my $l = <$SILIX>) {
     chomp $l;
-    my ($fam, $id) = split(/\t+/,$l);
-
+    my ($fam, $raw_id) = split(/\t+/,$l);
+    my $id = [split(/\./,$raw_id)]->[0];
     my $annoObj = $annotationsDico->{$id};
     my $anno = $annotationsDico->{$id}->{'oid_name'}." ".$annotationsDico->{$id}->{'strain'}."\t";
     foreach my $rank (@$ranks) {

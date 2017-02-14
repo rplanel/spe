@@ -10,7 +10,7 @@ outFile <- args[[2]]
 
 rand_indexes = read.csv(fileRandIndex, sep=" ",dec=".")
 rand_indexes_melt <- melt(rand_indexes, id = c("distance"))
-rand_indexes_melt %>% group_by(variable) %>% summarise(min = min(value), max = max(value)) -> rand_indexes_melt.2
+rand_indexes_melt %>% group_by(variable) %>% dplyr::summarise(min = min(value), max = max(value)) -> rand_indexes_melt.2
 left_join(rand_indexes_melt, rand_indexes_melt.2) %>% mutate(color = value == min | value == max) %>% filter(color == TRUE) -> rand_indexes_melt.3
 ggplot(rand_indexes_melt, aes(x = distance, y = value, colour = variable)) + geom_line() + geom_point(data=rand_indexes_melt.3, aes(x=distance, y = value)) + geom_text(data=rand_indexes_melt.3, aes(label=distance),hjust=0, vjust=0)
 ggsave(outFile)

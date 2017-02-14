@@ -17,9 +17,12 @@ if (famSize > 1) {
     var RNJ = new NJ.RapidNeighborJoining(distanceFloat, taxa);
     RNJ.run();
     var treeObject = RNJ.getAsObject();
+    const treeNewick = RNJ.getAsNewick();
     var json = JSON.stringify(treeObject);
-    fs.writeFile(out,json);
+    fs.writeFile(out + '.json',json);
+    fs.writeFile(out + '.nwk',treeNewick);
 }
 else {
-    fs.writeFile(out,'{}');
+    fs.writeFile(out + '.json','{}');
+    fs.writeFile(out + '.nwk', ';');
 }
