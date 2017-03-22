@@ -5,6 +5,7 @@ use Data::Dumper;
 
 my $dico  = $ARGV[0];
 my $edges = $ARGV[1];
+my $base_name = $ARGV[2] || 'graph';
 
 open (my $EDGES, '<', $edges) or die ("Cannot open the file $edges\nERROR:$!");
 open (my $DICO , '<', $dico ) or die ("Cannot open the file $dico\nERROR:$!");
@@ -20,8 +21,8 @@ while (my $l = <$DICO>) {
     $oid2Cluster->{$oid} = $clusterId;
     ## open filehandle if needed
     if ( !exists $cluster_fh->{$clusterId}) {
-      my $node_out = $clusterId.'-nodes.tab';
-      my $edge_out = $clusterId.'-edges.tab';
+      my $node_out = $base_name.'-'.$clusterId.'-nodes.tab';
+      my $edge_out = $base_name.'-'.$clusterId.'-edges.tab';
       open (my $NODE, '>', $node_out) or die ("Cannot open the file $node_out\nERROR:$!");
       open (my $EDGE, '>', $edge_out) or die ("Cannot open the file $edge_out\nERROR:$!");
       $cluster_fh->{$clusterId}->{node} = $NODE;

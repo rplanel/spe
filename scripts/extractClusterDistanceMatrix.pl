@@ -6,6 +6,7 @@ use JSON;
 
 my $cluster  = $ARGV[0];
 my $distance = $ARGV[1];
+my $out_prefix = $ARGV[2] || 'cluster';
 
 my $oid2Cluster = {};
 my $ranks = ['species', 'genus', 'family', 'order', 'class_', 'phylum'];
@@ -85,8 +86,8 @@ sub writeColumn {
 
 
 ## print la matrix.
-my $matrixOut = $clusterId.'-distance-matrix.json';
-my $taxaOut     = $clusterId.'-taxa.json';
+my $matrixOut = $out_prefix.'-'.$clusterId.'-distance-matrix.json';
+my $taxaOut   = $out_prefix.'-'.$clusterId.'-taxa.json';
 
 open (my $MATRIX , '>', $matrixOut) or die ("Cannot open the file $matrixOut\nERROR:$!" );
 open (my $TAXA   , '>', $taxaOut) or die ("Cannot open the file $taxaOut\nERROR:$!" );

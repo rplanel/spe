@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 use strict;
-
+use Data::Dumper;
 
 my $annotations = $ARGV[0];
 my $silix       = $ARGV[1];
@@ -13,7 +13,7 @@ my $ranks = ['species', 'genus', 'family', 'order', 'class', 'phylum'];
 my $annotationsDico = {};
 while (my $l = <$ANNO>) {
     chomp $l;
-    my ($oid, $strain, $name, $rank_name, $rank, $taxid) = split(/\t+/,$l);
+    my ($oid, $strain, $name, $rank_name, $rank, $taxid) = split(/\t/,$l);
     $annotationsDico->{$oid}->{'oid_name'}  = $name;
     $annotationsDico->{$oid}->{'strain'}    = $strain;
     $annotationsDico->{$oid}->{$rank} = {
@@ -21,6 +21,8 @@ while (my $l = <$ANNO>) {
         'rank_name' => $rank_name,
     };
 }
+
+#print STDERR Dumper $annotationsDico;
 
 open (my $SILIX, '<', $silix) or die ("Cannot open the file $silix\nERROR:$!");
 

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env perl
 
 use strict;
@@ -26,7 +27,7 @@ my $outputs = [
 ## open output filehandler
 
 foreach my $out (@$outputs) {
-  open($out->{fh}, '>', $dir.'vector-rand-index-'.$out->{name}.'.csv') or die ("Cannot open the file\nERROR:$!");
+  open($out->{fh}, '>', $dir.'vector-'.$out->{name}.'.csv') or die ("Cannot open the file\nERROR:$!");
 }
 
 
