@@ -292,7 +292,7 @@ process sketch {
   file "*.msh" into querySketch mode flatten
 
   script:
-  def resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/sketch/individual"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/sketch/individual"
   def cmd = ''
   def baseName
   if (seqType == "aa") {
