@@ -23,7 +23,15 @@ var distanceFloat = distance.map(function(col) {
 
 var famSize = taxa.length;
 if (famSize > 1) {
-    var RNJ = new NJ.RapidNeighborJoining(distanceFloat, taxa);
+    var new_taxa = taxa.map(function(obj){
+	var name = String(obj.name);
+	if (name) {
+	    var new_name  = name.replace(/\:|\(|\)|\;/g, "_");
+	    obj.name = new_name;
+	}
+	return obj;
+    });
+    var RNJ = new NJ.RapidNeighborJoining(distanceFloat, new_taxa);
     RNJ.run();
     var treeObject = RNJ.getAsObject();
     const treeNewick = RNJ.getAsNewick();
