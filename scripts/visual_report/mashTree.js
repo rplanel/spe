@@ -9728,7 +9728,7 @@ var _user$project$MashTree$getTree = F2(
 			baseUrl,
 			A2(
 				_elm_lang$core$Basics_ops['++'],
-				'/../results/trees/',
+				'/../results/trees/json/',
 				A2(_elm_lang$core$Basics_ops['++'], id, '-tree.json')));
 		var _p10 = A2(_elm_lang$core$Debug$log, 'url', url);
 		return A3(

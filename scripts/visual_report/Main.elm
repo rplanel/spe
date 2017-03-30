@@ -446,7 +446,7 @@ view model =
                 [ class "field" ]
                 [ div
                     [ class "ui checkbox" ]
-                    [ input [ type_ "checkbox", onClick ShowOrphan, checked model.showOrphan ] [ text "orphan" ]
+                    [ input [ type' "checkbox", onClick ShowOrphan, checked model.showOrphan ] [ text "orphan" ]
                     , label [ checked model.showOrphan ] [ text "Show Orphan" ]
                     ]
                 ]

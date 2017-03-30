@@ -323,7 +323,7 @@ getTree : String -> String -> Cmd Msg
 getTree baseUrl id =
     let
         url =
-            baseUrl ++ "/../results/trees/" ++ id ++ "-tree.json"
+            baseUrl ++ "/../results/trees/json/" ++ id ++ "-tree.json"
 
         _ =
             Debug.log "url" url
