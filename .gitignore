@@ -6,3 +6,5 @@ test*-data.txt
 log
 *~
 *.tab
+*.out
+microscope
