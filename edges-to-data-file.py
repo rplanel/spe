@@ -113,9 +113,8 @@ if __name__ == '__main__':
         print("start merge")
         cliques_and_cliques_grp = merge(report.cliques)
         print(len(cliques_and_cliques_grp))
-        
-        # for i, cli in enumerate(cliques_and_cliques_grp):
-        #     print('%d: %s' % (i, cli))
+        for i, cli in enumerate(cliques_and_cliques_grp):
+            print('%d: %s' % (i, cli))
     #print(report.cliques)
     
 

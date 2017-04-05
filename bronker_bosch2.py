@@ -5,7 +5,7 @@ MIN_SIZE = 3
 
 
 def bronker_bosch2(clique, candidates, excluded, reporter, NEIGHBORS):
-    '''Bron–Kerbosch algorithm with pivot'''
+    '''Bron-Kerbosch algorithm with pivot'''
     reporter.inc_count()
     if not candidates and not excluded:
         if len(clique) >= MIN_SIZE:
