@@ -34,5 +34,5 @@ for line in args.edges:
     node2    = columns[1]
     distance = float(columns[2])
 
-    if distance <= 0.16:
+    if distance <= args.distance:
         print(line_tr)
