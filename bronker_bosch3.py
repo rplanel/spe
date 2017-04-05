@@ -1,11 +1,10 @@
 # coding: utf-8
 
-from data import *
 from bronker_bosch2 import bronker_bosch2
 MIN_SIZE = 3
 
 
-def bronker_bosch3(clique, candidates, excluded, reporter):
+def bronker_bosch3(clique, candidates, excluded, reporter, NEIGHBORS):
     '''Bron–Kerbosch algorithm with pivot and degeneracy ordering'''
     reporter.inc_count()
     if not candidates and not excluded:
@@ -13,15 +12,15 @@ def bronker_bosch3(clique, candidates, excluded, reporter):
             reporter.record(clique)
         return
  
-    for v in list(degeneracy_order(candidates)):
+    for v in list(degeneracy_order(candidates, NEIGHBORS)):
         new_candidates = candidates.intersection(NEIGHBORS[v])
         new_excluded = excluded.intersection(NEIGHBORS[v])
-        bronker_bosch2(clique + [v], new_candidates, new_excluded, reporter)
+        bronker_bosch2(clique + [v], new_candidates, new_excluded, reporter, NEIGHBORS)
         candidates.remove(v)
         excluded.add(v)
 
 
-def degeneracy_order(nodes):
+def degeneracy_order(nodes, NEIGHBORS):
     # FIXME: can improve it to linear time
     deg = {}
     for node in nodes:
@@ -35,3 +34,5 @@ def degeneracy_order(nodes):
             if v in deg:
 
                 deg[v] -= 1
+
+                

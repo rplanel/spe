@@ -10,11 +10,12 @@ class Reporter(object):
         self.cnt += 1
  
     def record(self, clique):
+        
         self.cliques.append(clique)
  
     def print_report(self):
-        print self.name
-        print '%d recursive calls' % self.cnt
+        print(self.name)
+        print('%d recursive calls' % self.cnt)
         for i, clique in enumerate(self.cliques):
-            print '%d: %s' % (i, clique)
+            print('%d: %s' % (i, clique))
         print
