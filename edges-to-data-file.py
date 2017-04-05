@@ -43,7 +43,6 @@ def merge(lsts):
     return sets
 
 
-visited_edges = set()
 node_to_id = dict()
 
 for line in args.edges:
@@ -62,7 +61,7 @@ for line in args.edges:
 
         node_to_id[node1].append(node2)
 
-#print(node_to_id)
+print(len(node_to_id))
         
 #NEIGHBORS = list(node_to_id.values())
 #NEIGHBORS.insert(0,[])
@@ -99,8 +98,8 @@ NODES = list(node_to_id.keys())
 
 if __name__ == '__main__':
     funcs = [
-        bronker_bosch1,
-        ##bronker_bosch2,
+        ##bronker_bosch1,
+        bronker_bosch2,
         #bronker_bosch3
     ]
 

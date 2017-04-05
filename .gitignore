@@ -5,3 +5,4 @@ test*_data.txt
 test*-data.txt
 log
 *~
+*.tab
