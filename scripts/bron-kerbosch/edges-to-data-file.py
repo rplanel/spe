@@ -106,15 +106,16 @@ if __name__ == '__main__':
     for func in funcs:
         #print('## %s' % func.func_doc)
         report = Reporter('## %s' % func.func_doc)
-        print("start algo: "+ func.func_doc)
+        #print("start algo: "+ func.func_doc)
         func([], set(NODES), set(), report, NEIGHBORS)
-        report.print_report()
+        #report.print_report()
         #array_of_set = [ set(clique) for clique in report.cliques ]
-        print("start merge")
+        #print("start merge")
         cliques_and_cliques_grp = merge(report.cliques)
-        print(len(cliques_and_cliques_grp))
-        for i, cli in enumerate(cliques_and_cliques_grp):
-            print('%d: %s' % (i, cli))
+        #print(len(cliques_and_cliques_grp))
+        for i, nodes in enumerate(cliques_and_cliques_grp):
+            for node in nodes:
+                print(str(i) + "\t" + str(node))
     #print(report.cliques)
     
 
