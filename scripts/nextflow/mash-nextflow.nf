@@ -38,27 +38,30 @@ minSizeCluster = [0,1,5,10,15,20]
 /***********
  * SCRIPTS *
  ***********/
-extractOrgSeq    = Channel.value(file("${params.scripts}/extractOrgSeq.sh"))
-extractProteome  = Channel.value(file("${params.scripts}/extractProteome.sh"))
-GetOids          = Channel.value(file("${params.scripts}/getOids.sh"))
-GetNaOids          = Channel.value(file("${params.scripts}/getOidsNa.sh"))
+extractOrgSeq        = Channel.value(file("${params.scripts}/extractOrgSeq.sh"))
+extractProteome      = Channel.value(file("${params.scripts}/extractProteome.sh"))
+GetOids              = Channel.value(file("${params.scripts}/getOids.sh"))
+GetNaOids            = Channel.value(file("${params.scripts}/getOidsNa.sh"))
 filterGraphScript    = Channel.value(file("${params.scripts}/filterGraph.pl"))
 addAnnotationScript  = Channel.value(file("${params.scripts}/addAnnotation.pl"))
 extractClusterScript = Channel.value(file("${params.scripts}/extractCluster.pl"))
 extractDistance      = Channel.value(file("${params.scripts}/extractClusterDistanceMatrix.pl"))
 calculateClusterIntraStatScript = Channel.value(file("${params.scripts}/calculateClusterIntraStat.pl"))
-nj = Channel.value(file("${params.scripts}/calculate-nj-tree.js"))
-existsRecord          = Channel.value(file("${params.scripts}/existsRecord.sh"))
-splitProgenomes     = Channel.value(file("${params.scripts}/splitProgenomes.pl"))
-ExtractRankIndexVectors     = Channel.value(file("${params.scripts}/extractClusters4RandIndex.pl"))
-calculateSplitJoin = Channel.value(file("${params.scripts}/getSJIndex.R"))
-GetRandIndexPro = Channel.value(file("${params.scripts}/getRandIndexProgenome.R"))
-CalculateRandIndexTaxa = Channel.value(file("${params.scripts}/calculateRandIndexTaxa.R"))
-PlotClusteringMetrics = Channel.value(file("${params.scripts}/rand-index-plot.R"))
-GetTaxonomy     = Channel.value(file("${params.scripts}/getTaxonomy.pl"))
-RenumberCluster = Channel.value(file("${params.scripts}/renumber-cluster.pl"))
+nj                   = Channel.value(file("${params.scripts}/calculate-nj-tree.js"))
+existsRecord         = Channel.value(file("${params.scripts}/existsRecord.sh"))
+splitProgenomes      = Channel.value(file("${params.scripts}/splitProgenomes.pl"))
+ExtractRankIndexVectors = Channel.value(file("${params.scripts}/extractClusters4RandIndex.pl"))
+calculateSplitJoin      = Channel.value(file("${params.scripts}/getSJIndex.R"))
+GetRandIndexPro         = Channel.value(file("${params.scripts}/getRandIndexProgenome.R"))
+CalculateRandIndexTaxa  = Channel.value(file("${params.scripts}/calculateRandIndexTaxa.R"))
+PlotClusteringMetrics   = Channel.value(file("${params.scripts}/rand-index-plot.R"))
+GetTaxonomy             = Channel.value(file("${params.scripts}/getTaxonomy.pl"))
+RenumberCluster         = Channel.value(file("${params.scripts}/renumber-cluster.pl"))
 CalculateVariationInformation = Channel.value(file("${params.scripts}/calculate-variation-information.jl"))
-CalculateSJProgenome = Channel.value(file("${params.scripts}/calculateSJIndexProgenome.R"))
+CalculateSJProgenome    = Channel.value(file("${params.scripts}/calculateSJIndexProgenome.R"))
+GenerateClusterTable    = Channel.value(file("${params.scripts}/silix-cluster-to-mash-cluster-table.py"))
+calculateClique = Channel.value(file("${params.scripts}/calculate-cliques.py"))
+
 /*******
  * Visual report files
  *******/
@@ -171,11 +174,6 @@ process getGenomes {
   """
 }
 
-// genomesInputs = Channel.empty()
-// genomesInputs.mix(genome,genomes)
-// //.flatten()
-// .set { genomesInput}
-
 
 process getAAOid {
 
@@ -250,11 +248,10 @@ process splitProgenomes {
   """
   perl $script $progenomesRepresentative progenomes
   """
-  
-  
 }
 
 SequencesInput = Channel.empty()
+
 SequencesInput.mix(genomes, Proteomes, Progenomes)
 .flatten()
 .tap { countFasta }
@@ -377,7 +374,7 @@ incrementalQuery.into {queryToSketch; queryToDist}
 process all_vs_all_distance {
   tag { "${query} distance=${sketchSize} pvalue=${kmerSize} $sketchesDb" } 
   
-  //scratch true
+  scratch true
   publishDir "${resultDir}", mode: 'link', overwrite: true
   cache 'deep'
   
@@ -456,26 +453,21 @@ process filterEdges {
   tag { "distance = ${distanceThresholds} - pvalue = ${pvalueThreshold}" }
   
   publishDir "${resultDir}", mode: 'link', overwrite: true
-  
+
+  time '2h'
 
   input:
   set val(pvalueThreshold),val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), file(dist) from DistanceMatrixValue
   file script from filterGraphScript
-  //val pvalueThreshold
   val distanceThresholds
-  // val sketchSize
-  // val kmerSize
-  // val seqType
-  // val seqSrc
-  // val seqType
   
   output:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(distanceThresholds), file("${out}") into filteredEdges
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(distanceThresholds), file("${out}") into filteredEdges, filteredEdgesClique
 
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${distanceThresholds}/results"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/mash-distance"
   baseName = dist.getBaseName()
-  out = "${baseName}-filtered.tab"
+  out = "${baseName}-filtered-${distanceThresholds}.tab"
   """
   perl $script $dist ${distanceThresholds} ${pvalueThreshold} > $out
   """
@@ -553,10 +545,10 @@ process silixx {
 
   
   output:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("$out") into silixClusterFile, silixClusterFile2, SilixClusterFilesPro
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("$out"), val('silix') into silixClusterFile, silixClusterFile2, SilixClusterFilesPro
 
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/silix/${d}/results"
   baseName = edges.getBaseName()
   out = "${baseName}.silix"
   """
@@ -566,15 +558,46 @@ process silixx {
 
 }
 
+process calculateClique {
+
+  tag { "${edge} - ${d}" }
+  publishDir "${resultDir}", mode: 'link', overwrite: true
+  module 'python/3.5.3'
+  module 'gnu/4.9.2'
+  time { seqSrc == 'progenome' ? '4h' : '30m' }
+  
+  input:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(edge) from filteredEdgesClique
+  //  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(edge) from EdgesToClique
+  file script from calculateClique
+
+  output:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("clique*.txt"), val(clusteringMethod) into CliqueClusters, CliqueClusters2, CliqueClustersPro
+  
+  script:
+  clusteringMethod = 'clique'
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/per-cluster"
+  // listBaseName = edge.getBaseName().split('-')
+  // clusterId = listBaseName[1]
+  """
+  python ${script} -e ${edge} -o clique-${d}.txt
+  """
+}
+
+silixClusterFile
+.mix(CliqueClusters)
+.set { ClusterFile }
 
 
 //***********************************************************************
 
+
 SilixClusterFilesPro
+.mix(CliqueClustersPro)
 .spread(minSizeCluster)
 // .tap {SilixClustersPerMinSize}
 // .subscribe {println it}
-.set {SilixClustersPerMinSize}
+.set {ClustersPerMinSize}
 
 
 
@@ -588,7 +611,7 @@ process extractVectorProgenome {
   time '2h'
   
   input:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(clusterFile), val(minSizeCluster) from SilixClustersPerMinSize
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(clusterFile), val(minSizeCluster), val(clusteringMethod) from ClustersPerMinSize
   file ProgenomeClusterRef
   // val seqSrc
   // val sketchSize
@@ -601,11 +624,11 @@ process extractVectorProgenome {
 
   output:
   //file "pro-mash-taxids-intersections-${minSizeCluster}.tsv" into ProMashTaxidsIntersectionNS
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file("vector-cluster-${minSizeCluster}.csv"), val('vs-progenome') into VectorProRI, VectorProVI, VectorProSJ
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file("vector-cluster-${minSizeCluster}.csv"), val('vs-progenome'), val(clusteringMethod) into VectorProRI, VectorProVI, VectorProSJ
   //file "list-progenome-clusters-${minSizeCluster}.tsv" into No_singleton_progenome_clusters
   
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results/cluster-vectors"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/cluster-vectors"
   """
   cat $clusterFile | sort -k 2,2 | tail -n +2  > mash-clusters-sort.txt
   cat $ProgenomeClusterRef  | tail -n +2 | sort -k 1,1 > pro-clusters-sort.txt
@@ -634,7 +657,7 @@ process addAnnotation {
   time '1h'
   
   input:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(silixRes) from silixClusterFile
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(silixRes), val(clusteringMethod) from ClusterFile
   file anno from AnnotationsValue
   file script from addAnnotationScript
   // val pvalueThreshold
@@ -644,11 +667,11 @@ process addAnnotation {
   // val seqSrc
   
   output:
-  set val(d), file(out) into annotatedSilixClusterFile
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(out) into annotatedSilixCluster, AnnotatedSilixCluster4Rand 
+  set val(d), file(out), val(clusteringMethod) into annotatedSilixClusterFile
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(out), val(clusteringMethod) into annotatedSilixCluster, AnnotatedSilixCluster4Rand 
 
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results"
   base = silixRes.getBaseName()
   out = "${base}-annotated.silix"
   
@@ -672,14 +695,14 @@ process extractVectorsVsRank {
   time '2h'
   
   input:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(annotatedClusters) from AnnotatedSilixCluster4Rand
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(annotatedClusters), val(clusteringMethod) from AnnotatedSilixCluster4Rand
   file script from ExtractRankIndexVectors
   
   output:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("vector-*.csv"), val('vs-rank') into RandIndexesVectors, VariationOfInformationVectors, SplitJoinVectors mode flatten
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("vector-*.csv"), val('vs-rank'), val(clusteringMethod) into RandIndexesVectors, VariationOfInformationVectors, SplitJoinVectors mode flatten
   
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results/cluster-vectors"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/cluster-vectors"
   """
   perl $script $annotatedClusters
   """
@@ -689,7 +712,7 @@ process extractVectorsVsRank {
 
 VariationOfInformationVectors
 .spread([0])
-.map { [ it[0], it[1], it[2], it[3], it[4], it[5], it[8], it[6], it[7] ] }
+.map { [ it[0], it[1], it[2], it[3], it[4], it[5], it[9], it[6], it[7], it[8] ] }
 .set{ VariationOfInformationVectorsPerMinSizeCluster}
 
 VectorVI = Channel.empty()
@@ -710,19 +733,15 @@ process renumberedVectorClusters {
   time '1h'
   
   input:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file(vectors), val(compareType) from Vector4VI
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file(vectors), val(compareType), val(clusteringMethod) from Vector4VI
   file script from RenumberCluster
-  // val seqSrc
-  // val seqType
-  // val kmerSize
-  // val sketchSize
   
   output:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file("$out"), val(compareType) into RenumberedClusters
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file("$out"), val(compareType), val(clusteringMethod) into RenumberedClusters
 
   
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results/cluster-vectors/${compareType}"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/cluster-vectors/${compareType}"
   base_name = vectors.getBaseName()
   out = "${base_name}-renumbered.tsv"
   """
@@ -740,7 +759,7 @@ process CalculateVariationOfInformation {
   memory '10 GB'
   
   input:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file(clusterVectors), val(compareType) from RenumberedClusters
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file(clusterVectors), val(compareType), val(clusteringMethod) from RenumberedClusters
   file script from CalculateVariationInformation
   // val seqSrc
   // val seqType
@@ -748,10 +767,10 @@ process CalculateVariationOfInformation {
   // val sketchSize
   
   output:
-  set val(minSizeCluster), file("$out"), val(compareType) into VariationOfInformation
+  set val(minSizeCluster), file("$out"), val(compareType), val(clusteringMethod) into VariationOfInformation
   
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results/variation-of-information/${compareType}"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/variation-of-information/${compareType}"
   baseName = clusterVectors.getBaseName().split("-")
   out = "variation-of-information-${baseName[1]}-${minSizeCluster}.tsv"
   """
@@ -759,20 +778,20 @@ process CalculateVariationOfInformation {
   num_cluster_2=`cut -d ' ' -f2 $clusterVectors | sort -nu | wc -l`
   julia $script $clusterVectors \$num_cluster_1 \$num_cluster_2 $d > $out
   """
-
-
 }
 
 VariationOfInformation
 .collectFile(storeDir:"${seqSrc.value}/${seqType.value}/${kmerSize.value}-${sketchSize.value}/variation-of-information", seed: "distance variation_of_information\n") { it ->
   baseName = it[1].getBaseName()
   compareClustering = it[2]
-  ["${compareClustering}-${baseName}.tsv", it[1].text]
+  clusteringMethod  = it[3]
+  ["${clusteringMethod}-${compareClustering}-${baseName}.tsv", it[1].text]
  }
 .map { it ->
   splitBaseName = it.getBaseName().split('-')
-  compareClustering = "${splitBaseName[0]}-${splitBaseName[1]}"
-  [ 'variation-of-information', compareClustering, pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ]
+  compareClustering = "${splitBaseName[1]}-${splitBaseName[2]}"
+  clusteringMethod = splitBaseName[0]
+  [ 'variation-of-information', compareClustering, clusteringMethod, pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ]
  }
 .set{ VariationOfInformationProConcat }
 
@@ -783,18 +802,19 @@ process calculateSplitJoinTaxa {
   tag { "$d - $spVectors" }
   publishDir "${resultDir}", mode: 'link', overwrite: true
   module 'r/3.3.1'
+  time '1h'
   
   input:
   file script from calculateSplitJoin
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(spVectors) from SplitJoinVectors
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(spVectors), val(compareType), val(clusteringMethod) from SplitJoinVectors
   
   output:
-  set val(d), file("split-join-*.csv") into SplitJoinIndex
+  set val(compareType), val(d), file("split-join-*.csv"), val(clusteringMethod) into SplitJoinIndex
 
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results/split-join"
-  baseName = spVectors.getBaseName().split("-")
-  taxa = baseName[1]
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/split-join/${compareType}"
+  baseName  = spVectors.getBaseName().split("-")
+  taxa      = baseName[1]
   """
   Rscript $script $spVectors $d $taxa
   perl -i -ne 'chomp;my @arrayToSum = split(/\\s+/); shift @arrayToSum; my \$sum; map { \$sum += \$_ } @arrayToSum;print \$_,\" \",\$sum,\"\\n\";' split-join-${taxa}.csv
@@ -803,29 +823,35 @@ process calculateSplitJoinTaxa {
 
 SplitJoinIndex
 .collectFile(storeDir:"${seqSrc.value}/${seqType.value}/${kmerSize.value}-${sketchSize.value}/split-join", seed: "distance 1_2 2_1 sum\n") { it ->
-  baseName = it[1].getBaseName().split("-")
+  baseName = it[2].getBaseName().split("-")
   taxa = baseName[2]
-  [ "vs-rank-split-join-${taxa}.csv", it[1].text + "\n"]
+  [ "${it[3]}-${it[0]}-split-join-${taxa}.csv", it[2].text + "\n"]
  }
-.map { it -> [ 'split-join', 'vs-rank', pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ] }
+.map { it ->
+  splitBaseName = it.getBaseName().split('-')
+  clusteringMethod = splitBaseName[0]
+  
+  [ 'split-join', 'vs-rank', clusteringMethod, pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ] }
 .set { SplitJoinVsTaxa }
 
 
 process calculateRandIndexRank {
   
-  tag { "$d - $randIndexVectors" }
+  tag { "$clusteringMethod - $d - $randIndexVectors" }
   publishDir "${resultDir}", mode: 'link', overwrite: true
   module 'r/3.3.1'
+  time '1h'
+
   
   input:
   file script from CalculateRandIndexTaxa
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(randIndexVectors), val(compareType) from RandIndexesVectors
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(randIndexVectors), val(compareType), val(clusteringMethod) from RandIndexesVectors
 
   output:
-  set val(d), file("rand-index-*.csv"), val(compareType), val(taxa) into RandIndexVsRank
+  set val(d), file("rand-index-*.csv"), val(compareType), val(taxa), val(clusteringMethod) into RandIndexVsRank
 
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results/rand-index/${compareType}"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/rand-index/${compareType}"
   baseName = randIndexVectors.getBaseName().split("-")
   taxa = baseName[1]
   """
@@ -835,12 +861,13 @@ process calculateRandIndexRank {
 }
 
 RandIndexVsRank
-.collectFile(storeDir:"${seqSrc.value}/${seqType.value}/${kmerSize.value}-${sketchSize.value}/rand-index", seed: "distance Rand HA MA FM Jaccard\n") { it ->
+.collectFile(storeDir:"${seqSrc.value}/${seqType.value}/${kmerSize.value}-${sketchSize.value}/rand-index/vs-rank/csv", seed: "distance Rand HA MA FM Jaccard\n") { it ->
   compareClustering = it[2]
   taxa = it[3]
-  [ "${compareClustering}-rand-indexes-${taxa}.csv", it[1].text]
+  clusteringMethod = it[4]
+  [ "${clusteringMethod}-${compareClustering}-rand-indexes-${taxa}.csv", it[1].text]
  }
-.map { it -> [ 'rand-index', 'vs-rank', pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ] }
+.map { it -> [ 'rand-index', 'vs-rank', clusteringMethod, pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ] }
 .set { RandIndexesVsRank }
 
 
@@ -849,11 +876,13 @@ RandIndexVsRank
 process calculateSplitJoinVsProgenome {
   tag { "${d} - ${Vectors}" }
   publishDir "${resultDir}", mode: 'link', overwrite: true
-
+  
+  time '1h'
+  
   module 'r/3.3.1'
   
   input:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file(Vectors), val(compareType) from VectorProSJ
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file(Vectors), val(compareType), val(clusteringMethod) from VectorProSJ
   file script from CalculateSJProgenome
   
   when:
@@ -861,10 +890,10 @@ process calculateSplitJoinVsProgenome {
 
 
   output:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(minSizeCluster), file("$out") into SplitJoinIndexPro
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(minSizeCluster), file("$out"), val(clusteringMethod) into SplitJoinIndexPro
 
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results/split-join/${compareType}"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/split-join/${compareType}"
   inputFile = Vectors.getName()
   out = "split-join-${minSizeCluster}.csv"
   """
@@ -877,9 +906,14 @@ process calculateSplitJoinVsProgenome {
 
 SplitJoinIndexPro
 .collectFile(storeDir:"${seqSrc.value}/${seqType.value}/${kmerSize.value}-${sketchSize.value}/split-join/vs-progenome", seed: "distance 1_2 2_1 sum\n") { it ->
-  ["vs-progenome-split-join-${it[5]}.tsv", it[6].text]
+  
+  ["${it[7]}-vs-progenome-split-join-${it[5]}.tsv", it[6].text]
  }
-.map {it -> [ 'split-join', 'vs-progenome', pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ] }
+.map {it ->
+  splitBaseName = it.getBaseName().split('-')
+  clusteringMethod = splitBaseName[0]
+
+  [ 'split-join', 'vs-progenome', clusteringMethod, pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ] }
 .set{ SplitJoinProConcat }
 
 
@@ -893,7 +927,7 @@ process calculateRandIndexProgenome {
   module 'r/3.3.1'
   
   input:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file(randIndexVectors), val(compareType) from VectorProRI
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), val(minSizeCluster), file(randIndexVectors), val(compareType), val(clusteringMethod) from VectorProRI
   file script from GetRandIndexPro
   
   when:
@@ -901,10 +935,10 @@ process calculateRandIndexProgenome {
 
 
   output:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(minSizeCluster), file("$out") into RandIndexPro
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(minSizeCluster), file("$out"), val(clusteringMethod) into RandIndexPro
 
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results/rand-index/${compareType}"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/rand-index/${compareType}"
   inputFile = randIndexVectors.getName()
   out = "rand-index-${minSizeCluster}.csv"
   """
@@ -914,9 +948,13 @@ process calculateRandIndexProgenome {
 
 RandIndexPro
 .collectFile(storeDir:"${seqSrc.value}/${seqType.value}/${kmerSize.value}-${sketchSize.value}/rand-index/vs-progenome", seed: "distance Rand HA MA FM Jaccard\n") { it ->
-  ["vs-progenome-rand-indexes-${it[5]}.tsv", it[6].text]
+  ["vs-progenome-rand-indexes-${it[7]}-${it[5]}.tsv", it[6].text]
  }
-.map {it -> [ 'rand-index', 'vs-progenome', pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ] }
+.map { it ->
+  splitBaseName = it.getBaseName().split('-')
+  clusteringMethod = splitBaseName[4]
+  //println clusteringMethod
+  [ 'rand-index', 'vs-progenome', clusteringMethod, pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ] }
 .set{ RandIndexesProConcat }
 
 
@@ -942,14 +980,14 @@ process plotIndexes {
   module 'r/3.3.1'
   
   input:
-  set val(indexType), val(comparaisonClustering), val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), file(Indexes) from AllIndexesToPlot
+  set val(indexType), val(comparaisonClustering), val(clusteringMethod), val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), file(Indexes) from AllIndexesToPlot
   file script from PlotClusteringMetrics
   
   output:
   file "${out}-plot.pdf" into Plots
   
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${indexType}/${comparaisonClustering}/plot"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${indexType}/${comparaisonClustering}/plot"
   out = Indexes.getBaseName()
   """
   Rscript $script $Indexes ${out}-plot.pdf
@@ -1002,57 +1040,84 @@ process extractGraph {
 
   tag { "${d} - ${edges}" } 
   publishDir "${resultDir}", mode: 'link', overwrite: true
+
+  time '2h'
   
   input:
-  set val(d), file(dico) from annotatedSilixClusterFile
+  set val(d), file(dico), val(clusteringMethod) from annotatedSilixClusterFile
   set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), file(edges) from Distancematrix2Value
   file script from extractClusterScript
-  // val pvalueThreshold
-  // val sketchSize
-  // val kmerSize  
-  // val seqType
-  // val seqSrc
   
   output:
-  file "*-nodes.tab" into nodes mode flatten
-  file "*-edges.tab" into edges mode flatten
+  file("*-nodes.tab") into nodes mode flatten
+  file("*-edges.tab") into edges mode flatten
+  //set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("*-edges-filter.tab") into EdgesToClique mode flatten
   //val d into DistanceExtractGraph
   
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results/graph"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/graph"
   """
-  perl $script $dico $edges ${d}
+  perl $script $dico $edges ${d} ${seqSrc}-${seqType}-${kmerSize}-${sketchSize}-${d}-${clusteringMethod}
   """
 
 }
 
 
-phase_nodes = Channel.create()
-phase_edges = Channel.create()
-phase_d_extract_cluster = Channel.create()
+// Should create an array...
+phase_nodes_g             = Channel.create()
+phase_edges_g             = Channel.create()
+phase_seq_src_g           = Channel.create()
+phase_seq_type_g          = Channel.create()
+phase_kmer_size_g         = Channel.create()
+phase_sketch_size_g       = Channel.create()
+phase_distance_g          = Channel.create()
+phase_clustering_method_g = Channel.create()
 
 nodes
 .phase(edges) {it ->
+  //println it
   def split_name = it.baseName.split('-')
-  return split_name[0] + split_name[1].toInteger()
+  return split_name[0] + split_name[1] + split_name[2] + split_name[3] + split_name[4] + split_name[5] + split_name[6].toInteger()
  }
- .separate(phase_d_extract_cluster, phase_nodes, phase_edges) { it ->
-   //println it
+ .separate(phase_nodes_g, phase_edges_g, phase_seq_src_g, phase_seq_type_g, phase_kmer_size_g, phase_sketch_size_g, phase_distance_g, phase_clustering_method_g) { it ->
+   //   println it
    def split_name = it[0].baseName.split('-');
-   [ split_name[0], it[0], it[1] ]
+   [ it[0], it[1], split_name[0], split_name[1], split_name[2], split_name[3], split_name[4], split_name[5]]
   }
- 
-phase_nodes
-.buffer( size: params.bsExtractDstanceMatrix, remainder: true )
-.set {buf_nodes}
 
-phase_edges
-.buffer( size: params.bsExtractDstanceMatrix, remainder: true )
-.set {buf_edges}
 
-phase_d_extract_cluster
+  
+phase_nodes_g
 .buffer( size: params.bsExtractDstanceMatrix, remainder: true )
-.set {buf_d_extract_cluster}
+.set {buf_nodes_g}
+
+phase_edges_g
+.buffer( size: params.bsExtractDstanceMatrix, remainder: true )
+.set {buf_edges_g}
+
+phase_seq_src_g
+.buffer( size: params.bsExtractDstanceMatrix, remainder: true )
+.set {buf_seq_src_g}
+
+phase_seq_type_g
+.buffer( size: params.bsExtractDstanceMatrix, remainder: true )
+.set {buf_seq_type_g}
+
+phase_kmer_size_g
+.buffer( size: params.bsExtractDstanceMatrix, remainder: true )
+.set {buf_kmer_size_g}
+
+phase_sketch_size_g
+.buffer( size: params.bsExtractDstanceMatrix, remainder: true )
+.set {buf_sketch_size_g}
+
+phase_distance_g
+.buffer( size: params.bsExtractDstanceMatrix, remainder: true )
+.set {buf_distance_g}
+
+phase_clustering_method_g
+.buffer( size: params.bsExtractDstanceMatrix, remainder: true )
+.set {buf_clustering_method_g}
 
 
 process extractDistanceMatrix {
@@ -1060,14 +1125,18 @@ process extractDistanceMatrix {
   echo true
   //publishDir "${resultDir}", mode: 'link', overwrite: true
   time '4h'
-
+  cache 'deep'
   
   input:
-  //val d from D1
-  file nodes from buf_nodes
-  file edges from buf_edges
-  val d from buf_d_extract_cluster
-  file script from extractDistance
+  file nodes            from buf_nodes_g
+  file edges            from buf_edges_g
+  val  seqSrc           from buf_seq_src_g
+  val  seqType          from buf_seq_type_g
+  val  kmerSize         from buf_kmer_size_g
+  val  sketchSize       from buf_sketch_size_g
+  val  clusteringMethod from buf_clustering_method_g
+  val  d                from buf_distance_g
+  file script           from extractDistance
   
   output:
   file "*-distance-matrix.json" into ClusterDistanceMatrix mode flatten
@@ -1076,31 +1145,36 @@ process extractDistanceMatrix {
   script:
   assert nodes.size() == edges.size()
   assert nodes.size() == d.size()
-  
   def cmd = ''
   for( int i=0; i<nodes.size(); i++ ) {
-    cmd += "perl $script ${nodes[i]} ${edges[i]} ${d[i]}\n"
+    cmd += "perl $script ${nodes[i]} ${edges[i]} ${d[i]}-${seqSrc[i]}-${seqType[i]}-${kmerSize[i]}-${sketchSize[i]}-${clusteringMethod[i]}\n"
   } 
   cmd
-  
 }
 
-
-
-phase_distance_matrix   = Channel.create()
-phase_taxa              = Channel.create()
-phase_d_distance_matrix = Channel.create() 
+phase_distance_matrix      = Channel.create()
+phase_taxa                 = Channel.create()
+phase_distance_dm          = Channel.create() 
+phase_seq_src_dm           = Channel.create()
+phase_seq_type_dm          = Channel.create()
+phase_kmer_size_dm         = Channel.create()
+phase_sketch_size_dm       = Channel.create()
+phase_clustering_method_dm = Channel.create()
 
 
 ClusterDistanceMatrix
 .phase(ClusterTaxa) {it ->
+  //println it
   def split_name = it.baseName.split('-')
-  return split_name[0] + split_name[1].toInteger()
+  //return split_name[0] + split_name[1].toInteger()
+  return split_name[0] + split_name[1] + split_name[2] + split_name[3] + split_name[4] + split_name[5] + split_name[6].toInteger()
  }
- .separate(phase_d_distance_matrix, phase_distance_matrix, phase_taxa) { it ->
+ .separate(phase_distance_matrix, phase_taxa, phase_distance_dm, phase_seq_src_dm, phase_seq_type_dm, phase_kmer_size_dm, phase_sketch_size_dm, phase_clustering_method_dm) { it ->
    def split_name = it[0].baseName.split('-');
-   [ split_name[0], it[0], it[1],  seqType.value ]
+   //println it
+   [ it[0], it[1], split_name[0], split_name[1], split_name[2], split_name[3], split_name[4], split_name[5] ]
   }
+
 
 phase_distance_matrix
 .buffer( size: params.bsTree, remainder: true )
@@ -1110,39 +1184,60 @@ phase_taxa
 .buffer( size: params.bsTree, remainder: true )
 .set {buf_taxa}
 
-phase_d_distance_matrix
+phase_distance_dm
 .buffer( size: params.bsTree, remainder: true )
-.set {buf_d_nj_tree}
+.set {buf_distance_dm}
+
+phase_seq_src_dm
+.buffer( size: params.bsTree, remainder: true )
+.set {buf_seq_src_dm}
+
+phase_seq_type_dm
+.buffer( size: params.bsTree, remainder: true )
+.set {buf_seq_type_dm}
+
+phase_kmer_size_dm
+.buffer( size: params.bsTree, remainder: true )
+.set {buf_kmer_size_dm}
+
+phase_sketch_size_dm
+.buffer( size: params.bsTree, remainder: true )
+.set {buf_sketch_size_dm}
+
+phase_clustering_method_dm
+.buffer( size: params.bsTree, remainder: true )
+.set {buf_clustering_method_dm}
 
 
 
 process calculateNJTree {
 
   //publishDir "${resultDir}", mode: 'link', overwrite: true
-   time { 3.hour * task.attempt }
-   memory { 3.GB * task.attempt }
-   errorStrategy { task.exitStatus == 143 ? 'retry' : 'terminate' }
-   
+  time { 3.hour * task.attempt }
+  memory { 3.GB * task.attempt }
+  errorStrategy { task.exitStatus == 143 ? 'retry' : 'terminate' }
+  cache 'deep'
   // module 'Mash/1.1.1'
   maxRetries 4
 
   input:
   file script   from nj
-  val d         from buf_d_nj_tree
-  file distance from buf_distance_matrix
-  file taxa     from buf_taxa
-  //val pvalueThreshold
-  val sketchSize
-  val kmerSize
-  val seqType
-  val seqSrc
+  file distance         from buf_distance_matrix
+  file taxa             from buf_taxa
+  val  seqSrc           from buf_seq_src_dm
+  val  seqType          from buf_seq_type_dm
+  val  kmerSize         from buf_kmer_size_dm
+  val  sketchSize       from buf_sketch_size_dm
+  val  clusteringMethod from buf_clustering_method_dm
+  val d                 from buf_distance_dm
+  
 
   output:
   file "*-tree.json" into JsonTrees mode flatten
   file "*-tree.nwk" into NewickTrees mode flatten
   
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/results/trees"
+  //resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/trees"
   assert d.size() == distance.size()
   assert d.size() == taxa.size()
   def cmd = ''
@@ -1150,7 +1245,7 @@ process calculateNJTree {
   def split_name = ''
   for (int i=0; i<distance.size(); i++) {
     split_name = distance[i].baseName.split('-')
-    out = "${split_name[0]}-${split_name[1]}-tree"
+    out = "${seqSrc[i]}-${seqType[i]}-${kmerSize[i]}-${sketchSize[i]}-${clusteringMethod[i]}-${d[i]}-${split_name[6]}-tree"
     cmd += "node --max_old_space_size=3072 $script ${distance[i]} ${taxa[i]} ${out}\n"
   }
   cmd
@@ -1160,11 +1255,18 @@ JsonTrees
 .subscribe onNext: {it ->
   def f = file(it)
   def split_base_name = f.getBaseName().split('-')
-  def d = split_base_name[0]
-  def resDirStr = "${params.seqSrc}/${params.seqType}/${params.kmerSize}-${params.sketchSize}/${d}/results/trees/json"
+
+  def seqSrc           = split_base_name[0]
+  def seqType          = split_base_name[1]
+  def kmerSize         = split_base_name[2]
+  def sketchSize       = split_base_name[3]
+  def clusteringMethod = split_base_name[4]
+  def d                = split_base_name[5]
+  
+  def resDirStr = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/trees/json"
   def resDir = file(resDirStr)
   resDir.mkdirs()
-  f.mklink(resDirStr+'/'+split_base_name[1]+'-'+split_base_name[2]+'.json', hard:true, overwrite: true)
+  f.mklink(resDirStr+'/'+split_base_name[6]+'.json', hard:true, overwrite: true)
  }, onComplete: {println 'Json trees copied'}
 
 
@@ -1172,11 +1274,19 @@ NewickTrees
 .subscribe onNext: {it ->
   def f = file(it)
   def split_base_name = f.getBaseName().split('-')
-  def d = split_base_name[0]
-  def resDirStr = "${params.seqSrc}/${params.seqType}/${params.kmerSize}-${params.sketchSize}/${d}/results/trees/newick"
+  
+  def seqSrc           = split_base_name[0]
+  def seqType          = split_base_name[1]
+  def kmerSize         = split_base_name[2]
+  def sketchSize       = split_base_name[3]
+  def clusteringMethod = split_base_name[4]
+  def d                = split_base_name[5]
+
+  def resDirStr = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/trees/newick"
+  //  def resDirStr = "${params.seqSrc}/${params.seqType}/${params.kmerSize}-${params.sketchSize}/${d}/results/trees/newick"
   def resDir = file(resDirStr)
   resDir.mkdirs()
-  def out = resDirStr+'/'+split_base_name[1]+'-'+split_base_name[2]+'.nwk'
+  def out = resDirStr+'/'+split_base_name[6]+'.nwk'
   f.mklink(out, hard:true, overwrite: true)
  }, onComplete: {println 'Newick trees copied'}
 
@@ -1186,16 +1296,21 @@ process calculateClusterIntraStat {
 
   tag { "${d} - ${cluster}" }
   publishDir "${resultDir}", mode: 'link', overwrite: true
+
+  time '1h'
+
+  // when :
+  // seqSrc == 'no_db'
   
   input:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(cluster) from annotatedSilixCluster
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(cluster), val(clusteringMethod) from annotatedSilixCluster
   file script from calculateClusterIntraStatScript
   
   output:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("*rank.json"), file("*cluster.json") into Stats
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("*rank.json"), file("*cluster.json"), val(clusteringMethod) into Stats
   
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}/results"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results"
   base = cluster.getBaseName()
   out = "${base}-stat"
   """
@@ -1208,16 +1323,18 @@ process createJsonData {
 
   tag { "$d"}
   publishDir "${resultDir}", mode: 'link', overwrite: true
+
+  time '1h'
   
   input:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(rankStats), file(clusterStats) from Stats
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(rankStats), file(clusterStats), val(clusteringMethod) from Stats
 
   output:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("$baseName") into Data, DataVisual
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("$baseName"), val(clusteringMethod) into Data, DataVisual
   
 
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}"
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}"
   baseName = "data.js"
   """
   echo 'var rawClusterData = ' | cat - $clusterStats > clusterData
@@ -1234,13 +1351,15 @@ process createJsonData {
 
 
 process addAnalysisParamstoDb {
+
+  tag { "${pvalueThreshold} - ${seqSrc} - ${seqType} - ${kmerSize} - ${sketchSize} - ${d}" }
+  
+  time '1h'
   
   input:
   file script from existsRecord
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(data) from Data
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(data), val(clusteringMethod) from Data
   
-  when:
-  seqSrc =~ /^microscope.*/
   
   output:
   stdout mash_param_id
@@ -1248,7 +1367,7 @@ process addAnalysisParamstoDb {
   script:
   """
 
-  mysql GO_SPE -ABNre \"INSERT INTO MASH_param (distance, pvalue, kmer_size, sketch_size, filtered_orphan_plasmid, seq_type) VALUES ($d, $pvalueThreshold, $kmerSize, $sketchSize, TRUE, \'${seqType}\');\"
+  mysql GO_SPE -ABNre \"INSERT INTO MASH_param (distance, pvalue, kmer_size, sketch_size, filtered_orphan_plasmid, seq_type, seq_src, clustering_method) VALUES ($d, $pvalueThreshold, $kmerSize, $sketchSize, TRUE, \'${seqType}\', \'${seqSrc}\', \'${clusteringMethod}\');\"
 
   val=`mysql GO_SPE -ABNre \"
   SELECT MASH_param_id 
@@ -1264,7 +1383,11 @@ process addAnalysisParamstoDb {
   AND
   filtered_orphan_plasmid = TRUE
   AND 
-  seq_type = \'${seqType}\';\"`
+  seq_type = \'${seqType}\'
+  AND
+  clustering_method = \'${clusteringMethod}\'
+  AND
+  seq_src = \'${seqSrc}\';\"`
 
   echo \$val
 
@@ -1275,23 +1398,25 @@ process addAnalysisParamstoDb {
 
 process createClusterTable {
 
+
+  tag { "${trimmedparamId} : ${kmerSize}-${sketchSize}-${d}" }
+  module 'python/3.5.3'
+  time '1h'
+  
   input:
   val paramId from mash_param_id
   set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(file) from silixClusterFile2
-
+  file script from GenerateClusterTable
+  
   output:
   set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("mash_cluster.csv") into  mashClusterFile
   
   script:
+  trimmedparamId = paramId.trim()
+  //println trimmedparamId
+  
   """
-  perl -ne '
-      my \$param = ${paramId}; 
-      chomp \$param; chomp; 
-      my (\$clusterId, \$oid) = split(/\t/); 
-      \$clusterId =~ s/CL//g;
-      if (\$_ ne \"\") {
-         print \"\$param\t\$clusterId\t\$oid\n\";
-      }' $file > mash_cluster.csv
+  ./$script $file ${trimmedparamId} > mash_cluster.csv
   """
 
 }
@@ -1299,6 +1424,7 @@ process createClusterTable {
 
 process loadClusterFileToDB {
   tag { "$d - ${mashClusterTab}" }
+  time '1h'
   
   input:
   set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(mashClusterTab) from mashClusterFile
@@ -1318,17 +1444,19 @@ process setUpVisualReport {
 
   tag { "$d" }
   publishDir "${resultDir}", mode: 'link', overwrite: true
-
+  time '1h'
+  
   input:
   file VisualReport
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d) from DataVisual
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(data_file), val(clusteringMethod) from DataVisual
 
   output:
   file "visual_report" into VisualReportOut
   
   
   script:
-  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${d}"
+  
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}"
   """
   echo \"Ok\"
   """

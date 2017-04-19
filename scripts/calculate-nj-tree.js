@@ -10,9 +10,21 @@ try {
     process.exit(0);
 }
 
+
+//console.log(process.argv[2]);
+
+
 var taxa       = JSON.parse(fs.readFileSync(process.argv[3], 'utf8'));
 var distance   = JSON.parse(distanceFS);
 var out   = process.argv[4];
+
+// console.log(taxa.length);
+// console.log(distance.length);
+
+
+// distance.forEach(function(line) {
+// 	console.log(line.length);
+//     });
 
 var distanceFloat = distance.map(function(col) {
     return col.map(function(cell){
@@ -23,14 +35,29 @@ var distanceFloat = distance.map(function(col) {
 
 var famSize = taxa.length;
 if (famSize > 1) {
-    var new_taxa = taxa.map(function(obj){
-	var name = String(obj.name);
-	if (name) {
-	    var new_name  = name.replace(/\:|\(|\)|\;/g, "_");
-	    obj.name = new_name;
+    var new_taxa = taxa.map(function(obj,i){
+	//console.log(obj);
+	if (obj) {
+	    var name = String(obj.name);
+	    if (name) {
+		var new_name  = name.replace(/\:|\(|\)|\;/g, "_");
+		obj.name = new_name;
+	    }
+	
+	    return obj;
 	}
-	return obj;
+	else {
+	    return {
+		name: i
+	    };
+	}
     });
+    
+    // console.log(new_taxa);
+    // console.log(distanceFloat);
+    // distanceFloat.forEach(function(line) {
+    // 	console.log(line.length);
+    // });
     var RNJ = new NJ.RapidNeighborJoining(distanceFloat, new_taxa);
     RNJ.run();
     var treeObject = RNJ.getAsObject();

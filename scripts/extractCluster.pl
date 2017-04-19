@@ -5,7 +5,9 @@ use Data::Dumper;
 
 my $dico  = $ARGV[0];
 my $edges = $ARGV[1];
-my $base_name = $ARGV[2] || 'graph';
+my $distance_threshold = $ARGV[2];
+my $base_name = $ARGV[3] || 'graph';
+
 
 open (my $EDGES, '<', $edges) or die ("Cannot open the file $edges\nERROR:$!");
 open (my $DICO , '<', $dico ) or die ("Cannot open the file $dico\nERROR:$!");
@@ -21,12 +23,15 @@ while (my $l = <$DICO>) {
     $oid2Cluster->{$oid} = $clusterId;
     ## open filehandle if needed
     if ( !exists $cluster_fh->{$clusterId}) {
-      my $node_out = $base_name.'-'.$clusterId.'-nodes.tab';
-      my $edge_out = $base_name.'-'.$clusterId.'-edges.tab';
-      open (my $NODE, '>', $node_out) or die ("Cannot open the file $node_out\nERROR:$!");
-      open (my $EDGE, '>', $edge_out) or die ("Cannot open the file $edge_out\nERROR:$!");
-      $cluster_fh->{$clusterId}->{node} = $NODE;
-      $cluster_fh->{$clusterId}->{edge} = $EDGE;
+      my $node_out   = $base_name.'-'.$clusterId.'-nodes.tab';
+      my $edge_out   = $base_name.'-'.$clusterId.'-edges.tab';
+      #my $f_edge_out = $base_name.'-'.$clusterId.'-edges-filter.tab';
+      open (my $NODE , '>', $node_out  ) or die ("Cannot open the file $node_out\nERROR:$!");
+      open (my $EDGE , '>', $edge_out  ) or die ("Cannot open the file $edge_out\nERROR:$!");
+      #open (my $FEDGE, '>', $f_edge_out) or die ("Cannot open the file $edge_out\nERROR:$!");
+      $cluster_fh->{$clusterId}->{node}  = $NODE;
+      $cluster_fh->{$clusterId}->{edge}  = $EDGE;
+      #$cluster_fh->{$clusterId}->{fedge} = $FEDGE;
     }
     my $OUT = $cluster_fh->{$clusterId}->{node};
     print $OUT $l,"\n";
@@ -50,6 +55,10 @@ while (my $l = <$EDGES>) {
     if ( exists $cluster_fh->{$clusterId2} ) {
       my $OUT = $cluster_fh->{$clusterId2}->{edge};
       print $OUT $l,"\n";
+      # if ($distance <= $distance_threshold) {
+      # 	  my $FOUT = $cluster_fh->{$clusterId2}->{fedge};
+      # 	  print $FOUT $l,"\n";
+      # }
     }
     else {
       print STDERR "No filehandle for: $clusterId2\n";
