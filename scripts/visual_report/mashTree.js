@@ -9729,7 +9729,7 @@ var _user$project$MashTree$getTree = F2(
 			A2(
 				_elm_lang$core$Basics_ops['++'],
 				'/../results/trees/json/',
-				A2(_elm_lang$core$Basics_ops['++'], id, '-tree.json')));
+				A2(_elm_lang$core$Basics_ops['++'], id, '.json')));
 		var _p10 = A2(_elm_lang$core$Debug$log, 'url', url);
 		return A3(
 			_elm_lang$core$Task$perform,
