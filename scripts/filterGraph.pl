@@ -10,7 +10,7 @@ open (my $EDGES, '<', $edges) or die ("Cannot open the file $edges\nERROR:$!");
 
 my $currentNodeId;
 my $nodeIdRecord = {};
-print "reference-ID\tquery-ID\tdistance\tp-value\tshared-hashes\n";
+# print "reference-ID\tquery-ID\tdistance\tp-value\tshared-hashes\n";
 while (my $l = <$EDGES>) {
   chomp $l;
   my ($oid1, $oid2, $dist, $pval) = split(/\t+/,$l);

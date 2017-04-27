@@ -61,6 +61,10 @@ CalculateVariationInformation = Channel.value(file("${params.scripts}/calculate-
 CalculateSJProgenome    = Channel.value(file("${params.scripts}/calculateSJIndexProgenome.R"))
 GenerateClusterTable    = Channel.value(file("${params.scripts}/silix-cluster-to-mash-cluster-table.py"))
 calculateClique = Channel.value(file("${params.scripts}/calculate-cliques.py"))
+ConvertOrgToId  = Channel.value(file("${params.scripts}/convert-org-to-int-id.py"))
+ReplaceCustomId = Channel.value(file("${params.scripts}/replace-custom-id.py"))
+CalculateLouvainCommunities = Channel.value(file("${params.scripts}/calculate-louvain-communities.py"))
+
 
 /*******
  * Visual report files
@@ -151,7 +155,9 @@ process getNaOids {
 
 
 process getGenomes {
-  publishDir "${resultDir}", mode: 'link', overwrite: true
+
+  // publishDir "${resultDir}", mode: 'link', overwrite: true
+  storeDir "${resultDir}"
   maxRetries 5
   time { 5.hour * task.attempt }
   errorStrategy { task.exitStatus == 143 ? 'retry' : 'terminate' }
@@ -260,6 +266,8 @@ SequencesInput.mix(genomes, Proteomes, Progenomes)
 .set { SequencesInputs}
 
 countSeq = countFasta.count()
+
+
 
 
 
@@ -383,7 +391,7 @@ process all_vs_all_distance {
   file query from sketchesFilenameToDist
   
   output:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), file(out) into distanceMatrix, distanceMatrix2
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), file(out) into distanceMatrix, distanceMatrix2, MashDistancesDico
 
   script:
   resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/mash-distance"
@@ -396,6 +404,8 @@ process all_vs_all_distance {
   """
 
 }
+
+
 
 
 
@@ -462,7 +472,8 @@ process filterEdges {
   val distanceThresholds
   
   output:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(distanceThresholds), file("${out}") into filteredEdges, filteredEdgesClique
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(distanceThresholds), file("${out}") into filteredEdges, filteredEdgesClique, filteredEdgesLouvain, filteredEdgesWLouvain
+  //set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(distanceThresholds), file("${out}") into filteredEdges, filteredEdgesLouvain
 
   script:
   resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/mash-distance"
@@ -524,7 +535,7 @@ process prepareSilixInput {
   base = edgeFile.getBaseName()
   out = "${base}-edges.tab"
   """
-  tail -n +2 ${edgeFile} | cut -d\$'\t' -f1,2 | perl -pe 's/(\\d+\\.\\w+)\\.gz/\$1/g' > ${out}
+  cut -d\$'\t' -f1,2 ${edgeFile} | perl -pe 's/(\\d+\\.\\w+)\\.gz/\$1/g' > ${out}
   """
 
 }
@@ -542,7 +553,7 @@ process silixx {
   set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(edges) from edgesFile
   val num from countSeq
   //val pvalueThreshold
-
+  
   
   output:
   set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("$out"), val('silix') into silixClusterFile, silixClusterFile2, SilixClusterFilesPro
@@ -564,15 +575,20 @@ process calculateClique {
   publishDir "${resultDir}", mode: 'link', overwrite: true
   module 'python/3.5.3'
   module 'gnu/4.9.2'
-  time { seqSrc == 'progenome' ? '4h' : '30m' }
-  
+  // time { seqSrc == 'progenome' ? 4.hour * task.attempt :  1.hour * task.attempt }
+  // errorStrategy { task.exitStatus == 143 ? 'retry' : 'terminate' }
+  // maxRetries 4
+
+  when: 
+  false
+
   input:
   set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(edge) from filteredEdgesClique
   //  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(edge) from EdgesToClique
   file script from calculateClique
 
   output:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("clique*.txt"), val(clusteringMethod) into CliqueClusters, CliqueClusters2, CliqueClustersPro
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("clique*.txt"), val(clusteringMethod) into CliqueClusters, CliqueClustersPro
   
   script:
   clusteringMethod = 'clique'
@@ -584,8 +600,154 @@ process calculateClique {
   """
 }
 
+
+process calculateLouvainCommunities {
+  tag {"${edges} - ${d}"}
+  publishDir "${resultDir}", mode: 'link', overwrite: true
+
+  memory { seqSrc == 'progenome' ? 30.GB * task.attempt :  5.GB * task.attempt }
+  time   { seqSrc == 'progenome' ? 6.hour * task.attempt :  2.hour * task.attempt }
+  errorStrategy { task.exitStatus == 143 ? 'retry' : 'terminate' }
+  maxRetries 4
+  module 'python/2.7.8'
+  module 'python-louvain/0.6'
+
+  input:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(edges) from filteredEdgesLouvain
+  file script from CalculateLouvainCommunities
+
+  output:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(out), val(clusteringMethod) into LouvainClusters, LouvainClustersPro
+
+  script:
+  clusteringMethod = 'louvain'
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results"
+  baseName = edges.getBaseName()
+  out = "${baseName}-louvain_clusters.tsv"
+  """
+  python ${script} --edges ${edges} -o ${out}
+  """
+
+}
+
+
+process calculateWeightedLouvainCommunities {
+  tag {"${edges} - ${d}"}
+  publishDir "${resultDir}", mode: 'link', overwrite: true
+
+  memory { seqSrc == 'progenome' ? 30.GB * task.attempt :  5.GB * task.attempt }
+  time { seqSrc == 'progenome' ? 6.hour * task.attempt :  2.hour * task.attempt }
+  errorStrategy { task.exitStatus == 143 ? 'retry' : 'terminate' }
+  maxRetries 4
+  module 'python/2.7.8'
+  module 'python-louvain/0.6'
+
+  input:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(edges) from filteredEdgesWLouvain
+  file script from CalculateLouvainCommunities
+
+  output:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(out), val(clusteringMethod) into WLouvainClusters, WLouvainClustersPro
+
+  script:
+  clusteringMethod = 'weighted_louvain'
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results"
+  baseName = edges.getBaseName()
+  out = "${baseName}-louvain_clusters.tsv"
+  """
+  python ${script} --edges ${edges} -o ${out} --weight
+  """
+  
+}
+
+/*
+process orgToIntId {
+
+  tag { "${edge}" }
+  
+  module 'python/3.5.3'
+  time '1h'
+  
+  input:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(edge) from filteredEdgesLouvain
+  file script from ConvertOrgToId
+  
+  output:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file("*-customid.tsv") into filteredEdgesLouvainInt
+  file "*-dico.tsv" into OrgDico
+    
+  script:
+  """
+  python $script -e ${edge}
+  """
+}
+*/
+
+
+/*
+process calculateLouvainCommunities {
+  tag {"${edge} - ${d}"}
+  publishDir "${resultDir}", mode: 'link', overwrite: true
+  time '2h'
+  module 'python/3.5.3'
+  
+  input:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(edge) from filteredEdgesLouvainInt
+  
+  output:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(communities), val(clusteringMethod) into LouvainClustersInt
+  
+  script:
+  baseName = edge.getBaseName()
+  clusteringMethod = 'louvain'
+  resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/per-cluster"
+  onlyEdges = "only-edges.tab"
+  graph     = "graph.bin"
+  graphTree = "graph.tree"
+  communities = baseName + "-communities.tsv"
+  """
+  cut -f1,2 ${edge} | tail -n +2 > ${onlyEdges}
+  louvain-convert -i ${onlyEdges} -o ${graph}
+  louvain ${graph} -l -1 -v -q 0 > ${graphTree}
+  level=\$((`louvain-hierarchy -n | grep 'Number of levels' | cut -d ':' -f2` - 1))
+  louvain-hierarchy ${graphTree} -l \$level > ${communities}
+  """
+}
+*/
+
+
+/*
+process replace_int_to_org_id {
+  
+  module 'python/3.5.3'
+  time '1h'
+  
+  input:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(communities), val(clusteringMethod) from LouvainClustersInt
+  file dico from OrgDico
+  file script from ReplaceCustomId
+
+  output:
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(louvainClusters), val(clusteringMethod) into LouvainClusters
+  
+  script:
+  baseName = communities.getBaseName()
+  println baseName
+  baseNameSplitted = baseName.split("-")
+  
+  baseNameSplitted.removeElement("customid")
+  louvainClusters = baseNameSplitted.join("-") + '.tsv'
+  """
+  python ${script} -c ${communities} -d ${dico} -o ${out}
+  """
+
+
+}
+*/
+
+
 silixClusterFile
-.mix(CliqueClusters)
+.mix(CliqueClusters, LouvainClusters, WLouvainClusters)
 .set { ClusterFile }
 
 
@@ -593,7 +755,7 @@ silixClusterFile
 
 
 SilixClusterFilesPro
-.mix(CliqueClustersPro)
+.mix(CliqueClustersPro, LouvainClustersPro, WLouvainClustersPro)
 .spread(minSizeCluster)
 // .tap {SilixClustersPerMinSize}
 // .subscribe {println it}
@@ -604,19 +766,15 @@ SilixClusterFilesPro
 
 process extractVectorProgenome {
 
-  tag { "$d - minSizeCluster = ${minSizeCluster}" }
+  tag { "$d - ${clusteringMethod} - minSizeCluster = ${minSizeCluster}" }
 
   publishDir "${resultDir}", mode: 'link', overwrite: true
 
   time '2h'
   
   input:
-  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(clusterFile), val(minSizeCluster), val(clusteringMethod) from ClustersPerMinSize
+  set val(pvalueThreshold), val(seqSrc), val(seqType), val(kmerSize), val(sketchSize), val(d), file(clusterFile), val(clusteringMethod), val(minSizeCluster) from ClustersPerMinSize
   file ProgenomeClusterRef
-  // val seqSrc
-  // val sketchSize
-  // val kmerSize
-  // val seqType
 
   
   when:
@@ -650,10 +808,11 @@ process extractVectorProgenome {
 annotations.first().into{ AnnotationsValue }
 
 process addAnnotation {
-  tag { "$d - ${silixRes}" } 
-
-  publishDir "${resultDir}", mode: 'link', overwrite: true	
-
+  tag { "$d - ${clusteringMethod} - ${silixRes}" } 
+  
+  //publishDir "${resultDir}", mode: 'link', overwrite: true	
+  storeDir "${resultDir}"
+  
   time '1h'
   
   input:
@@ -689,7 +848,7 @@ process addAnnotation {
 
 process extractVectorsVsRank {
   
-  tag { "$d" }
+  tag { "$d - ${clusteringMethod}" }
 
   publishDir "${resultDir}", mode: 'link', overwrite: true
   time '2h'
@@ -799,7 +958,7 @@ VariationOfInformation
 
 
 process calculateSplitJoinTaxa {
-  tag { "$d - $spVectors" }
+  tag { "$d - $spVectors - ${clusteringMethod}" }
   publishDir "${resultDir}", mode: 'link', overwrite: true
   module 'r/3.3.1'
   time '1h'
@@ -840,7 +999,10 @@ process calculateRandIndexRank {
   tag { "$clusteringMethod - $d - $randIndexVectors" }
   publishDir "${resultDir}", mode: 'link', overwrite: true
   module 'r/3.3.1'
-  time '1h'
+  //  time '1h'
+  time { seqSrc == 'progenome' ? 6.hour * task.attempt :  1.hour * task.attempt }
+  errorStrategy { task.exitStatus == 143 ? 'retry' : 'terminate' }
+  maxRetries 4
 
   
   input:
@@ -867,7 +1029,10 @@ RandIndexVsRank
   clusteringMethod = it[4]
   [ "${clusteringMethod}-${compareClustering}-rand-indexes-${taxa}.csv", it[1].text]
  }
-.map { it -> [ 'rand-index', 'vs-rank', clusteringMethod, pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ] }
+.map {  it ->
+  splitBaseName = it.getBaseName().split('-')
+  clusteringMethod = splitBaseName[0]
+  [ 'rand-index', 'vs-rank', clusteringMethod, pvalueThreshold.value, seqSrc.value, seqType.value, kmerSize.value, sketchSize.value, it ] }
 .set { RandIndexesVsRank }
 
 
@@ -923,6 +1088,9 @@ process calculateRandIndexProgenome {
 
   tag { "${d} - ${randIndexVectors}" }
   publishDir "${resultDir}", mode: 'link', overwrite: true
+  time { 6.hour * task.attempt }
+  errorStrategy { task.exitStatus == 143 ? 'retry' : 'terminate' }
+  maxRetries 4
 
   module 'r/3.3.1'
   
@@ -1038,7 +1206,7 @@ distanceMatrix2.first().into{ Distancematrix2Value }
 
 process extractGraph {
 
-  tag { "${d} - ${edges}" } 
+  tag { "${d} - ${edges} - ${clusteringMethod}" } 
   publishDir "${resultDir}", mode: 'link', overwrite: true
 
   time '2h'
@@ -1055,6 +1223,7 @@ process extractGraph {
   //val d into DistanceExtractGraph
   
   script:
+  // might need to use the ulimit to set the number max of open files
   resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/graph"
   """
   perl $script $dico $edges ${d} ${seqSrc}-${seqType}-${kmerSize}-${sketchSize}-${d}-${clusteringMethod}
@@ -1075,7 +1244,6 @@ phase_clustering_method_g = Channel.create()
 
 nodes
 .phase(edges) {it ->
-  //println it
   def split_name = it.baseName.split('-')
   return split_name[0] + split_name[1] + split_name[2] + split_name[3] + split_name[4] + split_name[5] + split_name[6].toInteger()
  }
@@ -1235,7 +1403,7 @@ process calculateNJTree {
   output:
   file "*-tree.json" into JsonTrees mode flatten
   file "*-tree.nwk" into NewickTrees mode flatten
-  
+
   script:
   //resultDir = "${seqSrc}/${seqType}/${kmerSize}-${sketchSize}/${clusteringMethod}/${d}/results/trees"
   assert d.size() == distance.size()

@@ -13,7 +13,7 @@ open (my $EDGES, '<', $edges) or die ("Cannot open the file $edges\nERROR:$!");
 open (my $DICO , '<', $dico ) or die ("Cannot open the file $dico\nERROR:$!");
 
 my $oid2Cluster = {};
-my $cluster_fh  = {}; # Store the filehandle for performance issue.
+my $cluster_fh  = {};	 # Store the filehandle for performance issue.
 my $ranks = ['species', 'genus', 'family', 'order', 'class', 'phylum'];
 
 while (my $l = <$DICO>) {
@@ -39,15 +39,16 @@ while (my $l = <$DICO>) {
 }
 
 
-# my $countLine = 0;
+my $countLine = 0;
 
 while (my $l = <$EDGES>) {
-  # $countLine++;
+  $countLine++;
   # if ($countLine % 1000 == 0) {
   #   print STDERR '# ', $countLine,"\n";
   # }
   chomp $l;
-  my ($oid1, $oid2, $distance) = split(/\t/,$l);
+
+  my ($oid1, $oid2, $distance) = split(/\t+/,$l);
   my $clusterId1 = $oid2Cluster->{$oid1};
   my $clusterId2 = $oid2Cluster->{$oid2};
   ## in the same cluster
@@ -59,9 +60,8 @@ while (my $l = <$EDGES>) {
       # 	  my $FOUT = $cluster_fh->{$clusterId2}->{fedge};
       # 	  print $FOUT $l,"\n";
       # }
-    }
-    else {
-      print STDERR "No filehandle for: $clusterId2\n";
+    } else {
+      print STDERR "No filehandle for at line $countLine: $clusterId2 - $clusterId1\n$l\n";
       exit 1;
     }
   }

@@ -63,49 +63,61 @@ def merge(sets):
         sets = results
     return sets
 
+def che_merge(sets):
+    """ChessMaster"""
+    results = []
+    upd, isd, pop = set.update, set.isdisjoint, sets.pop
+    while sets:
+        if not [upd(sets[0],pop(i)) for i in range(len(sets)-1,0,-1) if not isd(sets[0],sets[i])]:
+            results.append(pop(0))
+    return results
+
 
 def set_id_to_node(node_id, dic):
     if node_id not in dic:
         dic[node_id] = str(len(dic))
     return dic[node_id]
 
-args.edges.readline()
-for line in args.edges:
-    line_tr   = line.strip()
-    columns   = line_tr.split("\t")
-    db_ids    = [columns[0], columns[1]]
-    new_edges = [ set_id_to_node(node, old_to_new_id) for node in db_ids];
 
-    ## qc needs to have v1,v2 and v2,v1 but not v1,v1.
-    ## I force the output to look like that and I record the links
-    if new_edges[0] != new_edges[1]:
-        link_id = ",".join(sorted(new_edges))
-        if link_id not in links_set:
-            links_set.add(link_id)
-            for link in [ ','.join(new_edges), ','.join(reversed(new_edges)) ]:
-                output_tmp.write(link+"\n")
+# print("## Start read edges file")
+
+# args.edges.readline()
+# for line in args.edges:
+#     line_tr   = line.strip()
+#     columns   = line_tr.split("\t")
+#     db_ids    = [columns[0], columns[1]]
+#     new_edges = [ set_id_to_node(node, old_to_new_id) for node in db_ids];
+
+#     ## qc needs to have v1,v2 and v2,v1 but not v1,v1.
+#     ## I force the output to look like that and I record the links
+#     if new_edges[0] != new_edges[1]:
+#         link_id = ",".join(sorted(new_edges))
+#         if link_id not in links_set:
+#             links_set.add(link_id)
+#             for link in [ ','.join(new_edges), ','.join(reversed(new_edges)) ]:
+#                 output_tmp.write(link+"\n")
 
      
-output_tmp.close()
+# output_tmp.close()
+# print("## End read edges file")
+# #output = open(args.output, 'w')
 
-#output = open(args.output, 'w')
+# lines_to_prepend = str(len(old_to_new_id)) + "\n" + str(len(links_set) * 2)
+# f = fileinput.input(qc_node_id_output, inplace=True)
+# for line in f:
+#     line = line.strip()
+#     if f.isfirstline():
+#         print(lines_to_prepend.rstrip('\r\n') + '\n' + line)
+#     else:
+#         print(line)
 
-lines_to_prepend = str(len(old_to_new_id)) + "\n" + str(len(links_set) * 2)
-f = fileinput.input(qc_node_id_output, inplace=True)
-for line in f:
-    line = line.strip()
-    if f.isfirstline():
-        print(lines_to_prepend.rstrip('\r\n') + '\n' + line)
-    else:
-        print(line)
+# f.close()
 
-f.close()
+# print("Start the max clique calculation")
 
-print("Start the max clique calculation")
+# os.system('qc --input-file=' + qc_node_id_output + ' --algorithm=hybrid > qc-cliques.output')
 
-os.system('qc --input-file=' + qc_node_id_output + ' --algorithm=hybrid > qc-cliques.output')
-
-print("End the max clique calculation")
+# print("End the max clique calculation")
 
 max_cliques = open('qc-cliques.output', 'r')
 
@@ -123,17 +135,18 @@ for line in max_cliques:
 
 
 #print(clique_sets)
-clique_groups = merge(clique_sets)
-
+#clique_groups = merge(clique_sets)
+print('## Start merge')
+clique_groups = che_merge(clique_sets)
 print("Nombre de clique group : " + str(len(clique_groups)))
 
-clique_file = open(args.output, 'w')
+# clique_file = open(args.output, 'w')
 
-new_to_old_id = {v: k for k, v in old_to_new_id.items()}
+# new_to_old_id = {v: k for k, v in old_to_new_id.items()}
 
-for i, clique_group in enumerate(clique_groups):
-    for genome in clique_group:
-        clique_file.write(str(i)+"\t"+ new_to_old_id[genome]+"\n")
+# for i, clique_group in enumerate(clique_groups):
+#     for genome in clique_group:
+#         clique_file.write(str(i)+"\t"+ new_to_old_id[genome]+"\n")
 
     #open(args.cluster_id+'-'+str(i))
     # for node in nodes:
