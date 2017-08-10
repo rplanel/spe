@@ -2,6 +2,7 @@
 
 use strict;
 use Data::Dumper;
+use PerlIO::gzip;
 
 my $dico  = $ARGV[0];
 my $edges = $ARGV[1];
@@ -9,7 +10,7 @@ my $distance_threshold = $ARGV[2];
 my $base_name = $ARGV[3] || 'graph';
 
 
-open (my $EDGES, '<', $edges) or die ("Cannot open the file $edges\nERROR:$!");
+open (my $EDGES, '<:gzip', $edges) or die ("Cannot open the file $edges\nERROR:$!");
 open (my $DICO , '<', $dico ) or die ("Cannot open the file $dico\nERROR:$!");
 
 my $oid2Cluster = {};

@@ -6,8 +6,6 @@ function piechart () {
     function exports(_selection, width, height, numCol, url) {
 	_selection.each(function(d, i) {
 
-            console.log(d);
-            
 	    var context = d3.select(this).select('g.piecharts');
 	    
 	    if (context.empty()){
@@ -21,7 +19,7 @@ function piechart () {
 	    var numOrganism;
 	    context.attr('transform','translate('+ (width+100) + ',' + height + ')');
 	    var radius = Math.min(width, height) / 2;
-	    var colors = d3.scaleOrdinal(d3.schemeCategory20b)
+	    var colors = d3.scaleOrdinal(d3.schemeCategory20b);
 	    var arc = d3.arc()
 		.outerRadius(radius - 10)
 		.innerRadius(0);
@@ -47,12 +45,18 @@ function piechart () {
 	    
 
             
-            enterSelection
-                .append('a')
-                .attr('transform', 'translate(0,-100)')
+            var aEnter = enterSelection
+                    .append('a')
+                    .attr('transform', 'translate(0,-100)');
+	    
+	    aEnter
                 .append('text')
                 .classed('title',true);
-                
+	    
+	    aEnter
+                .append('title');
+	    
+	    
 
 
             
@@ -64,11 +68,12 @@ function piechart () {
 	    var update = enterSelection  
 		.merge(updateSelection);
 
-            update
+            var a = update
                 .select('a')
                 .attr('href',function(d){
                     return url + 'tree.html?' +d.name;
-                })
+                });
+	    a
                 .select('text.title')
                 .style('font-size','14px')
                 .style('text-decoration','underline')
@@ -78,7 +83,14 @@ function piechart () {
 		    }));
 		    return d.name+"("+d.id+") ["+countTotal+"]";
 
-		})
+		});
+	    a
+		.select('title')
+		.text(function(d){
+		    return d.data.map(function(obj){
+			return obj.name + ' (' + obj.count + ')';
+		    }).join(' | ');
+		});
             
 	    update.attr('transform',function(d,i){
                 var column = i % numCol;

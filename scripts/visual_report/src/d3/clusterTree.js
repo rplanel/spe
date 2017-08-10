@@ -11,6 +11,9 @@ function clusterTree () {
             var root = d3.hierarchy(data);
             tree(root);
             var leaves = root.leaves();
+
+	    console.log(root);
+	    
             d3
                 .select('svg')
 	        .attr('width', width+200)
@@ -33,14 +36,14 @@ function clusterTree () {
                 if (node.children == undefined ) {
                     node.left = 0;
                     node.right = 0;
-                    return 1
+                    return 1;
                 }
                 else {
                     node.children[0].isRight = true;
                     node.right = addTreeHeight(node.children[0]);
                     node.children[1].isRight = false;
                     node.left = addTreeHeight(node.children[1]);
-                    return node.left + node.right + 1
+                    return node.left + node.right + 1;
                 }
             }
 
@@ -102,7 +105,7 @@ function clusterTree () {
             //addTreeHeight(root);
 
             
-            var container = d3.select(this)
+            var container = d3.select(this);
             var link = container.selectAll(".link")
                 .data(root.descendants().slice(1))
                 .enter()
@@ -131,7 +134,7 @@ function clusterTree () {
                 })
                 .attr("transform", function(d) {
                     return "translate(" + d.y + "," + d.x + ")";
-                })
+                });
 
             node.append("circle")
                 .attr("r", 2.5);
@@ -148,7 +151,7 @@ function clusterTree () {
                     return d.children ? "end" : "start";
                 })
                 .style('fill',function(d){
-                    var c = ''
+                    var c = '';
                     if (d.data.taxon && d.data.taxon.taxonomy[rank]) {
                         c = colors(d.data.taxon.taxonomy[rank].name);
                     }

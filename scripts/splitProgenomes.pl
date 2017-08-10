@@ -9,7 +9,8 @@ my $outDir = $ARGV[1] || 'split-progenomes';
 
 
 mkdir $outDir;
-print STDERR $progenomes,"\n";
+# print STDERR $progenomes,"\n";
+my ($baseName, $seqType, $ext) = split(/\./, $progenomes);
 open (my $GENOMES, '<:gzip', $progenomes) or die ("Cannot open the file $progenomes\nERROR:$!");
 my $currentGenomes;
 my $OUT;
@@ -22,7 +23,7 @@ while (my $l = <$GENOMES>) {
     $l =~ s/^>//g;
     $is_header_print = 0;
     my ($taxId, $projId) = split(/\./, $l);
-    my $genomesId = $taxId.'.'.$projId.'.fna.gz';
+    my $genomesId = $taxId.'.'.$projId.'.'.$seqType.'.gz';
     ##print STDERR $genomesId,"\n";
     if (!defined $currentGenomes || $currentGenomes ne $genomesId) {
       $currentGenomes = $genomesId;

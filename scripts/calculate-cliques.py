@@ -5,6 +5,7 @@ import sys
 import os.path
 import os.path
 import fileinput
+import gzip
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

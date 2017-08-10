@@ -19,7 +19,7 @@ do
        AND GO_type IN('CDS','fCDS')  
        AND S.S_status = 'inProduction'
        AND GO_evidence = 'automatic' ;" | \
-    perl -ne 'if(/^>/){ chomp;($seqId, $oid) = split(/\|/); open($O, ">>", $oid.".faa"); print $O "$seqId\n";} else {s/\*//g;print $O $_}'
+	perl -ne 'if(/^>/){ chomp;($seqId, $oid) = split(/\|/); open($O, ">>", $oid.".faa"); print $O "$seqId\n";} else {s/\*//g;print $O $_}'
 
 done
 

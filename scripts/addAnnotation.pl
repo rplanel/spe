@@ -22,7 +22,7 @@ while (my $l = <$ANNO>) {
     };
 }
 
-#print STDERR Dumper $annotationsDico;
+print STDERR Dumper $annotationsDico;
 
 open (my $SILIX, '<', $silix) or die ("Cannot open the file $silix\nERROR:$!");
 
