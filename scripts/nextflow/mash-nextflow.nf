@@ -1,3 +1,5 @@
+-*- mode: groovy;-*-
+
 #!/usr/bin/env nextflow
 
 
